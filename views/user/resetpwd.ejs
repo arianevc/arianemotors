@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="form-gap" style="padding-top: 70px;
+"></div>
+<div class="container">
+	<div class="row">
+		<div class="col-md-4 col-md-offset-4">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <div class="text-center">
+                  <h3><i class="fa fa-lock fa-4x"></i></h3>
+                  <h2 class="text-center">Reset Password</h2>
+                  <p>You can reset your password here.</p>
+                  <div class="panel-body">
+    
+                    <form id="register-form" role="form" autocomplete="off" class="form" method="post" action="/resetpwd/<%=token%>">
+    
+                      <div class="form-group gap-5">
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="glyphicon glyphicon-envelope color-blue"></i></span>
+                          <input id="password" name="password" placeholder="Create a new password" class="form-control"  type="text">
+                        </div>
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="glyphicon glyphicon-envelope color-blue"></i></span>
+                          <input id="confirmpassword" name="confirmpassword" placeholder="Re-Enter your new password" class="form-control"  type="password">
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <input name="recover-submit" class="btn btn-lg btn-primary btn-block" value="Reset Password" type="submit">
+                      </div>
+                      
+                      <input type="hidden" class="hide" name="token" id="token" value=""> 
+                    </form>
+                    <% if (message){%>
+                    <p style="color: red;"><%= message %></p>    
+                <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+	</div>
+  <% if(success){ %>
+    <script>
+      Swal.fire({
+        icon:"success",
+        title:"Reset Password Successful",
+        text:"Login again using the new password",
+        confirmButtonText:"Go to Login"
+      }).then(()=>{
+        window.location.href='/login'
+      })
+      
+    </script>
+    <% } %>
+</div>
+</body>
+</html>

@@ -1,0 +1,269 @@
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    inter: ['Inter', 'sans-serif'],
+                },
+            },
+        },
+    };
+</script>
+
+<div class="relative font-inter antialiased">
+
+    <main class="relative min-h-screen flex flex-col justify-center bg-slate-50 overflow-hidden">
+        <div class="w-full max-w-6xl mx-auto px-4 md:px-6 py-24">
+            <div class="flex justify-center">
+
+                <div class="max-w-md mx-auto text-center bg-white px-4 sm:px-8 py-10 rounded-xl shadow">
+                    <header class="mb-8">
+                        <h1 class="text-2xl font-bold mb-1">Email OTP Verification</h1>
+                        <p class="text-[15px] text-slate-500">Enter the 6-digit verification code that was sent to your registered email.</p>
+                    </header>
+                    <form id="otp-form" action="/verify-otp" method="POST">
+                        <div class="flex items-center justify-center gap-3">
+                            <input
+                                type="text" id="otpchar1" required
+                                class="w-12 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                pattern="\d*" maxlength="1" />
+                            <input
+                                type="text" id="otpchar2" required
+                                class="w-12 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                maxlength="1" />
+                            <input
+                                type="text" id="otpchar3" required
+                                class="w-12 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                maxlength="1" />
+                            <input
+                                type="text" id="otpchar4" required
+                                class="w-12 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                maxlength="1" />
+                            <input
+                                type="text" id="otpchar5" required
+                                class="w-12 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                maxlength="1" />
+                            <input
+                                type="text" id="otpchar6" required
+                                class="w-12 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                maxlength="1" />
+                        </div>
+                        <input type="hidden" name="otp" id="otp">
+                        <div class="max-w-[260px] mx-auto mt-4">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center whitespace-nowrap rounded-lg bg-indigo-500 px-3.5 py-2.5 text-sm font-medium
+                                 text-white shadow-sm shadow-indigo-950/10 hover:bg-indigo-600 focus:outline-none focus:ring focus:ring-indigo-300
+                                  focus-visible:outline-none focus-visible:ring focus-visible:ring-indigo-300 transition-colors duration-150">Verify
+                                Account</button>
+                        </div>
+                    </form>
+                    <div class="text-sm text-slate-500 mt-4">Didn't receive code? <a id="resendLink" class="hidden font-medium text-indigo-500 hover:text-indigo-600" href="javascript:void(0)" onclick="resendOtp()">Resend</a></div>
+                    <span id="timerText" class="ml-2 text-red-500"></span>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Page footer -->
+    <footer class="absolute left-6 right-6 md:left-12 md:right-auto bottom-4 md:bottom-8 text-center md:text-left">
+        <a class="text-xs text-slate-500 hover:underline" href="https://cruip.com">&copy;Cruip - Tailwind CSS
+            templates</a>
+    </footer>
+
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('otp-form')
+    const inputs = [...form.querySelectorAll('input[type=text]')]
+    const submit = form.querySelector('button[type=submit]')
+    const resendLink = document.getElementById('resendLink');
+    const timerText = document.getElementById('timerText');
+
+    if(!form) return//nothing to do if otp form is not present
+    
+    const handleKeyDown = (e) => {//this is to make sure that to avoid typing letters, and only the keys mentioned are used
+        if (
+            !/^[0-9]{1}$/.test(e.key)
+            && e.key !== 'Backspace'
+            && e.key !== 'Delete'
+            && e.key !== 'Tab'
+            && !e.metaKey
+        ) {
+            e.preventDefault()
+        }
+
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            const index = inputs.indexOf(e.target);
+            if (index > 0) {
+                inputs[index - 1].value = '';
+                inputs[index - 1].focus();
+            }
+        }
+    }
+
+    const handleInput = (e) => {//while typing otp , to jump on to next input field and at last move focus to submit button
+        const { target } = e
+        const index = inputs.indexOf(target)
+        if (target.value) {
+            if (index < inputs.length - 1) {
+                inputs[index + 1].focus()
+            } else {
+                submit.focus()
+            }
+        }
+    }
+
+    const handleFocus = (e) => {//if user clicks on one of the input field, focus that input for editing
+        e.target.select()
+    }
+
+    const handlePaste = (e) => {//if user copy paste otp, to avoid normal paste and fill all input fields(if it has 6 digits)
+        e.preventDefault()
+        const text = e.clipboardData.getData('text')
+        if (!new RegExp(`^[0-9]{${inputs.length}}$`).test(text)) {
+            return
+        }
+        const digits = text.split('')
+        inputs.forEach((input, index) => input.value = digits[index])
+        if(submit) submit.focus()
+    }
+
+    // Attach handlers to inputs(the handlers written about handling the otpin)
+    inputs.forEach((input) => {
+        input.addEventListener('input', handleInput)
+        input.addEventListener('keydown', handleKeyDown)
+        input.addEventListener('focus', handleFocus)
+        input.addEventListener('paste', handlePaste)
+    })
+    //otp timer function;when otp becomes 0 the resend otp becomes active
+    
+    let countdown = 40; // seconds
+    let intervalId=null
+
+    function updateTimerDisplay(){//for updating timer while send and resend otp
+        if(!timerText)return
+        const minutes = Math.floor(countdown / 60);
+      const seconds = countdown % 60;
+      timerText.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+    function startTimer(seconds){//starting timer ,here resend link is hidden
+        if(!resendLink|| !timerText)return
+        if(intervalId)clearInterval(intervalId)//to clear existinng intervalls
+        countdown=seconds
+       
+        resendLink.classList.add('hidden') //hide resend link while timer running
+        updateTimerDisplay()
+
+        intervalId=setInterval(()=>{
+            countdown--
+            updateTimerDisplay()
+            if(countdown<=0){
+                clearInterval(intervalId)
+                intervalId=null
+                timerText.textContent=""
+                resendLink.classList.remove("hidden")//show resendlink when timer finishes
+            }
+        },1000)
+    }
+
+    startTimer(countdown)//start initial timer
+
+    // OTP form submission using fetch
+    form.addEventListener('submit', async(e) => {
+        e.preventDefault(); // stop traditional form submission
+
+        const otpin = inputs.map(input => input.value).join('')
+        if (otpin.length !== 6 || !/^\d{6}$/.test(otpin)) {
+            Swal.fire({
+                icon: "warning",
+                title: "Incomplete OTP",
+                text: "Please enter all 6 digits correctly."
+            });
+            return;
+        }
+        try {
+            const res=await fetch('verify-otp',{
+                method:"post",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({otp:otpin})
+            })
+            const response=await res.json()
+            if(response.success){
+                Swal.fire({
+                    icon:"success",
+                    title:"OTP verified successfully",
+                    text:"Please login with your password ",
+                    confirmButtonText:"Go to Login",
+                }).then(()=>{
+                    window.location.href=response.redirectUrl
+                })
+            }else{
+                Swal.fire({
+                    icon:"error",
+                    title:"Error",
+                    text:response.message,
+                    showConfirmButton:false,
+                    timer:1500
+                })
+            }
+
+        } catch (error) {
+            Swal.fire({
+                icon:"error",
+                title:"Invalid OTP",
+                text:"Please try again"
+            })   
+        }
+        return false;
+    });
+     //resend otp function using fetch
+     window.resendOtp=async function () {//here it disables resend otp;
+        if (countdown>0)return//avoid sending otp while countdown is running
+        startTimer(60)//restart timer
+    // Make fetch call to resend the OTP
+    try {
+        const res=await fetch('/resend-otp',{
+            method:"post",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({email:'<%=email%>'})//sending otp using email received from backend
+        })
+        const response=await res.json()
+        if(response.success){
+            Swal.fire({
+                icon:"success",
+                title:"OTP sent successfully",
+                text:response.message,
+                showConfirmButton:false,
+                timer:4000
+            })
+        }else{
+            Swal.fire({
+                icon:"error",
+                title:"Error",
+                text:response.message,
+                showConfirmButton:false,
+                timer:1500
+            })
+        }
+    } catch (error) {
+        console.log(error)
+        Swal.fire({
+            icon:"error",
+            title:"Error",
+            text:"Error in resending the OTP.Please try again later."
+        })
+    }
+}
+});
+</script>
+
+
+
+
+

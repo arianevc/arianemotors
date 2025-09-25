@@ -1,0 +1,211 @@
+<!-- views/user/shop.ejs -->
+
+<%- include('../partials/user/header') %>
+
+   <style>
+    .active-category {
+  font-weight: bold;
+  color: #088178;
+}
+
+   </style>
+
+        <div class="page-header breadcrumb-wrap">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="/" rel="nofollow">Home</a>
+                    <span>Shop</span>
+                </div>
+            </div>
+        </div>
+        <section class="mt-50 mb-50">
+            <h2 class="text-center my-4">Our Products</h2>
+            <div class="container">
+                <div class="row flex-row-reverse">
+                    <div class="col-lg-9">
+                        <div class="shop-product-fillter">
+                            <div class="totall-product">
+                                <p> We found <strong class="text-brand"><%= products.length %></strong> items for you!</p>
+                            </div>
+                            <div class="sort-by-product-area">
+                                <!-- <div class="sort-by-cover mr-10">
+                                    <div class="sort-by-product-wrap">
+                                        <div class="sort-by">
+                                            <span><i class="fi-rs-apps"></i>Show:</span>
+                                        </div>
+                                        <div class="sort-by-dropdown-wrap">
+                                            <span> 50 <i class="fi-rs-angle-small-down"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="sort-by-dropdown">
+                                        <ul>
+                                            <li><a class="active" href="#">50</a></li>
+                                            <li><a href="#">100</a></li>
+                                            <li><a href="#">150</a></li>
+                                            <li><a href="#">200</a></li>
+                                            <li><a href="#">All</a></li>
+                                        </ul>
+                                    </div>
+                                </div> -->
+                                <div class="sort-by-cover">
+                                    <div class="sort-by-product-wrap">
+                                        <div class="sort-by">
+                                            <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
+                                        </div>
+                                        <div class="sort-by-dropdown-wrap">
+                                            <span> Featured <i class="fi-rs-angle-small-down"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="sort-by-dropdown">
+                                        <ul>
+                                            <li><a class="sort-link" data-sort=""  href="#">Featured</a></li>
+                                            <li><a href="#" class="sort-link" data-sort="asc">Price: Low to High</a></li>
+                                            <li><a href="#" class="sort-link" data-sort="desc">Price: High to Low</a></li>
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--Product card-->
+                        <%- include('../partials/user/productView',{products:products}) %>
+                        <!--pagination-->
+                        <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination justify-content-start">
+                                    <% if(currentPage>1){ %>
+                                    <li class="page-item"><a class="page-link" 
+                                href="?page=<%= currentPage-1 %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %>">Prev</a>
+                            </li><% } %>
+                            <% for(let i=1;i<=totalPages;i++){ %>
+                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>"><a class="page-link"
+                     href="?page=<%= i %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %>"><%= i %></a>
+                    </li><% } %>
+                    <% if(currentPage<totalPages){ %>
+                                    <li class="page-item"><a class="page-link" 
+                                href="?page=<%= currentPage+1 %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %>">Next</a>
+                            </li><% } %>
+                                    
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 primary-sidebar sticky-sidebar">
+                        <div class="widget-category mb-30">
+                            <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
+                            <ul class="categories">
+                              <% categoryList.forEach(category => {%>
+                                <li><a href="/shop?category=<%= category._id %>&search=<%= search || "" %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort || "" %>"
+                                    class="<%= categoryId == category._id.toString() ? 'active-category' : '' %>"><%= category.name %></a>
+                                </li>
+                                <% }) %>
+                            </ul>
+                        </div>
+                        <!-- Fillter By Price -->
+                        <div class="sidebar-widget price_range range mb-30">
+                            <div class="widget-header position-relative mb-20 pb-10">
+                                <h5 class="widget-title mb-10">Filter by price</h5>
+                                <div class="bt-1 border-color-1"></div>
+                            </div>
+                            <form method="GET" action="/shop">
+                                <input type="hidden" name="search" value="<%= search || '' %>">
+                                <input type="hidden" name="category" value="<%= categoryId || '' %>">
+                                <input type="hidden" name="sort" value="<%= sort || '' %>">
+                            <div class="label-input mb-2">
+                                <label for="minPrice">Min Price:</label>
+                                <input type="number" name="minPrice" id="minPrice" value="<%= minPrice || '' %>" />
+                            </div>
+                            <div class="label-input mb-3">
+                                <label for="maxPrice">Max Price:</label>
+                                <input type="number" name="maxPrice" id="maxPrice" value="<%= maxPrice || '' %>" />
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-default w-100">
+                                <i class="fi-rs-filter mr-5"></i> Filter
+                            </button>
+                        </form>
+
+                        </div>
+    
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!--Preloader Start-->
+    <div id="preloader-active">
+        <div class="preloader d-flex align-items-center justify-content-center">
+            <div class="preloader-inner position-relative">
+                <div class="text-center">
+                    <h5 class="mb-5">Now Loading</h5>
+                    <div class="loader">
+                        <div class="bar bar1"></div>
+                        <div class="bar bar2"></div>
+                        <div class="bar bar3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%-include('../partials/user/footer')%>
+    <!-- Vendor JS-->
+    <script src="/frontend/assets/js/vendor/modernizr-3.6.0.min.js"></script>
+    <script src="/frontend/assets/js/vendor/jquery-3.6.0.min.js"></script>
+    <script src="/frontend/assets/js/vendor/jquery-migrate-3.3.0.min.js"></script>
+    <script src="/frontend/assets/js/vendor/bootstrap.bundle.min.js"></script>
+    <script src="/frontend/assets/js/plugins/slick.js"></script>
+    <script src="/frontend/assets/js/plugins/jquery.syotimer.min.js"></script>
+    <script src="/frontend/assets/js/plugins/wow.js"></script>
+    <script src="/frontend/assets/js/plugins/jquery-ui.js"></script>
+    <script src="/frontend/assets/js/plugins/perfect-scrollbar.js"></script>
+    <script src="/frontend/assets/js/plugins/magnific-popup.js"></script>
+    <script src="/frontend/assets/js/plugins/select2.min.js"></script>
+    <script src="/frontend/assets/js/plugins/waypoints.js"></script>
+    <script src="/frontend/assets/js/plugins/counterup.js"></script>
+    <script src="/frontend/assets/js/plugins/jquery.countdown.min.js"></script>
+    <script src="/frontend/assets/js/plugins/images-loaded.js"></script>
+    <script src="/frontend/assets/js/plugins/isotope.js"></script>
+    <script src="/frontend/assets/js/plugins/scrollup.js"></script>
+    <script src="/frontend/assets/js/plugins/jquery.vticker-min.js"></script>
+    <script src="/frontend/assets/js/plugins/jquery.theia.sticky.js"></script>
+    <script src="/frontend/assets/js/plugins/jquery.elevatezoom.js"></script>
+    <!-- Template  JS -->
+    <script src="/frontend/assets/js/main.js?v=3.4"></script>
+    <script src="/frontend/assets/js/shop.js?v=3.4"></script>
+</body>
+
+</html>
+
+
+<!--shp sbove-->
+
+
+
+
+
+
+
+<script>
+    document.querySelectorAll(".sort-link").forEach(link => {
+        link.addEventListener('click',async (e) => {
+            e.preventDefault()
+
+            const sortValue=link.getAttribute('data-sort')
+            const urlParams=new URLSearchParams(window.location.search)//to get details about any filteres used in url 
+            urlParams.set('sort',sortValue)//add or update the sortvalue
+
+            try {
+                const response=await fetch(`shop/?${urlParams.toString()}`,{
+                    headers:{"X-Requested-With":"XMLHttpRequest"}//helps server to identify the AJAX request
+                })
+                const html=await response.text()
+                document.getElementById('product-container').innerHTML=html
+                 window.history.pushState({}, '', `/shop?${urlParams.toString()}`);//to make sure to update the url without
+            } catch (error) {
+                console.error("Error while displaying sorted products",error)
+                
+            }
+            
+        })        
+    });
+</script>

@@ -1,0 +1,317 @@
+<%- include('../partials/admin/header') %>
+        <section class="content-main">
+            <div class="row">
+                <div class="col-9">
+                    <div class="content-header">
+                        <h2 class="content-title">Add New Product</h2>
+                        <!-- <div>
+                            <button class="btn btn-md rounded font-sm hover-up">Add Product</button>
+                        </div> -->
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4>Enter the Product Details</h4>
+                        </div>
+                        <div class="card-body">
+                            <form action="/admin/products/add" method="post" enctype="multipart/form-data" id="addproductform">
+                                <div class="mb-4">
+                                    <label for="product_name" class="form-label">Product title</label>
+                                    <input type="text" name="name" placeholder="Enter Product Name" class="form-control" id="product_name">
+                                    <div id="error-name" class="error-message text-danger"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Product description</label>
+                                    <textarea placeholder="Type here" name="description" id="description" class="form-control" rows="4"></textarea>
+                                    <div id="error-description" class="error-message text-danger"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="brand" class="form-label">Brand Name</label>
+                                    <input type="text" name="brand" placeholder="Enter Brand Name" class="form-control" id="brand" />
+                                    <div id="error-brand" class="error-message text-danger"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="product_price" class="form-label">Price</label>
+                                    <input type="number" name="price" placeholder="Enter the Price" class="form-control" id="product_price"/>
+                                    <div id="error-price" class="error-message text-danger"></div>
+                                </div>
+                                <div class="mb-4">
+                                  <label for="category" class="form-label">Category</label>
+                                <select name="category" id="category" class="form-control" >
+                                <option value="">Select Category</option>
+                                
+                                <% categories.forEach(cat => { %>
+                                    
+                                <option value="<%= cat._id %>"><%= cat.name %></option>
+                                   <% }) %>
+                                 </select>
+                                 <div id="error-category" class="error-message text-danger"></div>
+                                 </div>
+                                 <div class="mb-4">
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number" name="quantity" placeholder="Enter the quantity" class="form-control" id="quantity"/>
+                                    <div id="error-quantity" class="error-message text-danger"></div>
+                                </div>
+                                <div class="mb-4">
+                                  <label class="form-label">Upload Image(s)</label>
+                                  <div class="input-upload">                    
+                                <input type="file" class="form-control" id="imageInput" multiple accept="image/*" />
+                            </div>
+                                  <div id="error-image" class="error-message text-danger"></div>
+                                  <button type="button" class="btn btn-secondary form-control" id="cropimagebtn">Crop & Add</button>
+                                  <div style="max-width: 100%;">
+                                    <img id="imagePreview" style="max-width: 100%;">
+                                  </div>
+                                  <!--hidden form to keep cropped images-->
+                                  <div class="croppedImgcontainer"></div>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Add Product</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div> <!-- card end// -->
+                    
+                </div>
+                
+            </div>
+        </section> <!-- content-main end// -->
+        <footer class="main-footer font-xs">
+            <div class="row pb-30 pt-15">
+                <div class="col-sm-6">
+                    <script>
+                    document.write(new Date().getFullYear())
+                    </script> ©, Evara - HTML Ecommerce Template .
+                </div>
+                <div class="col-sm-6">
+                    <div class="text-sm-end">
+                        All rights reserved
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+    <script src="/backend/assets/js/vendors/jquery-3.6.0.min.js"></script>
+    <script src="/backend/assets/js/vendors/bootstrap.bundle.min.js"></script>
+    <script src="/backend/assets/js/vendors/select2.min.js"></script>
+    <script src="/backend/assets/js/vendors/perfect-scrollbar.js"></script>
+    <script src="/backend/assets/js/vendors/jquery.fullscreen.min.js"></script>
+    <!-- Main Script -->
+    <script src="/backend/assets/js/main.js" type="text/javascript"></script>
+    <!--cropperjs script-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded",()=>{
+            //=============
+            // cropper logic for cropping images in add product
+            //===============
+        let cropper
+        let selectedFiles = []
+        let croppedBlobs = []
+        let imageIndex = 0
+
+  const imageInput = document.getElementById('imageInput')//file input 
+  const imagePreview = document.getElementById('imagePreview')//field for image Previiew
+  const cropBtn = document.getElementById('cropimagebtn')//button for cropping
+  const previewContainer = document.querySelector('.croppedImgcontainer')//previews of cropped images
+
+
+  //Function to load next image for cropping
+  function loadNextImage() {
+    if (imageIndex >= selectedFiles.length) {
+      //if all images are cropped
+      if (cropper) cropper.destroy()
+      imagePreview.src = ''
+      return
+    }
+
+    const file = selectedFiles[imageIndex]
+    const reader = new FileReader()
+
+    reader.onload = function (event) {
+      imagePreview.src = event.target.result
+      //destroy previous cropper if its existing
+      if (cropper) cropper.destroy()
+      cropper = new Cropper(imagePreview, {
+        aspectRatio: 1,
+        viewMode: 1
+      })
+    }
+
+    reader.readAsDataURL(file)
+  }
+  //Initialize the cropper workflow
+  function initializeImageCropper(inputElement){
+    inputElement.addEventListener('change',function(e){
+      selectedFiles=Array.from(e.target.files)//to store the selected files
+      imageIndex=0
+      croppedBlobs=[]//resets cropped blobs
+      loadNextImage()//start cropping
+    })
+  }
+  //to handle the cropping of each selected image
+  cropBtn.addEventListener('click', function () {
+    if (!cropper) return;
+
+    cropper.getCroppedCanvas().toBlob(blob => {
+      // Store the cropped blob
+      croppedBlobs.push(blob)
+
+      // Show a small preview for each image
+      const img = document.createElement('img')
+      img.src = URL.createObjectURL(blob)
+      img.style.width = '100px'
+      img.style.margin = '5px'
+      previewContainer.appendChild(img)
+
+      imageIndex++
+      loadNextImage() // Move to next image
+    }, 'image/jpeg')
+  });
+  //attaching the cropper to Add product input
+  initializeImageCropper(imageInput)
+//=========
+//Add product Form validation
+//==========
+
+function addProductValidate() {
+  console.log("Running validation");
+
+  let isValid=true
+  
+  document.querySelectorAll('.error-message').forEach(div=>{div.innerText=""})//clear any previous errors
+
+  //name validate
+  const name=document.getElementById('product_name').value.trim()
+  const brand=document.getElementById('brand').value.trim()
+  const description=document.getElementById('description').value.trim()
+  const price=parseFloat(document.getElementById('product_price').value.trim())
+  const quantity=document.getElementById('quantity').value.trim()
+  const category=document.getElementById('category').value
+
+  if(!name||name.length<2){
+    document.getElementById('error-name').innerText="Enter a valid product name"
+    isValid=false
+  }
+  //brand validate
+  
+  if(!brand||brand.length<2){
+    document.getElementById('error-brand').innerText="Enter a valid brand name"
+    isValid=false
+  }
+  // Price
+  
+  if (isNaN(price) || price <= 0) {
+    document.getElementById('error-price').innerText = 'Enter a valid price greater than 0';
+    isValid = false;
+  }
+  // Quantity
+  
+  if (isNaN(quantity)||quantity<0) {
+    document.getElementById('error-quantity').innerText = 'Enter a proper quantity';
+    isValid = false;
+  }
+
+  //description
+  if (!description || description.length < 10) {
+  document.getElementById('error-description').innerText = 'Enter a valid description (min 10 chars)';
+  isValid = false;
+}
+
+
+  // Category
+  if (!category) {
+    document.getElementById('error-category').innerText = 'Please select a category';
+    isValid = false;
+  }
+
+  // Images
+  if (croppedBlobs.length === 0) {
+    document.getElementById('error-image').innerText = 'Please upload at least one image';
+    isValid = false;
+  }
+console.log("Validation result:", isValid);
+
+  return isValid;
+}
+ //======================
+ // Add product Submit handler
+ //==========================
+
+  document.getElementById('addproductform').addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    if(!addProductValidate()){
+    Swal.fire({
+      icon: 'error',
+      title: 'Validation Failed',
+      text: 'Please correct the errors before submitting.',
+      confirmButtonText: 'OK'
+    });
+    return
+  }
+    console.log("Validation failed");
+
+    const formData = new FormData();
+
+    formData.append("name", document.getElementById("product_name").value);
+    formData.append("brand", document.getElementById("brand").value);
+    formData.append("description", document.getElementById("description").value);
+    formData.append("price", document.getElementById("product_price").value);
+    formData.append('quantity',document.getElementById("quantity").value)
+    formData.append("category", document.getElementById("category").value);
+
+    
+
+    // Add cropped images to formData
+    croppedBlobs.forEach((blob, index) => {
+      formData.append('images', blob, `cropped-${index}.jpeg`);
+    });
+console.log("submitting form")
+//add product fetch 
+    try {
+      console.log("response received")
+      const res = await fetch('/admin/products/add', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await res.json();
+      if (result.success) {
+  Swal.fire({
+    icon: 'success',
+    title: 'Success!',
+    text: 'Product added successfully.',
+    confirmButtonText: 'OK',
+  }).then(() => {
+    location.reload();
+  });
+} else {
+  if (result.priceError) {
+    document.getElementById('error-price').innerText = 'Enter a valid price';
+  } else {
+    Swal.fire({
+      icon: 'error',
+      title: 'Failed!',
+      text: 'Failed to add product.',
+      confirmButtonText: 'OK'
+    });
+  }
+}
+
+    } catch (error) {
+      console.error("Error submitting product:", error);
+    }
+  });
+})
+
+    </script>
+</body>
+
+
+
+</html>

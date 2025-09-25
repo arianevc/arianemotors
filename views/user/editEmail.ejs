@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ariane-Change Email</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="form-gap" style="padding-top: 70px;
+"></div>
+<div class="container">
+	<div class="row">
+		<div class="col-md-4 col-md-offset-4">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <div class="text-center">
+                  <h3><i class="fa fa-envelope fa-4x"></i></h3>
+                  <h2 class="text-center">Change Email</h2>
+                  <p>Enter your current email and new email here</p>
+                  <div class="panel-body">
+    
+                    <form id="register-form" role="form" autocomplete="off" class="form" method="post" action="/emailchange">
+    
+                      <div class="form-group gap-5">
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="glyphicon glyphicon-envelope color-blue"></i></span>
+                          <input id="existingEmail" name="existingEmail" class="form-control" type="text" readonly value="<%= user.email %>">
+                        </div>
+                        <div class="input-group">
+                          <span class="input-group-addon"><i class="glyphicon glyphicon-envelope color-blue"></i></span>
+                          <input id="newEmail" name="newEmail" placeholder="Enter your new email" class="form-control"  type="email">
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <input name="recover-submit" class="btn btn-lg btn btn-block"  style="background-color: #088178; color: #fff;" value="Change Email" type="submit">
+                      </div>
+                      
+                      <input type="hidden" class="hide" name="token" id="token" value=""> 
+                    </form>
+                  <% if(message) {%>
+                    <p style="color: red;"><%= message %></p>    
+                <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+	</div>
+  
+    <script>
+      Swal.fire({
+        icon:"success",
+        title:"An E-Mail is sent to the new email id",
+        text:"Login again using the new password",
+        confirmButtonText:"Go to Login"
+      }).then(()=>{
+        window.location.href='/login'
+      })
+      
+    </script>
+    
+</div>
+</body>
+</html>
