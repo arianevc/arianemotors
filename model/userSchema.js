@@ -3,11 +3,41 @@ const { ref } = require('process')
 // const { resetPassword } = require('../controller/controller.user')
 const { type } = require('os')
 const{Schema}=mongoose
+const addressSchema=new Schema({
+    name:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    street:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    city:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    pinCode:{
+        type:String,
+        required:true,
+        trim:true
+    },
+    state:{
+        type:String,
+        required:true,
+        trim:true
+    }
+})
 const userSchema= new Schema({
     name:{
         type:String,
         required:true,
     },
+    profileImage:{
+      type:String
+        },
     email:{
         type:String,
         required:true,
@@ -33,11 +63,7 @@ const userSchema= new Schema({
         default:null
     },
     wishList:[{type:mongoose.Schema.ObjectId,ref:'Product'}],
-    address:{
-        type:String,
-        // required:false,
-        default:null
-    },
+    addresses:[addressSchema],
     googleId:{
         type:String,
         unique:true,

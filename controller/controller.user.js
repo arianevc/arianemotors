@@ -163,39 +163,6 @@ const loadUserSignup=async(req,res)=>{
     }
 }
 
-
-
-//this is normal signup controller
-// const userSignupPost=async(req,res)=>
-//     {
-//     try {
-        
-//         console.log(req.body)
-//         const {name,email,phone,password}=req.body
-        
-//         const userExist=await User.findOne({email})
-//         if(userExist){
-//             console.log("user exists")
-            
-//             return res.render('user/login',{message:"Existing User"})
-//         }
-//         const hashedPassword=await bcrypt.hash(password,10)//to encrypt the password
-//         const newUser= new User({
-//             name,
-//             email,
-//             phone,
-//             password:hashedPassword,
-//         })
-//         await newUser.save()
-//         console.log('success')
-//        return res.redirect('/')
-//     } catch (error) {
-//         console.log("Error in saving user",error)
-//        res.status(500).send('Internal Server Error!!')
-//     }
-// }
-
-//this signup includes otp methods
 function generateOtp() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -329,7 +296,6 @@ const resendOtp=async (req,res)=>{
 
 const userloginPost=async (req,res)=>{
     try {
-        console.log(req.body)
         const {email,password}=req.body
         const user=await User.findOne({email:email})
         const passwordMatch=await bcrypt.compare(password,user.password)
@@ -352,7 +318,7 @@ const userloginPost=async (req,res)=>{
             return res.render('user/login',{success:false,message:"Invalid Password"})
         }
         req.session.user=user
-        console.log(req.session.user)
+        
          res.redirect('/')
         
     } catch (error) {
@@ -377,13 +343,57 @@ const loadAccountDetails=async(req,res)=>{
         if(!req.session.user){
            return res.redirect('/login')
         }
+        const user=await User.findById(req.session.user._id)
         const category=await Category.find()
-        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:req.session.user})
+        console.log(user.addresses)
+        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user})
     } catch (error) {
-        
+        console.log("error in loading ")
     }
 }
-
+const addAddress=async (req,res)=>{
+    try {
+        const user=await User.findById(req.session.user._id)
+        user.addresses.push(req.body)
+        await user.save()
+        console.log(user.addresses)
+        res.json({success:true,message:'Address added sucessfully!',addresses:user.addresses})
+    } catch (error) {
+        console.error("Error in adding address",error)
+        res.status(500).json({success:false,message:'Server Error'})
+    }
+}
+const getSingleAddress=async (req,res)=>{
+    try {
+        const user=await User.findById(req.session.user._id)
+        const address=user.addresses.id(req.params.addressId)
+        res.json({success:true,address:address})
+    } catch (error) {
+        res.status(500).json({success:false,message:"Server Error"})
+    }
+}
+const editAddress=async(req,res)=>{
+    try {
+        const user=await User.findById(req.session.user._id)
+        const address=user.addresses.id(req.params.addressId)
+        address.set(req.body)
+        await user.save()
+        res.json({success:true,message:"Address Updated!",addresses:user.addresses})
+    } catch (error) {
+        console.error("error in updating user address",error)
+    }
+}
+const deleteAddress=async(req,res)=>{
+    try {
+        const user=await User.findById(req.session.user._id)
+        user.addresses.pull(req.params.addressId)
+        await user.save()
+        res.json({success:true,message:"Address deleted!",addresses:user.addresses})
+    } catch (error) {
+        console.error("error in deleteing address",error)
+        res.status(500).json({success:false,message:"Server Error"})
+    }
+}
 const loadEditEmail=async(req,res)=>{
     try {
         res.render('user/editEmail',{user:req.session.user,message:"",success:""})
@@ -535,4 +545,4 @@ const removeFromWishlist= async (req,res)=>{
 }
 module.exports={LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,verifyOtp,resendOtp,
-    userloginPost,userLogout,loadAccountDetails,loadEditEmail,emailChange,loadShop,loadProductDetails,loadWishlist,addToWishlist,removeFromWishlist}
+    userloginPost,userLogout,loadAccountDetails,addAddress,editAddress,getSingleAddress,deleteAddress,loadEditEmail,emailChange,loadShop,loadProductDetails,loadWishlist,addToWishlist,removeFromWishlist}

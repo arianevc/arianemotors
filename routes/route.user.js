@@ -18,6 +18,12 @@ router.post('/logout',userController.userLogout)
 
 //user account
 router.get('/account',userController.loadAccountDetails)
+//user address management
+router.post('/account/addresses',userController.addAddress)
+//to get a single address among the addresses
+router.get('/account/addresses/:addressId',userController.getSingleAddress)
+router.put('/account/addresses/:addressId',userController.editAddress)
+router.delete('/account/addresses/:addressId',userController.deleteAddress)
 router.get('/edit/email',userController.loadEditEmail)
 router.post('/emailchange',userController.emailChange)
 
