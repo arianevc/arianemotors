@@ -51,10 +51,10 @@
                                     <div class="social-icons single-share">
                                         <ul class="text-grey-5 d-inline-block">
                                             <li><strong class="mr-10">Share this:</strong></li>
-                                            <li class="social-facebook"><a href="#"><img src="assets/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
-                                            <li class="social-twitter"> <a href="#"><img src="assets/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
-                                            <li class="social-instagram"><a href="#"><img src="assets/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
-                                            <li class="social-linkedin"><a href="#"><img src="assets/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
+                                            <li class="social-facebook"><a href="#"><img src="/assets/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
+                                            <li class="social-twitter"> <a href="#"><img src="/assets/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
+                                            <li class="social-instagram"><a href="#"><img src="/assets/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
+                                            <li class="social-linkedin"><a href="#"><img src="/assets/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -62,6 +62,7 @@
                                     <div class="detail-info">
                                         <h2 class="title-detail"><%= product.name %></h2>
                                         <div class="product-detail-rating">
+                                            <input type="text" name="isDeleted" id="isDeleted" value="<%=product.isDeleted  %>" hidden>
                                             <div class="pro-details-brand">
                                                 <span> Brands: <a href="#"><%= product.brand %></a></span>
                                             </div>
@@ -116,6 +117,8 @@
                                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                         <% if(product.quantity<1||product.quantity==undefined){ %>
                                             <div><h3 style="color: red;">Product is out of stock</h3></div>
+                                            <% }else if(product.isDeleted){ %>
+                                                <div><h3 style="color: red;">Product is currently unavailable</h3></div>
                                             <% }else{ %>
                                         <div class="detail-extralink">
                                             <div class="detail-qty border radius">
@@ -713,6 +716,25 @@
     <!-- Template  JS -->
     <script src="/frontend/assets/js/main.js?v=3.4"></script>
     <script src="/frontend/assets/js/shop.js?v=3.4"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded',function(){
+
+        const isDeleted=document.getElementById('isDeleted').value
+        console.log("isdeleted value: ",isDeleted)
+        if(isDeleted=='true'){
+            Swal.fire({
+        icon:"error",
+        title:"Sorry!",
+        text:"Product is currently unavailable",
+        confirmButtonText:"Go to Shop"
+      }).then(()=>{
+        window.location.href='/shop'
+      })
+        }
+    })
+</script>
+
 </body>
 
 </html>

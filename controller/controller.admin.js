@@ -48,9 +48,7 @@ const loadDashboard=async (req,res)=>{
 
 }
 const loadUserList=async(req,res)=>{
-if(!req.session.admin){
-        return res.redirect('/login')
-    }
+
     try {
         const search=req.query.search||""
     const page = parseInt(req.query.page) || 1;

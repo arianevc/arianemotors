@@ -5,6 +5,7 @@
                                 <div class="product-cart-wrap mb-30">
                                     <div class="product-img-action-wrap">
                                         <div class="product-img product-img-zoom">
+                                            
                                             <a href="/product/<%= product._id %>">
                                                 <img class="default-img" src="/<%= product.images[0]&&product.images?product.images[0]:'images/defaultImage.jpg' %>" alt="<%= product.name %>">
                                                 <img class="hover-img" src="/<%=product.images?product.images[1]:'images/defaultImage.jpg' %>" alt="<%= product.name %>">
@@ -26,6 +27,7 @@
                                             <a href="shop-grid-right.html"><%=product.category.name %></a>
                                         </div>
                                         <h2><a href="/product/<%= product._id %>"><%=product.brand%> <%= product.name %></a></h2>
+                                        
                                         <!-- <div class="rating-result" title="90%">
                                             <span>
                                                 <span>90%</span>

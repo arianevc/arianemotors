@@ -2,14 +2,14 @@ const express=require('express')
 const router=express.Router()
 const passport=require('passport')
 const userController=require('../controller/controller.user')
-const checkBlocked=require('../config/checkBlocked')
-const checkLoggedIn=require('../config/checkLoggedIn')
+const authenticate=require('../helpers/authenticate')
+
 
 //homepage
-router.get('/',checkBlocked,userController.LoadHomepage)
+router.get('/',authenticate.checkBlocked,userController.LoadHomepage)
 
 //login/signup routes
-router.get('/login',checkLoggedIn,userController.loadUserSignup)//middleware chaining
+router.get('/login',authenticate.checkLoggedIn,userController.loadUserLogin)//middleware chaining
 router.post('/signup',userController.userSignupPost)
 router.post('/verify-otp',userController.verifyOtp)
 router.post('/resend-otp',userController.resendOtp)
@@ -38,8 +38,8 @@ router.get('/resetpwd/:token',userController.loadResetPassword)
 router.post('/resetpwd/:token',userController.resetPasswordPost)
 
 //shop functions
-router.get('/shop',checkBlocked,userController.loadShop);
-router.get('/shop/sort',checkBlocked,userController.loadShop)
+router.get('/shop',authenticate.checkBlocked,userController.loadShop);
+router.get('/shop/sort',authenticate.checkBlocked,userController.loadShop)
 
 //product details
 router.get('/product/:id',userController.loadProductDetails)

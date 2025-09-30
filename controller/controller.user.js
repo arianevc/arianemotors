@@ -22,6 +22,7 @@ const LoadHomepage=async (req,res)=>{
     }
 }
 
+
 // const redirectIfLoggedIn = (req, res, next) => {
 //     if (req.session.user ) {
 //         return res.redirect('/');
@@ -34,18 +35,19 @@ const LoadHomepage=async (req,res)=>{
 // };
 
 const loadUserLogin=async (req,res)=>{
-    if (req.session.user){
-        return res.redirect('/')
-    }
-    if(req.session.admin){
-        return res.redirect('/admin')
-    }
+    // if (req.session.user){
+    //     return res.redirect('/')
+    // }
+    // if(req.session.admin){
+    //     return res.redirect('/admin')
+    // }
     const successMsg = req.session.signupSuccess;
     req.session.signupSuccess = null
     res.setHeader('Cache-Control', 'no-store');
      // or user login page
      res.setHeader("Pragma",'no-cache')
      res.setHeader("Expires",'0')
+     
      
     res.render('user/login', { message: "", success: successMsg});
 }

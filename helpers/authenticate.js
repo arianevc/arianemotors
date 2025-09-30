@@ -1,6 +1,14 @@
 const User=require('../model/userSchema')
 
-module.exports=async function (req,res,next) {
+const checkLoggedIn=async (req,res,next)=>{
+    if(req.session.user){
+        return res.redirect('/')
+    }else if(req.session.admin){
+        return res.redirect('/admin')
+    }   
+    next()
+}
+const checkBlocked=async(req,res,next)=> {
     try {
         if(!req.session.user){
             return next()
@@ -26,3 +34,4 @@ module.exports=async function (req,res,next) {
         next()
     }
 }
+module.exports={checkLoggedIn,checkBlocked}

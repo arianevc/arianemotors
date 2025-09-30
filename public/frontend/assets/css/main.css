@@ -879,7 +879,7 @@ h5.widget-title {
 button.submit, button[type='submit'] {
   font-size: 15px;
   font-weight: 500;
-  padding: 12px 40px;
+  /* padding: 12px 40px; */
   color: #ffffff;
   border: none;
   background-color: #088178;
@@ -887,9 +887,9 @@ button.submit, button[type='submit'] {
   border-radius: 5px;
 }
 
-button.submit:hover, button[type='submit']:hover {
+/* button.submit:hover, button[type='submit']:hover {
   background-color: #046963 !important;
-}
+} */
 
 .btn-brand:hover {
   background-color: #046963 !important;
