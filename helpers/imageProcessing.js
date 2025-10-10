@@ -22,4 +22,22 @@ async function processImages(files) {
     }
     return imagePaths
 }
-module.exports={processImages}
+async function processProfileImage(file) {
+    if(!file){
+        throw new Error('No file provided for processing')
+    }
+    const filename=`profile-${Date.now()}.jpeg`
+    const outputPath=path.join('public/uploads/profile_images',filename)
+
+    fs.mkdirSync(path.dirname(outputPath),{recursive:true})//to make sure directory exists
+
+    //Process the image buffer with sharp
+    await sharp(file.buffer)
+    .resize(250,250,{
+        fit:'cover',
+    })
+    .jpeg({quality:90})
+    .toFile(outputPath)
+    return `uploads/profile_images/${filename}`
+}
+module.exports={processImages,processProfileImage}

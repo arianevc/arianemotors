@@ -123,11 +123,11 @@
                                         <div class="detail-extralink">
                                             <div class="detail-qty border radius">
                                                 <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                                <span class="qty-val">1</span>
+                                                <span class="qty-val" id="qtyValue">1</span>
                                                 <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
                                             </div>
                                             <div class="product-extra-link2">
-                                                <button type="submit" class="button button-add-to-cart">Add to cart</button>
+                                                <button type="button" class="button button-add-to-cart" id="addToCartBtn" data-product-id="<%= product._id %>">Add to cart</button>
                                                 <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
                                                 <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
                                             </div>
@@ -727,11 +727,41 @@
         icon:"error",
         title:"Sorry!",
         text:"Product is currently unavailable",
-        confirmButtonText:"Go to Shop"
       }).then(()=>{
-        window.location.href='/shop'
+        window.location.reload()
       })
         }
+        const cartBtn=document.getElementById('addToCartBtn')
+        const qtySpan = document.getElementById('qtyValue');
+        const qtyUp = document.querySelector('.qty-up');
+        const qtyDown = document.querySelector('.qty-down');
+       function getCurrentQuantity() {
+          return parseInt(qtySpan.textContent)
+        }
+         qtyUp.addEventListener('click', function(e) {
+         e.preventDefault();
+        let currentQty = parseInt(qtySpan.textContent);
+         qtySpan.textContent = currentQty + 1;  
+    });
+
+qtyDown.addEventListener('click', function(e) {
+    e.preventDefault();
+    let currentQty = parseInt(qtySpan.textContent);
+    if (currentQty > 1) {
+        qtySpan.textContent = currentQty - 1;
+        
+    }
+  });
+
+        const productId=cartBtn.dataset.productId
+        const qtyValue=getCurrentQuantity()
+        cartBtn.addEventListener('click',function(e){
+            console.log("button clicked");
+            console.log("qty value is: ",qtyValue)
+            console.log("product id is: ",productId);
+            
+            
+        })
     })
 </script>
 

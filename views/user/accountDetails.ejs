@@ -206,23 +206,52 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="modal fade" id="editProfileModal" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="editProfileModalTitle">Edit Account</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form id="editProfileForm" action="/account/update">
+                                                        <div class="mb-3">
+                                                            <label for="name" class="form-label">Full Name</label>
+                                                            <input type="text" name="name" id="username">
+                                                            <p id="name-error" style="color: red;"></p>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="phone" class="form-label">Phone Number</label>
+                                                            <input type="text" name="phone" id="userphone">
+                                                            <p id="phone-error" style="color: red;"></p>
+                                                        </div>
+                                                        
+                                                    </form>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary" form="editProfileForm" id="editProfileSub">Save Changes</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="tab-pane fade" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
                                         <div class="card">
                                             <div class="card-header">
                                                 <h5>Account Details</h5>
                                             </div>
                                             <div class="card-body">
-                                                <form method="post" name="enq">
+                                                <form method="post" name="enq" id="userDetailsForm">
                                                     <div class="row">
                                                         <div class="user-img-container d-flex justify-content-center">
-                                                            <img src="/images/defaultImage.jpg" id="user-image" alt="user_image" style="border-radius: 50%;" width="150px" height="150px">
+                                                            <img src="<%= user.profileImage?user.profileImage:'/images/defaultImage.jpg' %>" id="user-image" alt="user_image" style="border-radius: 50%;" width="150px" height="150px">
                                                         </div>
                                                         <div class="edit-img-container d-flex justify-content-center">
-                                                            <a href="#" class="edit-img-link">Edit Image</a>
+                                                            <a href="#" id="img-edit-btn" class="edit-img-link">Edit Image <i class="fa fa-edit"></i></a>
                                                         </div>
                                                         <div class="form-group col-md-4">
                                                             <label>Name</label>
-                                                            <input required="" class="form-control square" name="name" type="text" readonly value="<%= user.name%>">
+                                                            <input required="" id="displayName" class="form-control square" name="name" type="text" readonly value="<%= user.name%>">
                                                         </div>
                                                         
                                                         <div class="form-group col-md-4">
@@ -232,11 +261,11 @@
                                                         </div>
                                                         <div class="form-group col-md-4">
                                                             <label>Phone</label>
-                                                            <input required="" class="form-control square" name="phone" type="text" readonly value="<%= user.phone %>">
+                                                            <input required="" id="displayPhone" class="form-control square" name="phone" type="text" readonly value="<%= user.phone %>">
                                                         </div>
                                                        
                                                         <div class="col-md-12">
-                                                            <button type="submit" class="btn btn-fill-out submit" name="submit" value="Submit">Edit</button>
+                                                            <button type="button" class="btn btn-secondary btn-sm edit-profile-btn" data-account-id="<%=user._id%>" data-bs-toggle="modal" id="editProfileBtn" data-bs-target="#editProfileModal">Edit User Details</button>
                                                         </div>
                                                     </div>
                                                 </form>
@@ -391,6 +420,116 @@
                 renderAddresses(result.addresses)
                 addressModal.hide();
             }
+        })
+
+        //edit form calling and populate
+        const editbtn=document.getElementById('editProfileBtn')
+        const editModal=new bootstrap.Modal(document.getElementById('editProfileModal'))//to manipulate the modal
+        const userId=editbtn.dataset.accountId
+        editbtn.addEventListener('click',async()=>{
+            console.log("editbtn clicked")
+            // console.log("userId :",userId)
+            const response=await fetch(`/account/editProfile/${userId}`,{
+                method:'GET',
+                headers:{'Content-Type':'application/json'},
+            })
+            const result=await response.json()
+        const username=document.getElementById('username')
+        const userphone=document.getElementById('userphone')
+        userphone.value=result.phone
+        username.value=result.name
+        })
+        const editform=document.getElementById('editProfileForm')
+
+       editform.addEventListener('submit',function(e){
+        e.preventDefault()
+            const formData=new FormData(editform)
+            const name=formData.get('name')
+            const phone=formData.get('phone')
+            let isValid=true
+            const phoneError=document.getElementById('phone-error')
+            const nameError=document.getElementById('name-error')
+
+            if(name.trim()===""){
+                    nameError.textContent="*Please enter a valid name"
+                    isValid=false
+            }
+            const phoneRegex=/^\d{10}$/
+            if(!phoneRegex.test(phone)){
+                phoneError.textContent="*Please enter a valid phone number"
+                isValid=false
+            }
+            if(isValid){
+                const data=Object.fromEntries(formData.entries())
+                fetch(editform.action,{
+                    method:"PUT",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify(data)
+                }).then(response=>response.json())
+                .then(result=>{
+                    if(result.success){
+                        Swal.fire({
+                            icon:'success',
+                            title:'Success',
+                            text:result.message,
+                            timer:1000,
+                            showConfirmButton:false
+                        }).then(()=>{
+                            editModal.hide()//close the modal after swal
+                            document.getElementById('displayName').value=data.name
+                            document.getElementById('displayPhone').value=data.phone
+                        })
+                    }else{
+                        Swal.fire({
+                            icon:'error',
+                            title:'Error',
+                            text:result.message
+                        })
+                    }
+                })
+                .catch(error=>{
+                    console.log("error in editing",error)
+                    Swal.fire({
+                            icon:'error',
+                            title:'Server Error',
+                            text:error.message
+                        })
+                })
+            }else{
+                e.preventDefault()
+            }
+                 
+               
+        })
+        //image handling
+        document.getElementById('img-edit-btn').addEventListener('click',function(e){
+            e.preventDefault()
+            Swal.fire({
+                title:'Edit Image',
+                icon:'question',
+                text:'Would you like to remove your profile picture or change it',
+                showCancelButton:true,
+                confirmButtonText:'Change Image',
+                cancelButtonText:'Remove Image',
+                reverseButtons:true
+            }).then((result)=>{
+                if(result.isConfirmed){
+                    window.location.href='/account/change-image'
+                }else if(result.dismiss===Swal.DismissReason.cancel){
+                    fetch('/account/change-image',{
+                        method:'DELETE',
+                        headers:{"Content-Type":"application/json"}
+                    }).then(res=>res.json())
+                    .then(data=>{
+                        if(data.success){
+                            Swal.fire('Removed Image!','Your image has been removed','success')
+                            .then(()=>location.reload());
+                        }else{
+                            Swal.fire('Error',data.message||'Could not remove image','error')
+                        }
+                    })
+                }
+            })
         })
     })
     </script>

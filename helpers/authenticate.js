@@ -8,6 +8,12 @@ const checkLoggedIn=async (req,res,next)=>{
     }   
     next()
 }
+const checkUserSession=async(req,res,next)=>{
+    if(!req.session.user){
+        return res.redirect('/login')
+    }
+    next()
+}
 const checkBlocked=async(req,res,next)=> {
     try {
         if(!req.session.user){
@@ -34,4 +40,4 @@ const checkBlocked=async(req,res,next)=> {
         next()
     }
 }
-module.exports={checkLoggedIn,checkBlocked}
+module.exports={checkLoggedIn,checkUserSession,checkBlocked}

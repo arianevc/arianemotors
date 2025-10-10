@@ -7,8 +7,10 @@ const nodemailer=require('nodemailer')
 const User=require('../model/userSchema')
 const Category=require('../model/categorySchema')
 const Product=require('../model/productSchema')
+const {processImages, processProfileImage}=require('../helpers/imageProcessing')
 const { configDotenv } = require('dotenv')
 const { search } = require('../routes/route.user')
+const { error } = require('console')
 
 
 const LoadHomepage=async (req,res)=>{
@@ -231,19 +233,30 @@ const userSignupPost=async (req,res)=>{
         res.redirect('/login')
     }
 }
-
+const loadVerfiyOtp=async(req,res)=>{
+    try {
+        if(!req.session.otpData){
+            return res.redirect('/')
+        }
+        return res.render('user/verify-otp',{email:req.session.otpData.email})
+    } catch (error) {
+        console.error("error in rendering the otp verify: ",error);
+        res.status(500).json("Server Error")
+    }
+}
 const verifyOtp= async (req,res)=>{
-try {
+try { 
     const {otp}=req.body
     console.log("User Entered otp: ",otp)
     if(!req.session.otpData){//if no otp is stored in session
        return res.status(400).json({success:false,message:"OTP not found"})
     }
-    const{otp:storedOtp,expiresAt}=req.session.otpData
+    const{otp:storedOtp,expiresAt,email}=req.session.otpData
     if(Date.now()>expiresAt){
        return res.status(400).json({success:false,message:"OTP is expired"})
     }
     if(otp===storedOtp){
+        if(req.session.userData){
         const user=req.session.userData
         const hashedPassword=await bcrypt.hash(user.password,10)
         const saveUserData=new User({
@@ -254,9 +267,20 @@ try {
         })
         await saveUserData.save()
         req.session.userData = null;
+    }else if(req.session.user){
+       await User.findByIdAndUpdate(req.session.user._id,{email:email})
+        
+    }
+      req.session.signupSuccess = "Verification successful. Please log in.";
       req.session.otpData= null;
-       req.session.signupSuccess = "Signup successful. Please log in.";
-res.json({ success: true, redirectUrl: "/login" });
+      req.session.destroy((err)=>{
+        if(err){
+            console.error("error in destroying session: ",err);
+            return res.status(500).json("Server Error")
+        }
+            
+        })
+       return res.json({ success: true, redirectUrl: "/login" });
 
     }
     else{
@@ -300,10 +324,10 @@ const userloginPost=async (req,res)=>{
     try {
         const {email,password}=req.body
         const user=await User.findOne({email:email})
-        const passwordMatch=await bcrypt.compare(password,user.password)
         if(!user){
             return res.render('user/login',{success:false,message:"User Not Found"})
         }
+        const passwordMatch=await bcrypt.compare(password,user.password)
         if(user.isAdmin){
             {
                 if(!passwordMatch){
@@ -347,18 +371,45 @@ const loadAccountDetails=async(req,res)=>{
         }
         const user=await User.findById(req.session.user._id)
         const category=await Category.find()
-        console.log(user.addresses)
+        // console.log(user.addresses)
         res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user})
     } catch (error) {
         console.log("error in loading ")
     }
+}
+
+const editProfile=async(req,res)=>{
+    try {
+        const userId=req.params.userId
+        // console.log(userId)
+        const user=await User.findById(userId)
+        res.json({name:user.name,phone:user.phone})
+    } catch (error) {
+        console.log("error in editing profile",error)
+    }
+}
+const editUserPost=async(req,res)=>{
+    try {
+        // console.log(req.body)
+        const {name,phone}=req.body
+        if(!name||!phone){
+           return res.status(400).json({success:false,message:"Name and phone are required"})
+        }
+        const user=await User.findByIdAndUpdate(req.session.user._id,{name:name,phone:phone})
+        
+        res.json({success:true,message:"User Profile updated successfully"})
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({success:false,message:"Server Error"})
+    }
+    
 }
 const addAddress=async (req,res)=>{
     try {
         const user=await User.findById(req.session.user._id)
         user.addresses.push(req.body)
         await user.save()
-        console.log(user.addresses)
+        // console.log(user.addresses)
         res.json({success:true,message:'Address added sucessfully!',addresses:user.addresses})
     } catch (error) {
         console.error("Error in adding address",error)
@@ -398,24 +449,83 @@ const deleteAddress=async(req,res)=>{
 }
 const loadEditEmail=async(req,res)=>{
     try {
+         if(!req.session.user){
+            return res.redirect('/login')
+        }
         res.render('user/editEmail',{user:req.session.user,message:"",success:""})
     } catch (error) {
         console.error("Error in loading edit mail page",error)
     }
 }
 
-const emailChange=async(req,res)=>{
+const emailVerify=async(req,res)=>{
     try {
         const {existingEmail,newEmail}=req.body
         const emailRegex=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
         if(existingEmail==newEmail){
-            return res.render('user/editEmail',{user:req.session.user,message:"New email cannot be existing email"})
+            return res.json({success:false,message:"Both emails cannot be same"})
         }else if(!emailRegex.test(newEmail)){
-            return res.render('user/editEmail',{user:req.session.user,message:"Please enter a valid email id"})
+            return res.json({success:false,message:"Please enter a valid email id"})
         }
-        const user=User.findById(req.session.user._id)
+        const otp=generateOtp()
+        const emailSent=await verifyEmail(newEmail,otp)
+        if(!emailSent){
+            return res.json('email-error')
+        }
+        req.session.otpData={
+            otp:otp,
+            expiresAt:Date.now()+1*60*1000,
+            email:newEmail
+        }
+        console.log(req.session.otpData)
+        console.log("OTP Sent: ",otp)
+        return res.json({success:true,message:"An OTP is sent to the new Email.Please check your email for the OTP ",redirectUrl:'/verify-otp'})
+        // await User.findByIdAndUpdate(req.session.user._id,{email:newEmail})
     } catch (error) {
         console.error("error in reseting the email",error)
+        res.status(500).json("Server Error")
+    }
+}
+const loadImageEditer=async(req,res)=>{
+    try {
+        res.render('user/change-image')
+    } catch (error) {
+        console.error("error in rendering image editer: ",error);
+        res.status(500).json("Server Error")
+    }
+}
+const changeImagePost=async(req,res)=>{
+try {
+    if(!req.file){
+        return res.status(400).json({success:false,message:"No file was uploaded"})
+    }
+    const userId=req.session.user._id
+    //this takes the file buffer,resizes/compresses it, saves it and returns the path
+    const imagePath=await processProfileImage(req.file)
+    //update the user's record in the database
+    await User.findByIdAndUpdate(userId,{profileImage:'/'+imagePath.replace(/\\/g,'/')})
+    res.json({
+        success:true,
+        message:"Profile image uploaded successfully!",
+        newImagePath:'/'+imagePath.replace(/\\/g,'/')
+    })
+} catch (error) {
+    console.error("Error uploading profile image: ",error);
+    res.status(500).json({success:false,message:"Server error during upload"})
+    
+}
+}
+const removeImage=async(req,res)=>{
+    try {
+        const userId=req.session.user._id
+        if(!userId){
+            return res.redirect('/login')
+        }
+        await User.findByIdAndUpdate(userId,{profileImage:""})
+        res.json({success:true,message:"Profile Image removed successfully"})
+    } catch (error) {
+        console.error("error in removing the image: ",error);
+        res.status(500).json({success:false,message:"Server error during removal of image"})
     }
 }
 const addProductToCart=async(req,res)=>{
@@ -546,5 +656,7 @@ const removeFromWishlist= async (req,res)=>{
     }
 }
 module.exports={LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
-    loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,verifyOtp,resendOtp,
-    userloginPost,userLogout,loadAccountDetails,addAddress,editAddress,getSingleAddress,deleteAddress,loadEditEmail,emailChange,loadShop,loadProductDetails,loadWishlist,addToWishlist,removeFromWishlist}
+    loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
+    userloginPost,userLogout,loadAccountDetails,editProfile,editUserPost,addAddress,editAddress,
+    getSingleAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,removeImage,loadShop,loadProductDetails,
+    loadWishlist,addToWishlist,removeFromWishlist}

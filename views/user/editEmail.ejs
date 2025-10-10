@@ -23,20 +23,22 @@
                   <p>Enter your current email and new email here</p>
                   <div class="panel-body">
     
-                    <form id="register-form" role="form" autocomplete="off" class="form" method="post" action="/emailchange">
+                    <form id="email-form" role="form" autocomplete="on" class="form" method="post" action="/edit/email">
     
                       <div class="form-group gap-5">
                         <div class="input-group">
                           <span class="input-group-addon"><i class="glyphicon glyphicon-envelope color-blue"></i></span>
                           <input id="existingEmail" name="existingEmail" class="form-control" type="text" readonly value="<%= user.email %>">
                         </div>
+                        <br>
                         <div class="input-group">
                           <span class="input-group-addon"><i class="glyphicon glyphicon-envelope color-blue"></i></span>
                           <input id="newEmail" name="newEmail" placeholder="Enter your new email" class="form-control"  type="email">
                         </div>
                       </div>
+                      <p id="email-error" style="color: red;"></p>
                       <div class="form-group">
-                        <input name="recover-submit" class="btn btn-lg btn btn-block"  style="background-color: #088178; color: #fff;" value="Change Email" type="submit">
+                        <button name="recover-submit" class="btn btn-lg btn btn-block" id="submitBtn"  style="background-color: #088178; color: #fff;" type="submit">Verify Email</button>
                       </div>
                       
                       <input type="hidden" class="hide" name="token" id="token" value=""> 
@@ -51,18 +53,67 @@
           </div>
 	</div>
   
-    <script>
-      Swal.fire({
-        icon:"success",
-        title:"An E-Mail is sent to the new email id",
-        text:"Login again using the new password",
-        confirmButtonText:"Go to Login"
-      }).then(()=>{
-        window.location.href='/login'
-      })
-      
-    </script>
     
 </div>
+    <script>
+      const emailForm=document.getElementById('email-form')
+      
+      emailForm.addEventListener('submit',async function(e){
+        e.preventDefault()
+        const emailError=document.getElementById('email-error')
+      let isValid=true
+        const newEmail=document.getElementById('newEmail').value.trim()
+        const oldEmail=document.getElementById('existingEmail').value.trim()
+        const formData=new FormData(emailForm)
+        if(newEmail==""){
+          emailError.textContent="*Please provide an Email ID"
+          isValid=false
+        }
+        if(newEmail==oldEmail){
+          emailError.textContent="*New email and existing email cannot be same"
+          isValid=false
+        }
+        const data=Object.fromEntries(formData.entries())
+        if(isValid){
+          const response=await fetch(emailForm.action,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(data)
+          })
+          const result=await response.json()
+          
+          if(result.success){
+            Swal.fire({
+              icon:'success',
+              title:"Success",
+              text:result.message,
+              timer:3000
+            }).then(()=>{
+              window.location.href=result.redirectUrl
+            })
+          }else{
+            Swal.fire({
+              icon:"error",
+              title:"Error",
+              text:result.message
+            })
+          }
+          
+        }else{
+          e.preventDefault()
+        }
+      })
+      
+
+      // Swal.fire({
+      //   icon:"success",
+      //   title:"An E-Mail is sent to the new email id",
+      //   text:"Login again using the new password",
+      //   confirmButtonText:"Go to Login"
+      // }).then(()=>{
+      //   window.location.href='/login'
+      // })
+      
+    </script>
 </body>
 </html>

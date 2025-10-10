@@ -2,7 +2,7 @@ const path=require('path')
 const fs=require('fs')
 const Product=require('../model/productSchema')
 const Category=require('../model/categorySchema')
-const {processImages}=require('../controller/imageProcessing')
+const {processImages}=require('../helpers/imageProcessing')
 
 const loadProducts=async(req,res)=>{
   if(!req.session.admin){
