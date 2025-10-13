@@ -128,8 +128,8 @@
                                             </div>
                                             <div class="product-extra-link2">
                                                 <button type="button" class="button button-add-to-cart" id="addToCartBtn" data-product-id="<%= product._id %>">Add to cart</button>
-                                                <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
-                                                <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
+                                                <a aria-label="Add To Wishlist" id="wishlistAddBtn" class="action-btn hover-up" data-product-id="<%= product._id %>"><i class="fi-rs-heart"></i></a>
+                                                <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
                                             </div>
                                         </div>
                                         <% } %>
@@ -719,7 +719,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded',function(){
-
         const isDeleted=document.getElementById('isDeleted').value
         console.log("isdeleted value: ",isDeleted)
         if(isDeleted=='true'){
@@ -728,38 +727,116 @@
         title:"Sorry!",
         text:"Product is currently unavailable",
       }).then(()=>{
-        window.location.reload()
+        window.location.href='/shop'
       })
         }
         const cartBtn=document.getElementById('addToCartBtn')
         const qtySpan = document.getElementById('qtyValue');
         const qtyUp = document.querySelector('.qty-up');
         const qtyDown = document.querySelector('.qty-down');
-       function getCurrentQuantity() {
-          return parseInt(qtySpan.textContent)
-        }
+        let cartqtyvalue=parseInt(qtySpan.textContent)
          qtyUp.addEventListener('click', function(e) {
          e.preventDefault();
         let currentQty = parseInt(qtySpan.textContent);
-         qtySpan.textContent = currentQty + 1;  
+         qtySpan.textContent = currentQty + 1;
+        cartqtyvalue=parseInt(qtySpan.textContent ) 
     });
 
-qtyDown.addEventListener('click', function(e) {
-    e.preventDefault();
-    let currentQty = parseInt(qtySpan.textContent);
+       qtyDown.addEventListener('click', function(e) {
+        e.preventDefault();
+         let currentQty = parseInt(qtySpan.textContent);
     if (currentQty > 1) {
         qtySpan.textContent = currentQty - 1;
-        
+        cartqtyvalue=parseInt(qtySpan.textContent)  
     }
   });
-
+  //cart functions
         const productId=cartBtn.dataset.productId
-        const qtyValue=getCurrentQuantity()
         cartBtn.addEventListener('click',function(e){
-            console.log("button clicked");
-            console.log("qty value is: ",qtyValue)
-            console.log("product id is: ",productId);
+            e.preventDefault()
+            // console.log("button clicked");
+            // console.log("qty value is: ",cartqtyvalue)
+            // console.log("product id is: ",productId);
+            const cartDetails={
+                productId:productId,
+                quantity:cartqtyvalue,
+            }
+            fetch('/cart/add',{
+                method:"POST",
+                headers:{"Content-Type":'application/json'},
+                body:JSON.stringify(cartDetails)
+            }).then(response=>response.json())
+            .then(result=>{
+                if(result.success){
+                     Swal.fire({
+                        icon:'success',
+                        title:'Product added to cart',
+                        text:result.message
+                    })
+                }else if(result.redirectUrl){
+                    console.log("link: ",result.redirectUrl);
+                    Swal.fire({
+                        icon:'error',
+                        title:'Error',
+                        text:result.message,
+                        confirmButtonText:'Ok',
+                        showCancelButton:true
+                    }).then((swalResult)=>{
+                        if(swalResult.isConfirmed){
+                            window.location.href=result.redirectUrl
+                        }
+                    })
+                }else{
+                    Swal.fire("Error", result.message || "Could not add product to cart.", "error")
+                }
+            })
             
+            
+        })
+        //wishlist functions
+        const wishlistBtn=document.getElementById('wishlistAddBtn')
+        const productIdwl=wishlistBtn.dataset.productId
+        const heartIcon=wishlistBtn.querySelector('i')
+        document.addEventListener('click',function(e){
+            // console.log("button clicked",productIdwl);
+            fetch(`/wishlist/toggle/${productIdwl}`,{
+                method:'POST'
+            }).then(response=>response.json())
+            .then(result=>{
+                if(result.success){
+                    Swal.fire({
+                        icon:'success',
+                        title:result.message,
+                        timer:1500,
+                        showConfirmButton:false
+                    })
+                    if(result.removed){
+                        heartIcon.classList.remove('fa-heart')
+                        heartIcon.classList.add('fa-heart-o')
+                        heartIcon.style.color=""
+                    }else{
+                        heartIcon.classList.remove('fa-heart-o')
+                        heartIcon.classList.add('fa-heart')
+                        heartIcon.style.color="red"
+                    }
+                }else{
+                    Swal.fire({
+                        icon:'error',
+                        title:result.message||"Please login to use the wishlist",
+                        timer:1500,
+                        showConfirmButton:false
+                    })
+                }
+            }).catch(err=>{
+                console.log("error in wishlist: ",err);
+                Swal.fire({
+                        icon:'error',
+                        title:result.message,
+                        timer:1500,
+                        showConfirmButton:false
+                    })
+                
+            })
             
         })
     })

@@ -53,8 +53,11 @@ router.get('/shop/sort',authenticate.checkBlocked,userController.loadShop)
 router.get('/product/:id',userController.loadProductDetails)
 //wishlist functions
 router.get('/wishlist',userController.loadWishlist)
-router.post('/wishlist/add/:productId',userController.addToWishlist)
-router.post('/wishlist/remove/:productId',userController.removeFromWishlist)
+router.post('/wishlist/toggle/:productId',userController.toggleWishlist)
+
+//cart management
+router.post('/cart/add',userController.addProductToCart)
+router.get('/cart',userController.loadCart)
 
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
 router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/login'}),(req,res)=>{

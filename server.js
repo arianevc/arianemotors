@@ -11,6 +11,7 @@ const passport=require('./config/passport')//for google auths
 const userRoutes=require('./routes/route.user')
 const adminRoutes=require('./routes/route.admin')
 dotenv.config()
+app.use(nocache())
 
 app.use( express.static(path.join(__dirname, 'public')));
 // app.use(nocache)
@@ -18,12 +19,11 @@ app.use((req,res,next)=>{
     res.set('Cache-Contol','no-store')
     next()
 })
-app
+
 // function noCache(req, res, next) {
 //   res.set('Cache-Control', 'no-store');
 //   next();
 // }
-// app.use(noCache)
 
 connectDB();
 // User session middleware

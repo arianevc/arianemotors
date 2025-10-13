@@ -9,10 +9,11 @@ const checkLoggedIn=async (req,res,next)=>{
     next()
 }
 const checkUserSession=async(req,res,next)=>{
-    if(!req.session.user){
-        return res.redirect('/login')
+    if(req.session.user){
+        next()
+    }else{
+        res.redirect('/login')
     }
-    next()
 }
 const checkBlocked=async(req,res,next)=> {
     try {

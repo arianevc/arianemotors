@@ -30,6 +30,19 @@ const addressSchema=new Schema({
         trim:true
     }
 })
+const cartItemSchema = new mongoose.Schema({
+    productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product', // This creates a reference to your Product model
+        required: true
+    },
+    quantity: {
+        type: Number,
+        required: true,
+        min: [1, 'Quantity cannot be less than 1.'],
+        default: 1
+    }
+});
 const userSchema= new Schema({
     name:{
         type:String,
@@ -62,7 +75,10 @@ const userSchema= new Schema({
         type:Date,
         default:null
     },
-    wishList:[{type:mongoose.Schema.ObjectId,ref:'Product'}],
+    wishList:[{
+        type:mongoose.Schema.ObjectId,
+        ref:'Product'
+    }],
     addresses:[addressSchema],
     googleId:{
         type:String,
@@ -78,10 +94,7 @@ const userSchema= new Schema({
         type:Boolean,
         default:false
     },
-    cart:[{
-        type:Schema.Types.ObjectId,
-        ref:"Cart"
-    }],
+    cart:[cartItemSchema],
     wallet:{
         type:Number,
         default:0

@@ -344,7 +344,7 @@ const userloginPost=async (req,res)=>{
             return res.render('user/login',{success:false,message:"Invalid Password"})
         }
         req.session.user=user
-        
+    
          res.redirect('/')
         
     } catch (error) {
@@ -530,15 +530,36 @@ const removeImage=async(req,res)=>{
 }
 const addProductToCart=async(req,res)=>{
     try {
-        if(req.session.user){
-            res.redirect('/login')
-        }else{
-            const {productId}=req.body
-            req
+        if(!req.session.user){
+           return res.status(401).json({success:false,message:"Please sign in to add to cart",redirectUrl:'/login'})
         }
-
+        // console.log(req.body)
+        const{productId,quantity}=req.body
+        const qtynum=parseInt(quantity)
+        const userId=req.session.user._id
+        const user=await User.findById(userId)
+        const product=await Product.findById(productId)
+        if(!product||product.isDeleted){
+            return res.status(404).json({success:false,message:"Product is unavailable",redirectUrl:'/shop'})
+        }
+        if(!user){
+           return res.status(404).json({success:false,message:"User not found"})
+        }
+        if(user.cart.length>=5){
+            return res.status(401).json({success:false,message:"Only 5 items allowed in cart"})
+        }
+        
+        const existingProduct=user.cart.find(item=>item.productId.toString()==productId)
+        if(existingProduct){
+            existingProduct.quantity+=qtynum
+        }else{
+            user.cart.push({productId,quantity:qtynum})
+        }
+        await user.save()
+        return res.status(200).json({success:true,message:"Product added to cart successfully"})
     } catch (error) {
-        console.log(error)
+        console.log("Error in adding product to cart",error)
+        res.status(500).json({success:false,message:"Server error occured while adding to cart"})
     }
 }
 
@@ -608,12 +629,32 @@ const loadProductDetails=async(req,res)=>{
         res.status(500).send("Server Error")
     }
 }
-
+const loadCart=async(req,res)=>{
+    try {
+        if(!req.session.user){
+            return res.redirect('/login')
+        }
+        const search=req.query.search||""
+        const categoryId=req.query.category||""
+        const categories=await Category.find()
+        const user=await User.findById(req.session.user._id).populate({
+            path:'cart.productId',
+            model:'Product'
+        })
+        res.render('user/cart',{categoryList:categories,categoryId,search,cart:user.cart})
+    } catch (error) {
+        console.error("error in displaying the cart: ",error);
+        res.status(500).send("Server Error")
+    }
+}
 const loadWishlist=async (req,res)=>{
     try {
         if(req.session.user){
+            const search=req.query.search||""
+        const categoryId=req.query.category||""
+        const categories=await Category.find()
         const user=await User.findById(req.session.user._id).populate('wishList')
-        res.render('user/wishList',{wishList:user.wishList})
+        res.render('user/wishList',{wishList:user.wishList,categoryList:categories,categoryId,search})
         }else{
             return res.redirect('/login')
         }
@@ -623,40 +664,34 @@ const loadWishlist=async (req,res)=>{
     }
 }
 
-const addToWishlist=async (req,res)=>{
+const toggleWishlist=async (req,res)=>{
     try {
+        
         const userId=req.session.user._id
         const productId=req.params.productId
 
         const user=await User.findById(userId)
 
-        if(!user.wishList.includes(productId)){
-            user.wishList.push(productId)
-            await user.save()
+        const productIndex=user.wishList.indexOf(productId)
+        if(productIndex>-1){
+            //if product in wishlist then remove
+            await user.updateOne({_id:userId},{$pull:{wishList:productId}})
+            res.status(200).json({success:true,removed:true,message:"Product removed from wishlist"})
+        }else{
+            //add product to wishlist
+            await user.updateOne({_id:userId},{$addToSet:{wishList:productId}})
+            res.status(200).json({success:true,removed:false,message:"Product added from wishlist"})
         }
-        res.json({success:true,message:"Product added to wishlist"})
     } catch (error) {
-        console.error("Error while adding to the wishlist",error)
+        console.error("Error while toggling to the wishlist",error)
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
 
-const removeFromWishlist= async (req,res)=>{
-    try {
-        const userId=req.session.user._id
-        const Product=req.params.productId
 
-        await User.findByIdAndUpdate(userId,{$pull:{wishList:productId}})
-
-        res.json({success:true,message:"Product removed from wish List"})
-        
-    } catch (error) {
-     console.error("Error in removing from wishList",error)
-     res.status(500).json({success:false,message:"Server Error in wishlist"})  
-    }
-}
 module.exports={LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
     userloginPost,userLogout,loadAccountDetails,editProfile,editUserPost,addAddress,editAddress,
-    getSingleAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,removeImage,loadShop,loadProductDetails,
-    loadWishlist,addToWishlist,removeFromWishlist}
+    getSingleAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,removeImage,addProductToCart
+    ,loadShop,loadProductDetails,loadCart,
+    loadWishlist,toggleWishlist}
