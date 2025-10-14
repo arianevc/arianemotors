@@ -17,7 +17,6 @@
             </div>
             <div class="card mb-4">
                 <header class="card-header">
-                    <h4 class="card-title">List of users</h4>
                     <div class="row align-items-center">
                         
                         <div class="col-md-3 col-6">
@@ -67,7 +66,7 @@
                                 
                                         <td>
                                             <form id="blockForm-<%= user._id %>" action="/admin/users/<%= user._id %>/block" method="post">
-                                                <button class="block-user-btn" data-user-id="<%= user.id %>" data-username="<%= user.name %>" type="button" style="background-color: <%=user.isBlocked? 'green':'red' %>;color:white"><%= user.isBlocked? "Unblock":"Block" %>
+                                                <button class="block-user-btn btn <%=user.isBlocked?"btn-success":"btn-danger" %>" data-user-id="<%= user.id %>" data-username="<%= user.name %>" type="button" ><%= user.isBlocked? "Unblock":"Block" %>
                                                 </button>
                                             </form>
                                         </td>
@@ -84,16 +83,28 @@
                 </div>
             </div>
             <div class="pagination-area mt-30 mb-50">
-                <nav aria-label="Page navigation example">
-                    <ul class="pagination justify-content-start">
-                        <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                        <li class="page-item"><a class="page-link" href="#">02</a></li>
-                        <li class="page-item"><a class="page-link" href="#">03</a></li>
-                        <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                        <li class="page-item"><a class="page-link" href="#">16</a></li>
-                        <li class="page-item"><a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a></li>
-                    </ul>
-                </nav>
+                <nav aria-label="Product Pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+      
+      <% if (currentPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link" href="?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>">Previous</a>
+        </li>
+      <% } %>
+
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+          <a class="page-link" href="?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
+        </li>
+      <% } %>
+
+      <% if (currentPage < totalPages) { %>
+        <li class="page-item">
+          <a class="page-link" href="?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>">Next</a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
             </div>
         </section> <!-- content-main end// -->
         <footer class="main-footer font-xs">
@@ -128,12 +139,13 @@
             const searchButton=document.getElementById('searchButton')
             const searchInput=document.getElementById('searchInput')
             const statusFilter=document.getElementById('userStatusFilter')
-            function fetchFilteredUsers() {
-                
+            let currentPage=1
+            function fetchFilteredUsers(page=1) {
+                currentPage=page
                 const selectedStatus=statusFilter.value.toLowerCase()
                 const searchTerm=searchInput.value
-                const response=fetch(`/admin/users/filter?status=${selectedStatus}&search=${searchTerm}`)
-                .then(response=>{
+                const fetchURL=`/admin/users/filter?status=${selectedStatus}&search=${searchTerm}&page=${currentPage}`
+                fetch(fetchURL).then(response=>{
                     if(!response.ok){
                         throw new Error('Network response was not ok')
                     }
@@ -141,6 +153,7 @@
                 })
                 .then(data=>{
                     updateUserTable(data.users)
+                    updatePagination(data.totalPages,data.currentPage)
                 })
                 .catch(error=>{
                     console.error('Fetch user error',error);
@@ -172,14 +185,37 @@
                                 
                                         <td>
                                             <form id="blockForm-${user._id}" action="/admin/users/${user._id}/block" method="post">
-                                                <button class="block-user-btn" data-user-id="${user._id}" data-username="${user.name}" type="button" 
-                                                style="background-color: ${user.isBlocked?'green':'red'};color:white">${user.isBlocked? "Unblock":"Block"}
+                                                <button class="block-user-btn btn ${user.isBlocked?"btn-success":"btn-danger"}" data-user-id="${user._id}" data-username="${user.name}" type="button" 
+                                                >${user.isBlocked? "Unblock":"Block"}
                                                 </button>
                                             </form>
                                         </td>
                     `
                     table.innerHTML+=row
                 })
+            }
+            function updatePagination(totalPages,currentPage){
+                const paginationContainer=document.querySelector('.pagination')
+                if(!paginationContainer)return
+                paginationContainer.innerHTML=""//clear old pagination links
+
+                for(let i=1;i<=totalPages;i++){
+                    const li=document.createElement('li')
+                    li.className=`page-item ${i===currentPage?'active':""}`
+
+                    const a=document.createElement('a')
+                    a.className='page-link'
+                    a.href='#'
+                    a.textContent=i
+                    a.addEventListener('click',(e)=>{
+                        e.preventDefault()
+                        fetchFilteredUsers(i)
+                    })
+                    li.appendChild(a)
+                    paginationContainer.appendChild(li)
+                    
+                }
+
             }
             //for changing the status of the user
             const tableBody=document.getElementById('usersTableBody')

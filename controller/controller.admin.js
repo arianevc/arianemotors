@@ -52,10 +52,13 @@ const loadUserList=async(req,res)=>{
     try {
         const search=req.query.search||""
     const page = parseInt(req.query.page) || 1;
-    const limit = 5; // products per page
+    const limit = 5; // users per page
     const skip = (page - 1) * limit;
-        const allUsers=await User.find({isAdmin:0})
-        res.render('admin/usersList',{users:allUsers,search})
+        const allUsers=await User.find({isAdmin:0}).skip(skip).limit(limit)
+        const total=await User.find({isAdmin:0}).countDocuments()
+        // console.log(total);
+        const totalPages=Math.ceil(total/limit)
+        res.render('admin/usersList',{users:allUsers,search,currentPage:page,totalPages})
     } catch (error) {
         console.error("Error in rendering usersList",error)
         return res.status(500).send("Server Error")
@@ -67,6 +70,9 @@ const userStatusFilter=async (req,res)=>{
         
         const status=req.query.status
         const search=req.query.search
+        const page=parseInt(req.query.page)||1
+        const limit=5
+        const skip=(page-1)*limit
         let query={isAdmin:0}
         if(status=="blocked"){
             query.isBlocked=true
@@ -74,11 +80,16 @@ const userStatusFilter=async (req,res)=>{
             query.isBlocked=false
         }
         if(search){
-            query.name={$regex:search,$options:'i'}
+            query.$or=[
+                {name:{$regex:search,$options:'i'}},
+                {email:{$regex:search,$options:'i'}}
+            ]
         }
-        const user=await User.find(query)
-        
-        return res.json({users:user})
+
+        const total=await User.find(query).countDocuments()
+        const totalPages=Math.ceil(total/limit)
+        const user=await User.find(query).sort({createdAt:-1}).skip(skip).limit(limit)
+        return res.json({users:user,totalPages:totalPages,currentPage:page})
     } catch (error) {
         console.log('Error displaying users',error)
         return res.status(500).send("Server Error")
