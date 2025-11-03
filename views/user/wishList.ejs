@@ -16,6 +16,12 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="table-responsive">
+                            <% if(wishList.length<1||wishList==undefined){ %>
+                                <div>
+                                <p class="font-weight-bold d-flex justify-content-center" style="color: #088178;">No Items in wishlist.Please check the shop page</p>
+                                <a class="d-flex justify-content-center" href="/shop"> <button class="btn btn-sm" >Back to shopping</button></a>
+                                </div>
+                                <% }else{%>
                             <table class="table shopping-summery text-center">
                                 <thead>
                                     <tr class="main-heading">
@@ -27,62 +33,44 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <% wishList.forEach(item => {%>
                                     <tr>
-                                        <td class="image product-thumbnail"><img src="assets/imgs/shop/product-1-1.jpg" alt="#"></td>
+                                        <td class="image product-thumbnail"><img src="/<%=item.images[0]%>" alt="product_image"></td>
                                         <td class="product-des product-name">
-                                            <h5 class="product-name"><a href="shop-product-right.html">J.Crew Mercantile Women's Short-Sleeve</a></h5>
-                                            <p class="font-xs">Maboriosam in a tonto nesciung eget<br> distingy magndapibus.
+                                            <h5 class="product-name"><a href="/product/<%=item._id%>"><%=item.name%></a></h5>
+                                            <p class="font-xs"><%= item.productDescription.slice(0,80)%>...
                                             </p>
                                         </td>
-                                        <td class="price" data-title="Price"><span>$65.00 </span></td>
+                                        <td class="price" data-title="Price"><span>₹<%=item.price%>.00 </span></td>
                                         <td class="text-center" data-title="Stock">
-                                            <span class="color3 font-weight-bold">In Stock</span>
+                                            <% if(item.quantity<1||item.quantity==undefined) {%>
+                                            <span class="color3 font-weight-bold" style="color: red;">Out of stock</span>
+                                            <% }else if(item.quantity<=5){ %>
+                                                <span class="color3 font-weight-bold" style="color: orange;">Only <%= item.quantity %> in stock</span>
+                                                <% }else{ %>
+                                                    <span class="color3 font-weight-bold" style="color: #088178;"> In stock</span>
+                                                <%}  %>
                                         </td>
                                         <td class="text-right" data-title="Cart">
-                                            <button class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</button>
+                                             <% if(item.quantity<1||item.quantity==undefined) {%>
+                                           <a href="/shop"> <button class="btn btn-sm" >Back to shopping</button></a>
+                                            <% }else{ %>
+                                                <button class="btn btn-sm addtocartbtn" data-product-id="<%=item._id%>"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</button>
+                                                <% } %>
                                         </td>
-                                        <td class="action" data-title="Remove"><a href="#"><i class="fi-rs-trash"></i></a></td>
+                                        <td class="action" data-title="Remove"><a href="#" class="removebtn" data-product-id="<%=item._id %>"><i class="fi-rs-trash"></i></a></td>
+                                        
                                     </tr>
-                                    <tr>
-                                        <td class="image"><img src="assets/imgs/shop/product-2-1.jpg" alt="#"></td>
-                                        <td class="product-des">
-                                            <h5 class="product-name"><a href="shop-product-right.html">Amazon Essentials Women's Tank</a></h5>
-                                            <p class="font-xs">Sit at ipsum amet clita no est,<br> sed amet sadipscing et gubergren</p>
-                                        </td>
-                                        <td class="price" data-title="Price"><span>$75.00 </span></td>
-                                        <td class="text-center" data-title="Stock">
-                                            <span class="color3 font-weight-bold">In Stock</span>
-                                        </td>
-                                        <td class="text-right" data-title="Cart">
-                                            <button class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</button>
-                                        </td>
-                                        <td class="action" data-title="Remove"><a href="#"><i class="fi-rs-trash"></i></a></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="image"><img src="assets/imgs/shop/product-3-1.jpg" alt="#"></td>
-                                        <td class="product-des">
-                                            <h5 class="product-name"><a href="shop-product-right.html">Amazon Brand - Daily Ritual Women's Jersey </a></h5>
-                                            <p class="font-xs">Erat amet et et amet diam et et.<br> Justo amet at dolore
-                                            </p>
-                                        </td>
-                                        <td class="price" data-title="Price"><span>$62.00 </span></td>
-                                        <td class="text-center" data-title="Stock">
-                                            <span class="text-danger font-weight-bold">Out of stock</span>
-                                        </td>
-                                        <td class="text-right" data-title="Cart">
-                                            <button class="btn btn-sm btn-secondary"><i class="fi-rs-headset mr-5"></i>Contact Us</button>
-                                        </td>
-                                        <td class="action" data-title="Remove"><a href="#"><i class="fi-rs-trash"></i></a></td>
-                                    </tr>
+                                   <%  }); %>
                                 </tbody>
                             </table>
+                            <% } %>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
-    <%- include('../partials/user/footer') %>
     <!-- Preloader Start -->
     <div id="preloader-active">
         <div class="preloader d-flex align-items-center justify-content-center">
@@ -98,6 +86,9 @@
             </div>
         </div>
     </div>
+    <%- include('../partials/user/footer') %>
+
+
     <!-- Vendor JS-->
     <script src="/frontend/assets/js/vendor/modernizr-3.6.0.min.js"></script>
     <script src="/frontend/assets/js/vendor/jquery-3.6.0.min.js"></script>
@@ -120,6 +111,71 @@
     <!-- Template  JS -->
     <script src="/frontend/assets/js/main.js?v=3.4"></script>
     <script src="/frontend/assets/js/shop.js?v=3.4"></script>
-</body>
-
-</html>
+<script>
+    document.addEventListener('DOMContentLoaded',function(){
+        //deletefrom wishlist
+        const removebtns=document.querySelectorAll('.removebtn')
+        removebtns.forEach(btn => {
+            btn.addEventListener('click',function(e){
+                e.preventDefault()
+                const productId=btn.dataset.productId
+                fetch(`/wishlist/delete/${productId}`,{
+                    method:'DELETE',
+                    headers:{'Content-Type':'application/json'}
+                }).then(response=>response.json())
+                .then(result=>{
+                    if(result.success){
+                        Swal.fire({
+                            icon:"success",
+                            text:result.message,
+                            title:"Success"
+                        }).then(()=>{
+                            window.location.reload()
+                        })
+                    }else{
+                        Swal.fire("Error",result.message,"error")
+                    }
+                })
+                .catch(err=>{
+                    Swal.fire("Error","Some issues","error")
+                })
+                
+            })
+        });
+        //addtocart from wishlist
+        const addtocartbtns=document.querySelectorAll('.addtocartbtn')
+        addtocartbtns.forEach(btn=>{
+            btn.addEventListener('click',function(e){
+                e.preventDefault()
+                const productId=btn.dataset.productId
+                fetch('/cart/add',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({
+                        productId:productId,
+                        quantity:1
+                    })
+                }).then(response=>response.json())
+                .then(result=>{
+                    if(result.success){
+                        Swal.fire({
+                            icon:"success",
+                            title:"Success",
+                            text:result.message,
+                            showCancelButton:true,
+                            confrimButtonText:"Go to Cart"
+                        }).then(done=>{
+                            if(done.isConfirmed){
+                                window.location.href='/cart'
+                            }else if (done.isDismissed){
+                                window.location.reload()
+                            }
+                        })
+                    }else{
+                        Swal.fire('Error',result.message,'error')
+                    }
+                })
+            })
+        })
+    })
+</script>

@@ -1,15 +1,15 @@
 const User=require('../model/userSchema')
 
 const checkLoggedIn=async (req,res,next)=>{
-    if(req.session.user){
-        return res.redirect('/')
-    }else if(req.session.admin){
+    if(req.session.isAdmin){
         return res.redirect('/admin')
+    }else if(req.session.userId){
+        return res.redirect('/')
     }   
     next()
 }
 const checkUserSession=async(req,res,next)=>{
-    if(req.session.user){
+    if(req.session.userId){
         next()
     }else{
         res.redirect('/login')
@@ -17,20 +17,16 @@ const checkUserSession=async(req,res,next)=>{
 }
 const checkBlocked=async(req,res,next)=> {
     try {
-        if(!req.session.user){
+        if(!req.session.userId){
             return next()
         }
-        const userId=req.session.user._id
-        if(!userId){
-            return next()
-        }
-        const user=await User.findById(userId)
+        const user=await User.findById(req.session.userId)
         if(!user){//user doesnt exists
-            req.session.user=null
+            req.session.userId=null
             return res.redirect('/login')
         }
         if(user.isBlocked){
-            req.session.user=null
+            req.session.userId=null
             return res.redirect('/login?blocked=true')
         }
             next()

@@ -23,38 +23,34 @@
                                         <!-- MAIN SLIDES -->
                                         <div class="product-image-slider">
                                             <% if(product.images&&product.images.length>0){ %>
-                                            <% product.images.forEach(image => { %>
                                             <figure class="border-radius-10">
-                                                <img src="/<%= image %>" alt="product image">
+                                                <img src="/<%= product.images[0] %>" id="product-img" data-zoom-image="/<%=product.images[0] %>"  alt="product image">
                                             </figure>
-                                            <% }) %>
                                             <% }else{ %>
                                                 <figure class="border-radius-10">
-                                                <img src="/images/defaultImage.jpg" alt="product image">
+                                                <img src="/images/defaultImage.jpg"alt="product image">
                                             </figure>
                                             <% } %>
                                         </div>
                                         <!-- THUMBNAILS -->
-                                        <div class="slider-nav-thumbnails pl-15 pr-15">
+                                        <div class="slider-nav-thumbnails pl-15 pr-15" id="gal1">
                                             <% product.images.forEach(image => { %>
-                                                <div><img src="/<%= image %>" alt="product image"></div>
+                                                <a data-image="/<%= image %>" class="thumbnail_img" data-zoom-image="/<%= image %>">
+
+                                                        <img src="/<%= image %>" alt="product image thumbnail" width="75" height="75">
+
+                                                    </a>
                                                 <% }) %>
-                                                <!-- <div><img src="assets/imgs/shop/thumbnail-4.jpg" alt="product image"></div> -->
-                                                <!-- <div><img src="assets/imgs/shop/thumbnail-5.jpg" alt="product image"></div> -->
-                                                <!-- <div><img src="assets/imgs/shop/thumbnail-6.jpg" alt="product image"></div> -->
-                                                <!-- <div><img src="assets/imgs/shop/thumbnail-7.jpg" alt="product image"></div> -->
-                                                <!-- <div><img src="assets/imgs/shop/thumbnail-8.jpg" alt="product image"></div> -->
-                                                <!-- <div><img src="assets/imgs/shop/thumbnail-9.jpg" alt="product image"></div> -->
-                                                </div>
+                                               </div>
                                     </div>
                                     <!-- End Gallery -->
                                     <div class="social-icons single-share">
                                         <ul class="text-grey-5 d-inline-block">
                                             <li><strong class="mr-10">Share this:</strong></li>
-                                            <li class="social-facebook"><a href="#"><img src="/assets/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
-                                            <li class="social-twitter"> <a href="#"><img src="/assets/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
-                                            <li class="social-instagram"><a href="#"><img src="/assets/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
-                                            <li class="social-linkedin"><a href="#"><img src="/assets/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
+                                            <li class="social-facebook"><a href="#"><img src="/frontend/assets/imgs/theme/icons/icon-facebook.svg" alt=""></a></li>
+                                            <li class="social-twitter"> <a href="#"><img src="/frontend/assets/imgs/theme/icons/icon-twitter.svg" alt=""></a></li>
+                                            <li class="social-instagram"><a href="#"><img src="/frontend/assets/imgs/theme/icons/icon-instagram.svg" alt=""></a></li>
+                                            <li class="social-linkedin"><a href="#"><img src="/frontend/assets/imgs/theme/icons/icon-pinterest.svg" alt=""></a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -64,7 +60,7 @@
                                         <div class="product-detail-rating">
                                             <input type="text" name="isDeleted" id="isDeleted" value="<%=product.isDeleted  %>" hidden>
                                             <div class="pro-details-brand">
-                                                <span> Brands: <a href="#"><%= product.brand %></a></span>
+                                                <span> Brand: <a href="#"><%= product.brand %></a></span>
                                             </div>
                                             <div class="product-rate-cover text-end">
                                                 <div class="product-rate d-inline-block">
@@ -76,8 +72,8 @@
                                         </div>
                                         <div class="clearfix product-price-cover">
                                             <div class="product-price primary-color float-left">
-                                                <ins><span class="text-brand">₹<%=product.price%></span></ins>
-                                                <ins><span class="old-price font-md ml-15">₹<%= product.price*1.2 %> </span></ins>
+                                                <ins><span class="text-brand">₹<%=product.price%>.00</span></ins>
+                                                <ins><span class="old-price font-md ml-15">₹<%= (product.price*1.2).toFixed(2) %> </span></ins>
                                                 <span class="save-price  font-md color3 ml-15">10% Off</span>
                                             </div>
                                         </div>
@@ -128,13 +124,17 @@
                                             </div>
                                             <div class="product-extra-link2">
                                                 <button type="button" class="button button-add-to-cart" id="addToCartBtn" data-product-id="<%= product._id %>">Add to cart</button>
-                                                <a aria-label="Add To Wishlist" id="wishlistAddBtn" class="action-btn hover-up" data-product-id="<%= product._id %>"><i class="fi-rs-heart"></i></a>
+                                                <% if(isWishlisted){ %>
+                                                    <a title="Wishlisted" id="wishlistAddBtn" class="action-btn hover-up" data-product-id="<%= product._id %>"><i class="fa fa-heart" style="color: red;"></i></a>
+                                                    <% }else{ %>
+                                                <a title="Add To Wishlist" id="wishlistAddBtn" class="action-btn hover-up" data-product-id="<%= product._id %>"><i class="fa fa-heart-o"></i></a>
+                                                <% } %>
                                                 <!-- <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> -->
                                             </div>
                                         </div>
                                         <% } %>
                                         <ul class="product-meta font-xs color-grey mt-50">
-                                            <li>Availability:<span class="in-stock text-<% product.quantity<1||product.quantity==undefined?"danger":"success" %> ml-5"><%= product.quantity %> Items In Stock</span></li>
+                                            <li>Availability:<span class="in-stock text-<%= product.quantity<=5?"danger":"success" %> ml-5"><%= product.quantity %> Items In Stock</span></li>
                                         </ul>
                                     </div>
                                     <!-- Detail Info -->
@@ -281,7 +281,7 @@
                                                         <div class="single-comment justify-content-between d-flex">
                                                             <div class="user justify-content-between d-flex">
                                                                 <div class="thumb text-center">
-                                                                    <img src="assets/imgs/page/avatar-6.jpg" alt="">
+                                                                    <img src="/frontend/assets/imgs/page/avatar-6.jpg" alt="">
                                                                     <h6><a href="#">Jacky Chan</a></h6>
                                                                     <p class="font-xxs">Since 2012</p>
                                                                 </div>
@@ -304,7 +304,7 @@
                                                         <div class="single-comment justify-content-between d-flex">
                                                             <div class="user justify-content-between d-flex">
                                                                 <div class="thumb text-center">
-                                                                    <img src="assets/imgs/page/avatar-7.jpg" alt="">
+                                                                    <img src="/frontend/assets/imgs/page/avatar-7.jpg" alt="">
                                                                     <h6><a href="#">Ana Rosie</a></h6>
                                                                     <p class="font-xxs">Since 2008</p>
                                                                 </div>
@@ -327,7 +327,7 @@
                                                         <div class="single-comment justify-content-between d-flex">
                                                             <div class="user justify-content-between d-flex">
                                                                 <div class="thumb text-center">
-                                                                    <img src="assets/imgs/page/avatar-8.jpg" alt="">
+                                                                    <img src="/frontend/assets/imgs/page/avatar-8.jpg" alt="">
                                                                     <h6><a href="#">Steven Keny</a></h6>
                                                                     <p class="font-xxs">Since 2010</p>
                                                                 </div>
@@ -574,101 +574,7 @@
                                 
                             </ul>
                         </div>
-                        <!-- Fillter By Price -->
-                        <!-- <div class="sidebar-widget price_range range mb-30">
-                            <div class="widget-header position-relative mb-20 pb-10">
-                                <h5 class="widget-title mb-10">Fill by price</h5>
-                                <div class="bt-1 border-color-1"></div>
-                            </div>
-                            <div class="price-filter">
-                                <div class="price-filter-inner">
-                                    <div id="slider-range"></div>
-                                    <div class="price_slider_amount">
-                                        <div class="label-input">
-                                            <span>Range:</span><input type="text" id="amount" name="price" placeholder="Add Your Price" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="list-group">
-                                <div class="list-group-item mb-10 mt-10">
-                                    <label class="fw-900">Color</label>
-                                    <div class="custome-checkbox">
-                                        <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox1" value="">
-                                        <label class="form-check-label" for="exampleCheckbox1"><span>Red (56)</span></label>
-                                        <br>
-                                        <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox2" value="">
-                                        <label class="form-check-label" for="exampleCheckbox2"><span>Green (78)</span></label>
-                                        <br>
-                                        <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox3" value="">
-                                        <label class="form-check-label" for="exampleCheckbox3"><span>Blue (54)</span></label>
-                                    </div>
-                                    <label class="fw-900 mt-15">Item Condition</label>
-                                    <div class="custome-checkbox">
-                                        <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox11" value="">
-                                        <label class="form-check-label" for="exampleCheckbox11"><span>New (1506)</span></label>
-                                        <br>
-                                        <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox21" value="">
-                                        <label class="form-check-label" for="exampleCheckbox21"><span>Refurbished (27)</span></label>
-                                        <br>
-                                        <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox31" value="">
-                                        <label class="form-check-label" for="exampleCheckbox31"><span>Used (45)</span></label>
-                                    </div>
-                                </div>
-                            </div>
-                            <a href="shop-grid-right.html" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i> Fillter</a>
-                        </div> -->
-                        <!-- Product sidebar Widget -->
-                        <!-- <div class="sidebar-widget product-sidebar  mb-30 p-30 bg-grey border-radius-10">
-                            <div class="widget-header position-relative mb-20 pb-10">
-                                <h5 class="widget-title mb-10">New products</h5>
-                                <div class="bt-1 border-color-1"></div>
-                            </div>
-                            <div class="single-post clearfix">
-                                <div class="image">
-                                    <img src="assets/imgs/shop/thumbnail-3.jpg" alt="#">
-                                </div>
-                                <div class="content pt-10">
-                                    <h5><a href="shop-product-detail.html">Chen Cardigan</a></h5>
-                                    <p class="price mb-0 mt-5">$99.50</p>
-                                    <div class="product-rate">
-                                        <div class="product-rating" style="width:90%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="single-post clearfix">
-                                <div class="image">
-                                    <img src="assets/imgs/shop/thumbnail-4.jpg" alt="#">
-                                </div>
-                                <div class="content pt-10">
-                                    <h6><a href="shop-product-detail.html">Chen Sweater</a></h6>
-                                    <p class="price mb-0 mt-5">$89.50</p>
-                                    <div class="product-rate">
-                                        <div class="product-rating" style="width:80%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="single-post clearfix">
-                                <div class="image">
-                                    <img src="assets/imgs/shop/thumbnail-5.jpg" alt="#">
-                                </div>
-                                <div class="content pt-10">
-                                    <h6><a href="shop-product-detail.html">Colorful Jacket</a></h6>
-                                    <p class="price mb-0 mt-5">$25</p>
-                                    <div class="product-rate">
-                                        <div class="product-rating" style="width:60%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
-                        <!-- <div class="banner-img wow fadeIn mb-45 animated d-lg-block d-none">
-                            <img src="assets/imgs/banner/banner-11.jpg" alt="">
-                            <div class="banner-text">
-                                <span>Women Zone</span>
-                                <h4>Save 17% on <br>Office Dress</h4>
-                                <a href="shop-grid-right.html">Shop Now <i class="fi-rs-arrow-right"></i></a>
-                            </div>
-                        </div> -->
+                        
                     </div>
                 </div>
             </div>
@@ -693,9 +599,9 @@
     <%-include('../partials/user/footer')%>
     
     <!-- Vendor JS-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/igorlino/elevatezoom-plus/1.1.6/src/jquery.ez-plus.js"></script>
     <script src="/frontend/assets/js/vendor/modernizr-3.6.0.min.js"></script>
-    <script src="/frontend/assets/js/vendor/jquery-3.6.0.min.js"></script>
-    <script src="/frontend/assets/js/vendor/jquery-migrate-3.3.0.min.js"></script>
     <script src="/frontend/assets/js/vendor/bootstrap.bundle.min.js"></script>
     <script src="/frontend/assets/js/plugins/slick.js"></script>
     <script src="/frontend/assets/js/plugins/jquery.syotimer.min.js"></script>
@@ -712,13 +618,28 @@
     <script src="/frontend/assets/js/plugins/scrollup.js"></script>
     <script src="/frontend/assets/js/plugins/jquery.vticker-min.js"></script>
     <script src="/frontend/assets/js/plugins/jquery.theia.sticky.js"></script>
-    <script src="/frontend/assets/js/plugins/jquery.elevatezoom.js"></script>
+    
     <!-- Template  JS -->
     <script src="/frontend/assets/js/main.js?v=3.4"></script>
-    <script src="/frontend/assets/js/shop.js?v=3.4"></script>
+    
+    <!--Zoom function JQuery-->
+    <script>
+        $(document).ready(function(){
+            $('#product-img').ezPlus({
+                gallery:'gal1',
+                galleryActiveClass:'active',
+                easing:true,
+                tint: true,
+                tintColour: '#121212', 
+                tintOpacity: 0.75,
+                imageCrossfade:true
+            })
+        })
+    </script>
 
 <script>
     document.addEventListener('DOMContentLoaded',function(){
+
         const isDeleted=document.getElementById('isDeleted').value
         console.log("isdeleted value: ",isDeleted)
         if(isDeleted=='true'){
@@ -797,10 +718,12 @@
         const wishlistBtn=document.getElementById('wishlistAddBtn')
         const productIdwl=wishlistBtn.dataset.productId
         const heartIcon=wishlistBtn.querySelector('i')
-        document.addEventListener('click',function(e){
+        wishlistBtn.addEventListener('click',function(e){
             // console.log("button clicked",productIdwl);
             fetch(`/wishlist/toggle/${productIdwl}`,{
-                method:'POST'
+                method:'POST',
+                credentials:"include",
+                headers:{"Content-Type":"application/json"}
             }).then(response=>response.json())
             .then(result=>{
                 if(result.success){
@@ -822,16 +745,22 @@
                 }else{
                     Swal.fire({
                         icon:'error',
-                        title:result.message||"Please login to use the wishlist",
-                        timer:1500,
-                        showConfirmButton:false
+                        title:"Error!",
+                        text:result.message,
+                        showConfirmButton:true,
+                        showCancelButton:true
+                    }).then((swalResult)=>{
+                        if(result.redirectUrl&&swalResult.isConfirmed){
+                            window.location.href=result.redirectUrl
+                        }
                     })
                 }
             }).catch(err=>{
                 console.log("error in wishlist: ",err);
                 Swal.fire({
                         icon:'error',
-                        title:result.message,
+                        title:"Error",
+                        text:err.message,
                         timer:1500,
                         showConfirmButton:false
                     })
@@ -839,6 +768,7 @@
             })
             
         })
+        
     })
 </script>
 

@@ -5,7 +5,7 @@ const Category=require('../model/categorySchema')
 const {processImages}=require('../helpers/imageProcessing')
 
 const loadProducts=async(req,res)=>{
-  if(!req.session.admin){
+  if(!req.session.isAdmin){
  return res.redirect('/login')
   }
     try {

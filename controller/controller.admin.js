@@ -6,12 +6,7 @@ const Category=require('../model/categorySchema')
 
 
 
-const adminLogin=async(req,res)=>{
-    if(req.session.admin){
-        return res.redirect('/')
-    }
-    res.redirect('/user/login')
-}
+
 // const adminLoginPost=async (req,res)=>{
 //     try{
 //         const {email,password}=req.body
@@ -36,7 +31,7 @@ const adminLogin=async(req,res)=>{
 // }
 const loadDashboard=async (req,res)=>{
     try{
-        if(!req.session.admin){
+        if(!req.session.isAdmin){
             return res.redirect('/login')
         }
        return res.render('admin/adminDashboard')
@@ -121,4 +116,4 @@ const adminLogout=async (req,res)=>{
     })
 }
 
-module.exports={adminLogin,loadDashboard,loadUserList,userStatusFilter,blockUser,adminLogout}
+module.exports={loadDashboard,loadUserList,userStatusFilter,blockUser,adminLogout}

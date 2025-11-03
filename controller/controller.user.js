@@ -9,8 +9,8 @@ const Category=require('../model/categorySchema')
 const Product=require('../model/productSchema')
 const {processImages, processProfileImage}=require('../helpers/imageProcessing')
 const { configDotenv } = require('dotenv')
-const { search } = require('../routes/route.user')
-const { error } = require('console')
+const verifyEmail=require("../helpers/verifyEmail")
+
 
 
 const LoadHomepage=async (req,res)=>{
@@ -24,25 +24,7 @@ const LoadHomepage=async (req,res)=>{
     }
 }
 
-
-// const redirectIfLoggedIn = (req, res, next) => {
-//     if (req.session.user ) {
-//         return res.redirect('/');
-//     }
-//     if(req.session.admin){
-//         return res.redirect('/admin')
-//     }
-
-//     next();
-// };
-
 const loadUserLogin=async (req,res)=>{
-    // if (req.session.user){
-    //     return res.redirect('/')
-    // }
-    // if(req.session.admin){
-    //     return res.redirect('/admin')
-    // }
     const successMsg = req.session.signupSuccess;
     req.session.signupSuccess = null
     res.setHeader('Cache-Control', 'no-store');
@@ -166,43 +148,9 @@ const loadUserSignup=async(req,res)=>{
         res.status(500).send("Server Error")
     }
 }
-
 function generateOtp() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
-
-async function verifyEmail(email,otp) {
-    try {
-        console.log("email function called")
-        const transporter=nodemailer.createTransport({
-            service:'gmail',
-            port:587,
-            secure:false,
-            requireTLS:true,
-            auth:{
-                user:process.env.NODEMAILER_EMAIL,
-                pass:process.env.NODEMAILER_PASSKEY
-            }
-        })
-        const info= await transporter.sendMail({
-            from:`Ariane Motors <${process.env.NODEMAILER_EMAIL}>`,
-            to:email,
-            subject:'Verify your account on Ariane Motors',
-            text:`Your OTP is ${otp} to verify your account`,
-            html:`<h3>Hi there!</h3>
-  <p>Use the following OTP to verify your email address:</p>
-  <h2>${otp}</h2>
-  <p>This OTP is valid for 2 minutes.</p>
-  <br>
-  <p>– The Arachnid & Team</p>`
-        })
-        return info.accepted.length>0
-    } catch (error) {
-        console.log("Error in sending OTP",error)
-    }
-    
-}
-
 const userSignupPost=async (req,res)=>{
     try {
         const {name,phone,email,password,cpassword}=req.body
@@ -267,8 +215,8 @@ try {
         })
         await saveUserData.save()
         req.session.userData = null;
-    }else if(req.session.user){
-       await User.findByIdAndUpdate(req.session.user._id,{email:email})
+    }else if(req.session.userId){
+       await User.findByIdAndUpdate(req.session.userId,{email:email})
         
     }
       req.session.signupSuccess = "Verification successful. Please log in.";
@@ -328,24 +276,18 @@ const userloginPost=async (req,res)=>{
             return res.render('user/login',{success:false,message:"User Not Found"})
         }
         const passwordMatch=await bcrypt.compare(password,user.password)
-        if(user.isAdmin){
-            {
-                if(!passwordMatch){
-                    return res.render('user/login',{success:false,message:"Invalid Password"})
-                }
-            }
-            req.session.admin=user
-            return res.redirect('/admin')
-        }
         if(user.isBlocked){
             return res.render('user/login',{success:false,message:"User is blocked by admin"})
         }
         if(!passwordMatch){
             return res.render('user/login',{success:false,message:"Invalid Password"})
         }
-        req.session.user=user
-    
-         res.redirect('/')
+        req.session.userId=user._id
+        if(user.isAdmin){
+            req.session.isAdmin=true
+            return res.redirect('/admin')
+        }
+         return res.redirect('/')
         
     } catch (error) {
         console.log("Issue while user logging",error)
@@ -364,334 +306,6 @@ const userLogout=async (req,res)=>{
     })
 }
 
-const loadAccountDetails=async(req,res)=>{
-    try {
-        if(!req.session.user){
-           return res.redirect('/login')
-        }
-        const user=await User.findById(req.session.user._id)
-        const category=await Category.find()
-        // console.log(user.addresses)
-        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user})
-    } catch (error) {
-        console.log("error in loading ")
-    }
-}
-
-const editProfile=async(req,res)=>{
-    try {
-        const userId=req.params.userId
-        // console.log(userId)
-        const user=await User.findById(userId)
-        res.json({name:user.name,phone:user.phone})
-    } catch (error) {
-        console.log("error in editing profile",error)
-    }
-}
-const editUserPost=async(req,res)=>{
-    try {
-        // console.log(req.body)
-        const {name,phone}=req.body
-        if(!name||!phone){
-           return res.status(400).json({success:false,message:"Name and phone are required"})
-        }
-        const user=await User.findByIdAndUpdate(req.session.user._id,{name:name,phone:phone})
-        
-        res.json({success:true,message:"User Profile updated successfully"})
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({success:false,message:"Server Error"})
-    }
-    
-}
-const addAddress=async (req,res)=>{
-    try {
-        const user=await User.findById(req.session.user._id)
-        user.addresses.push(req.body)
-        await user.save()
-        // console.log(user.addresses)
-        res.json({success:true,message:'Address added sucessfully!',addresses:user.addresses})
-    } catch (error) {
-        console.error("Error in adding address",error)
-        res.status(500).json({success:false,message:'Server Error'})
-    }
-}
-const getSingleAddress=async (req,res)=>{
-    try {
-        const user=await User.findById(req.session.user._id)
-        const address=user.addresses.id(req.params.addressId)
-        res.json({success:true,address:address})
-    } catch (error) {
-        res.status(500).json({success:false,message:"Server Error"})
-    }
-}
-const editAddress=async(req,res)=>{
-    try {
-        const user=await User.findById(req.session.user._id)
-        const address=user.addresses.id(req.params.addressId)
-        address.set(req.body)
-        await user.save()
-        res.json({success:true,message:"Address Updated!",addresses:user.addresses})
-    } catch (error) {
-        console.error("error in updating user address",error)
-    }
-}
-const deleteAddress=async(req,res)=>{
-    try {
-        const user=await User.findById(req.session.user._id)
-        user.addresses.pull(req.params.addressId)
-        await user.save()
-        res.json({success:true,message:"Address deleted!",addresses:user.addresses})
-    } catch (error) {
-        console.error("error in deleteing address",error)
-        res.status(500).json({success:false,message:"Server Error"})
-    }
-}
-const loadEditEmail=async(req,res)=>{
-    try {
-         if(!req.session.user){
-            return res.redirect('/login')
-        }
-        res.render('user/editEmail',{user:req.session.user,message:"",success:""})
-    } catch (error) {
-        console.error("Error in loading edit mail page",error)
-    }
-}
-
-const emailVerify=async(req,res)=>{
-    try {
-        const {existingEmail,newEmail}=req.body
-        const emailRegex=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-        if(existingEmail==newEmail){
-            return res.json({success:false,message:"Both emails cannot be same"})
-        }else if(!emailRegex.test(newEmail)){
-            return res.json({success:false,message:"Please enter a valid email id"})
-        }
-        const otp=generateOtp()
-        const emailSent=await verifyEmail(newEmail,otp)
-        if(!emailSent){
-            return res.json('email-error')
-        }
-        req.session.otpData={
-            otp:otp,
-            expiresAt:Date.now()+1*60*1000,
-            email:newEmail
-        }
-        console.log(req.session.otpData)
-        console.log("OTP Sent: ",otp)
-        return res.json({success:true,message:"An OTP is sent to the new Email.Please check your email for the OTP ",redirectUrl:'/verify-otp'})
-        // await User.findByIdAndUpdate(req.session.user._id,{email:newEmail})
-    } catch (error) {
-        console.error("error in reseting the email",error)
-        res.status(500).json("Server Error")
-    }
-}
-const loadImageEditer=async(req,res)=>{
-    try {
-        res.render('user/change-image')
-    } catch (error) {
-        console.error("error in rendering image editer: ",error);
-        res.status(500).json("Server Error")
-    }
-}
-const changeImagePost=async(req,res)=>{
-try {
-    if(!req.file){
-        return res.status(400).json({success:false,message:"No file was uploaded"})
-    }
-    const userId=req.session.user._id
-    //this takes the file buffer,resizes/compresses it, saves it and returns the path
-    const imagePath=await processProfileImage(req.file)
-    //update the user's record in the database
-    await User.findByIdAndUpdate(userId,{profileImage:'/'+imagePath.replace(/\\/g,'/')})
-    res.json({
-        success:true,
-        message:"Profile image uploaded successfully!",
-        newImagePath:'/'+imagePath.replace(/\\/g,'/')
-    })
-} catch (error) {
-    console.error("Error uploading profile image: ",error);
-    res.status(500).json({success:false,message:"Server error during upload"})
-    
-}
-}
-const removeImage=async(req,res)=>{
-    try {
-        const userId=req.session.user._id
-        if(!userId){
-            return res.redirect('/login')
-        }
-        await User.findByIdAndUpdate(userId,{profileImage:""})
-        res.json({success:true,message:"Profile Image removed successfully"})
-    } catch (error) {
-        console.error("error in removing the image: ",error);
-        res.status(500).json({success:false,message:"Server error during removal of image"})
-    }
-}
-const addProductToCart=async(req,res)=>{
-    try {
-        if(!req.session.user){
-           return res.status(401).json({success:false,message:"Please sign in to add to cart",redirectUrl:'/login'})
-        }
-        // console.log(req.body)
-        const{productId,quantity}=req.body
-        const qtynum=parseInt(quantity)
-        const userId=req.session.user._id
-        const user=await User.findById(userId)
-        const product=await Product.findById(productId)
-        if(!product||product.isDeleted){
-            return res.status(404).json({success:false,message:"Product is unavailable",redirectUrl:'/shop'})
-        }
-        if(!user){
-           return res.status(404).json({success:false,message:"User not found"})
-        }
-        if(user.cart.length>=5){
-            return res.status(401).json({success:false,message:"Only 5 items allowed in cart"})
-        }
-        
-        const existingProduct=user.cart.find(item=>item.productId.toString()==productId)
-        if(existingProduct){
-            existingProduct.quantity+=qtynum
-        }else{
-            user.cart.push({productId,quantity:qtynum})
-        }
-        await user.save()
-        return res.status(200).json({success:true,message:"Product added to cart successfully"})
-    } catch (error) {
-        console.log("Error in adding product to cart",error)
-        res.status(500).json({success:false,message:"Server error occured while adding to cart"})
-    }
-}
-
-const loadShop = async (req, res) => {
-  try {
-    const search=req.query.search ||""
-    const categoryId=req.query.category||""
-    const minPrice=parseInt(req.query.minPrice)||0
-    const maxPrice=parseInt(req.query.maxPrice)||100000
-    const page=parseInt(req.query.page)||1
-    const sort=req.query.sort||''
-    const limit=6
-    const skip=(page-1)*limit
-
-    const filter={isDeleted:false,price:{$gte:minPrice,$lte:maxPrice}}
-    // console.log(search,categoryId)
-    //always apply search filter
-    if(search)
-    {
-       filter.name={$regex:search,$options:"i"}
-
-    }
-    if(categoryId){
-    filter.category=categoryId
-    }
-    let sortOption={}//sort products according filter
-    
-    if(sort=='asc'){
-        sortOption.price=1
-    }else if(sort=="desc"){
-        sortOption.price=-1
-    }else{
-        sortOption.createdAt=-1
-    }
-
-
-    const totalProducts=await Product.countDocuments(filter)
-    const totalPages=Math.ceil(totalProducts/limit)
-
-
-    const products = await Product.find(filter).populate('category').sort(sortOption).skip(skip).limit(limit);
-    const categories=await Category.find()
-    if (req.xhr) { // Check if request is AJAX
-  return res.render('partials/user/productView', { products });
-}
-
-    res.render('user/shop', { products,categoryList:categories,search,minPrice,maxPrice,categoryId,currentPage:page,totalPages,sort }); // render 'shop.ejs' with products
-  } catch (error) {
-    console.error("Error loading shop:", error);
-    res.status(500).send("Something went wrong.");
-  }
-};
-
-
-const loadProductDetails=async(req,res)=>{
-    try {
-        const productId=req.params.id
-        const categories=await Category.find()
-        const product=await Product.findById(productId).populate('category')
-
-        if(!product){
-            return res.status(404).send("Product Not Found")
-        }
-        res.render('user/productDetails',{product,categoryList:categories,categoryId:"",search:""})
-    } catch (error) {
-        console.error("Error in showing product details",error)
-        res.status(500).send("Server Error")
-    }
-}
-const loadCart=async(req,res)=>{
-    try {
-        if(!req.session.user){
-            return res.redirect('/login')
-        }
-        const search=req.query.search||""
-        const categoryId=req.query.category||""
-        const categories=await Category.find()
-        const user=await User.findById(req.session.user._id).populate({
-            path:'cart.productId',
-            model:'Product'
-        })
-        res.render('user/cart',{categoryList:categories,categoryId,search,cart:user.cart})
-    } catch (error) {
-        console.error("error in displaying the cart: ",error);
-        res.status(500).send("Server Error")
-    }
-}
-const loadWishlist=async (req,res)=>{
-    try {
-        if(req.session.user){
-            const search=req.query.search||""
-        const categoryId=req.query.category||""
-        const categories=await Category.find()
-        const user=await User.findById(req.session.user._id).populate('wishList')
-        res.render('user/wishList',{wishList:user.wishList,categoryList:categories,categoryId,search})
-        }else{
-            return res.redirect('/login')
-        }
-    } catch (error) {
-        console.error("Error while loading wishlist",error)
-        res.status(500).send("Server Error")
-    }
-}
-
-const toggleWishlist=async (req,res)=>{
-    try {
-        
-        const userId=req.session.user._id
-        const productId=req.params.productId
-
-        const user=await User.findById(userId)
-
-        const productIndex=user.wishList.indexOf(productId)
-        if(productIndex>-1){
-            //if product in wishlist then remove
-            await user.updateOne({_id:userId},{$pull:{wishList:productId}})
-            res.status(200).json({success:true,removed:true,message:"Product removed from wishlist"})
-        }else{
-            //add product to wishlist
-            await user.updateOne({_id:userId},{$addToSet:{wishList:productId}})
-            res.status(200).json({success:true,removed:false,message:"Product added from wishlist"})
-        }
-    } catch (error) {
-        console.error("Error while toggling to the wishlist",error)
-        res.status(500).json({success:false,message:"Server Error"})
-    }
-}
-
-
 module.exports={LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
-    userloginPost,userLogout,loadAccountDetails,editProfile,editUserPost,addAddress,editAddress,
-    getSingleAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,removeImage,addProductToCart
-    ,loadShop,loadProductDetails,loadCart,
-    loadWishlist,toggleWishlist}
+    userloginPost,userLogout}

@@ -47,6 +47,9 @@
                                         </ul>
                                     </div>
                                 </div> -->
+                                <button type="submit" class="btn btn-sm btn-default w-100" id="clearfilterbtn">
+                                <i class="fi-rs-cross mr-5"></i>Clear Filter
+                            </button>
                                 <div class="sort-by-cover">
                                     <div class="sort-by-product-wrap">
                                         <div class="sort-by">
@@ -168,10 +171,10 @@
     <script src="/frontend/assets/js/plugins/scrollup.js"></script>
     <script src="/frontend/assets/js/plugins/jquery.vticker-min.js"></script>
     <script src="/frontend/assets/js/plugins/jquery.theia.sticky.js"></script>
-    <script src="/frontend/assets/js/plugins/jquery.elevatezoom.js"></script>
+    
     <!-- Template  JS -->
     <script src="/frontend/assets/js/main.js?v=3.4"></script>
-    <script src="/frontend/assets/js/shop.js?v=3.4"></script>
+   
 </body>
 
 </html>
@@ -186,6 +189,9 @@
 
 
 <script>
+    document.addEventListener('DOMContentLoaded',function(){
+
+    //sort filter
     document.querySelectorAll(".sort-link").forEach(link => {
         link.addEventListener('click',async (e) => {
             e.preventDefault()
@@ -208,4 +214,29 @@
             
         })        
     });
+    //clear filter
+    const clearfilterbtn=document.getElementById('clearfilterbtn')
+    if(clearfilterbtn){
+        clearfilterbtn.addEventListener('click',async function(e){
+            e.preventDefault()
+            const urlParams=new URLSearchParams(window.location.search)
+            urlParams.delete('minPrice')
+            urlParams.delete('maxPrice')
+            urlParams.delete('page')
+            try {
+                const response = await fetch(`/shop?${urlParams.toString()}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+                const html = await response.text();
+                
+                document.getElementById('product-container').innerHTML = html;
+                
+                window.history.pushState({}, '', `/shop?${urlParams.toString()}`);
+            } catch (error) {
+                console.error("error while clearing filter",error);
+                
+            }
+        })
+    }
+})
 </script>

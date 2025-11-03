@@ -1,6 +1,6 @@
 <%- include('../partials/user/header') %>
 <style>
-    .clearCartBtn{
+    .clearcartbtn a:hover{
         color: red;
     }
 </style>
@@ -32,75 +32,53 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <% if(cart.length==0||cart.length==undefined) {%>
+                                        <div class="">
+                                        <p class="font-weight-bold  d-flex justify-content-center" style="color: #088178;">No Items in your cart.Please check the shop page</p>
+                                        <br>
+                                         <a class="d-flex justify-content-center" href="/shop"><button class="btn"><i class="fi-rs-shopping-bag mr-10 "></i>Continue Shopping</button></a>
+                                         </div>
+                                    <% }else{ %>
                                     <% let total=0 %>
                                     <% cart.forEach(item=>{ %>
                                         <tr>
                                             <td class="image product-thumbnail"><img src="<%= item.productId.images[0] %>" alt="#"></td>
                                             <td class="product-des product-name">
-                                                <h5 class="product-name"><a href="shop-product-right.html"><%= item.productId.name %></a></h5>
+                                                <h5 class="product-name"><a href="/product/<%=item.productId._id %>"><%= item.productId.name %></a></h5>
                                                 <p class="font-xs"><%= item.productId.productDescription %><br>
                                                 </p>
                                             </td>
-                                            <td class="price" data-title="Price"><span>₹<%= item.productId.price %> </span></td>
+                                            <td class="price" data-title="Price">
+                                                <span id="product-price-<%=item.productId._id%>">₹<%= item.productId.price %> </span>
+                                                </td>
                                             <td class="text-center" data-title="Stock">
-                                                <div class="detail-qty border radius  m-auto">
-                                                    <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                                    <span class="qty-val"><%= item.quantity %></span>
+                                                <div class="detail-qty border radius d-flex justify-content-center  m-auto">
+                                                    <button class="qty-btn" data-action="dec" data-product-id="<%=item.productId._id %>" style="border: none;background: none;">-</button>
+                                                    <span class="qty-val" id="qty-val-<%=item.productId._id%>"><%= item.quantity %></span>
+                                                    <button class="qty-btn" data-action="inc" data-product-id="<%=item.productId._id %>" style="border: none;background: none;">+</button>
                                                     <% let subtotal=item.quantity*item.productId.price %>
                                                     <% total+=subtotal %>
-                                                    <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                                </div>
+                                                    </div>
                                             </td>
                                             <td class="text-right" data-title="Cart">
-                                                <span>₹<%=subtotal %> </span>
+                                                <span id="subtotal-<%=item.productId._id %>">₹<%=subtotal.toFixed(2) %> </span>
                                             </td>
-                                            <td class="action" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
+                                            <td class="action removebtn" data-product-id="<%=item.productId._id %>" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
                                         </tr>
                                         <% }) %>
-                                    <tr>
-                                        <td colspan="6" class="text-end">
-                                            <a href="#" id="clearCartBtn" class="text-muted"> <i class="fi-rs-cross-small"></i> Clear Cart</a>
-                                        </td>
-                                    </tr>
+                                    
                                 </tbody>
                             </table>
                         </div>
                         <div class="cart-action text-end">
-                            <a class="btn  mr-10 mb-sm-15"><i class="fi-rs-shuffle mr-10"></i>Update Cart</a>
+                            <button id="clearCartBtn" class="btn btn-primary"> <i class="fi-rs-cross-small"></i> Clear Cart</button>
                             <a class="btn " href="/shop"><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
                         </div>
                         <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>
                         <div class="row mb-50">
                             <div class="col-lg-6 col-md-12">
-                                <div class="heading_s1 mb-3">
-                                    <h4>Calculate Shipping</h4>
-                                </div>
-                                <p class="mt-15 mb-30">Flat rate: <span class="font-xl text-brand fw-900">5%</span></p>
-                                <form class="field_form shipping_calculator">
-                                    <div class="form-row">
-                                        <div class="form-group col-lg-12">
-                                            <div class="custom_select">
-                                                <select class="form-control select-active">
-                                                    <option value="">Choose a option...</option>
-                                                    <option value="IN">India</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-row row">
-                                        <div class="form-group col-lg-6">
-                                            <input required="required" placeholder="State / Country" name="name" type="text">
-                                        </div>
-                                        <div class="form-group col-lg-6">
-                                            <input required="required" placeholder="PostCode / ZIP" name="name" type="text">
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-lg-12">
-                                            <button class="btn  btn-sm"><i class="fi-rs-shuffle mr-10"></i>Update</button>
-                                        </div>
-                                    </div>
-                                </form>
+                                
+                                
                                 <div class="mb-30 mt-50">
                                     <div class="heading_s1 mb-3">
                                         <h4>Apply Coupon</h4>
@@ -133,7 +111,7 @@
                                             <tbody>
                                                 <tr>
                                                     <td class="cart_total_label">Cart Subtotal</td>
-                                                    <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">₹<%=total %>.00</span></td>
+                                                    <td class="cart_total_amount"><span class="font-lg fw-900 text-brand" id="final-total">₹<%=total.toFixed(2) %></span></td>
                                                 </tr>
                                                 <tr>
                                                     <td class="cart_total_label">Shipping</td>
@@ -141,7 +119,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td class="cart_total_label">Total</td>
-                                                    <td class="cart_total_amount"><strong><span class="font-xl fw-900 text-brand">₹<%=total%>.00</span></strong></td>
+                                                    <td class="cart_total_amount"><strong><span class="font-xl fw-900 text-brand" id="grand-total">₹<%=total.toFixed(2)%></span></strong></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -151,6 +129,7 @@
                             </div>
                         </div>
                     </div>
+                    <% } %>
                 </div>
             </div>
         </section>
@@ -194,6 +173,110 @@
     <!-- Template  JS -->
     <script src="/frontend/assets/js/main.js?v=3.4"></script>
     <script src="/frontend/assets/js/shop.js?v=3.4"></script>
-</body>
+<script>
+    document.addEventListener('DOMContentLoaded',function(){
 
-</html>
+
+        //change qty of the product
+        document.querySelector('tbody').addEventListener('click',function(e){
+            if(!e.target.classList.contains('qty-btn')){//to make sure if its qty changeing btn
+                return
+            }
+            e.preventDefault()
+            const button=e.target
+            const productId=button.dataset.productId
+            const action=button.dataset.action//if 'inc'or 'dec'
+
+            const qtySpan=document.getElementById(`qty-val-${productId}`)
+            let currentQty=parseInt(qtySpan.textContent)
+            if(action==='inc'){
+                currentQty++
+            }else if(action==='dec'&&currentQty>1){
+                currentQty--
+            }else{
+                return
+            }
+            qtySpan.textContent=currentQty
+            updateCartQuantity(productId,currentQty)
+            async function updateCartQuantity(productId,quantity) {
+                try {
+                    const response=await fetch('cart/update-quantity',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({
+                            productId:productId,
+                            quantity:quantity
+                        })
+                    })
+                    const result=await response.json()
+                    if(result.success){
+                        const productPrice=document.getElementById(`product-price-${productId}`).textContent.replace("₹","")
+                        console.log("Product price is: ",productPrice);
+                        
+                        const subtotalSpan=document.getElementById(`subtotal-${productId}`)
+                        const finalTotal=document.getElementById('final-total')
+                        const grandTotal=document.getElementById('grand-total')
+
+                        subtotalSpan.textContent=`₹${(productPrice*quantity).toFixed(2)}`
+                        finalTotal.textContent=`₹${result.finalTotal.toFixed(2)}`
+                        grandTotal.textContent=`₹${result.finalTotal.toFixed(2)}`
+                    }else{
+                        Swal.fire("Error!",result.message,'error').then(()=>{
+                            window.location.reload()
+                        }) 
+                        console.error('Failed to update quantity');
+                    } 
+                } catch (error) {
+                    console.error('Error updating cart quantity : ',error);
+                   
+                }
+
+            }
+        })
+        //delete from cart 
+        const removebtns=document.querySelectorAll('.removebtn')
+        removebtns.forEach(btn=>{
+           btn.addEventListener('click',async function (e) {
+             const productId=btn.dataset.productId
+             await fetch(`/cart/delete/${productId}`,{
+                method:'DELETE',
+                headers:{'Content-Type':'application/json'}
+             }).then(response=>response.json()).then(result=>{
+                if(result.success){
+                    Swal.fire({
+                        icon:"success",
+                        text:result.message,
+                        title:"Success"
+                    }).then(()=>{
+                        window.location.reload()
+                    })
+                }else{
+                    Swal.fire("Error",result.message,"error")
+                }
+             })
+             .catch(err=>{
+                    Swal.fire("Error","Some issues","error")
+                })
+           })
+        })
+        //clear cart
+        const clearCartBtn=document.getElementById('clearCartBtn')
+        clearCartBtn.addEventListener('click',async function(){
+            await fetch('/cart/clearCart',{
+                method:"DELETE",
+                headers:{"Content-Type":"application/json"}
+            }).then(response=>response.json())
+            .then((result=>{
+                if(result.success){
+                    Swal.fire('Success',result.message,"success").then(()=>{
+                        window.location.reload()
+                    })
+                }else{
+                    Swal.fire("Error!",result.message,"error")
+                }
+            })).catch(result=>{
+                Swal.fire("Error!",result.message,"error")
+            })
+        })
+    })
+</script>

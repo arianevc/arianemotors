@@ -15,13 +15,9 @@ const categorySchema= new Schema({
         type:Boolean,
         default:false
     },
-    // isListed:{
-    //     type:Boolean,
-    //     default:true
-    // },
     createdAt:{
         type:Date,
         default:Date.now
     }
-})
+}) 
 module.exports=mongoose.model('Category',categorySchema)

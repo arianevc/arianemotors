@@ -65,7 +65,7 @@
             <img src="/<%= product.images[0] %>" width="200" alt="image">
             
       </td>
-      <td style="height: 100%;" class="d-flex">
+      <td style="height: 100%;" class="d-flex justify-content-between">
         <button 
           class="btn btn-warning edit-btn"
           data-bs-toggle="modal" 
@@ -78,11 +78,11 @@
           data-quantity="<%= product.quantity %>"
           data-category="<%= product.category._id ||product.category%>"
           data-images="<%= product.images %>"
-        >
-          Edit <i class="fa fa-pencil"></i>
+        ><i class="fa fa-pencil"></i>
         </button>
           <button class="btn btn-<%= product.isDeleted?'success':'danger' %> delete-product-btn" data-id="<%= product._id %>" data-deleted="<%= product.isDeleted ?1:0%>" type="submit"><%= product.isDeleted?"Restore":"Delete" %></button>
-          <!-- <button class="btn btn-danger remove-product-btn" data-id="<%= product._id %>" type="submit">Delete</button> -->
+          
+          <button class="btn btn-danger"><i class="fa fa-trash-o"></i></button>
         
       </td>
     </tr>

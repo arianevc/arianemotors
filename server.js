@@ -8,8 +8,8 @@ const dotenv=require('dotenv')
 const nocache=require('nocache')
 const port=process.env.PORT||5000
 const passport=require('./config/passport')//for google auths
-const userRoutes=require('./routes/route.user')
-const adminRoutes=require('./routes/route.admin')
+const userRoutes=require('./routes/userRoutes/route.user')
+const adminRoutes=require('./routes/adminRoutes/route.admin')
 dotenv.config()
 app.use(nocache())
 
@@ -29,26 +29,26 @@ connectDB();
 // User session middleware
 app.use('/', session({
     name: 'user.sid', 
-    secret: process.env.USER_SESSION_KEY || 'userSecret',
+    secret: process.env.USER_SESSION_KEY,
     resave: false,
     saveUninitialized: true,
     cookie: {
         secure: false, // remember to change it in hosting
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 60
+        maxAge: 2 * 60 * 60 * 1000
     }
 }));
 
 // Admin session middleware
 app.use('/admin', session({
     name: 'admin.sid', // cookie name for admin
-    secret: process.env.ADMIN_SESSION_KEY || 'adminSecret',
+    secret: process.env.ADMIN_SESSION_KEY,
     resave: false,
     saveUninitialized: true,
     cookie: {
         secure: false, 
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 60
+        maxAge: 2 * 60 * 60 * 1000
     }
 }))
 
@@ -61,9 +61,19 @@ app.use(express.json())
 app.set('view engine','ejs')
 app.set('views',path.join(__dirname,'views'))
 
-app.use((req,res,next)=>{
-    res.locals.loggedUser=req.session.user?req.session.user.name:null
-    // console.log(res.locals.loggedUser)
+const User=require("./model/userSchema")
+app.use(async(req,res,next)=>{
+    if(req.session.userId){
+        try {
+            const user=await User.findById(req.session.userId)
+            res.locals.loggedUser=user?user.name:null
+        } catch (error) {
+            console.error("Error in setting loggedUser local: ",error);
+            res.locals.loggedUser=null
+        }
+    }else{
+        res.locals.loggedUser=null
+    }
     next()
 })
 
