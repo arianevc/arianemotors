@@ -9,6 +9,7 @@ const nocache=require('nocache')
 const port=process.env.PORT||5000
 const passport=require('./config/passport')//for google auths
 const userRoutes=require('./routes/userRoutes/route.user')
+const shopRoutes=require('./routes/userRoutes/route.shop')
 const adminRoutes=require('./routes/adminRoutes/route.admin')
 dotenv.config()
 app.use(nocache())
@@ -79,6 +80,7 @@ app.use(async(req,res,next)=>{
 
 
 app.use('/',userRoutes)
+app.use('/shop',shopRoutes)
 app.use('/admin',adminRoutes)
 
 

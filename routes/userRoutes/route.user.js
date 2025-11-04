@@ -3,7 +3,6 @@ const router=express.Router()
 const passport=require('passport')
 const userController=require('../../controller/controller.user')
 const profileController=require("../../controller/controller.profile")
-const shopController=require('../../controller/controller.shop')
 const authenticate=require('../../helpers/authenticate')
 const upload = require("../../config/multer");
 
@@ -45,24 +44,7 @@ router.route("/forgotpwd")//router chaining
 router.get('/resetpwd/:token',userController.loadResetPassword)
 router.post('/resetpwd/:token',userController.resetPasswordPost)
 
-//shop functions
-router.get('/shop',authenticate.checkBlocked,shopController.loadShop);
-router.get('/shop/sort',authenticate.checkBlocked,shopController.loadShop)
-
-//product details
-router.get('/product/:id',shopController.loadProductDetails)
-//wishlist functions
-router.get('/wishlist',shopController.loadWishlist)
-router.post('/wishlist/toggle/:productId',shopController.toggleWishlist)
-router.delete('/wishlist/delete/:productId',shopController.deleteFromWishlist)
-
-//cart management
-router.post('/cart/add',shopController.addProductToCart)
-router.get('/cart',shopController.loadCart)
-router.delete('/cart/clearCart',shopController.clearCart)
-router.delete('/cart/delete/:productId',shopController.deleteFromCart)
-router.post('/cart/update-quantity',shopController.updateCartQuantity)
-
+//google auth for google signin
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
 router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/login'}),(req,res)=>{
     req.session.user={

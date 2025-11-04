@@ -275,7 +275,14 @@ const deleteFromWishlist=async(req,res)=>{
         
     }
 }
-
+const loadCheckout=async(req,res)=>{
+    try {
+        res.render('user/checkOutPage')
+    } catch (error) {
+        console.error("error in loading checkoutpage",error);
+        res.render('user/error',{statusCode:500,statusMessage:"Server Error"})
+    }
+}
 module.exports={loadShop,loadProductDetails,addProductToCart,
     loadCart,updateCartQuantity,deleteFromCart,clearCart,loadWishlist,
-    toggleWishlist,deleteFromWishlist}
+    toggleWishlist,deleteFromWishlist,loadCheckout}
