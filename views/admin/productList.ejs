@@ -62,7 +62,7 @@
       <td>₹<%= product.price %></td>
       <td><%= product.quantity %></td>
       <td>
-            <img src="/<%= product.images[0] %>" width="200" alt="image">
+            <img src="<%= product.images[0] %>" width="200" alt="image">
             
       </td>
       <td style="height: 100%;" class="d-flex justify-content-between">
@@ -82,7 +82,7 @@
         </button>
           <button class="btn btn-<%= product.isDeleted?'success':'danger' %> delete-product-btn" data-id="<%= product._id %>" data-deleted="<%= product.isDeleted ?1:0%>" type="submit"><%= product.isDeleted?"Restore":"Delete" %></button>
           
-          <button class="btn btn-danger"><i class="fa fa-trash-o"></i></button>
+          <button class="btn btn-danger removeBtn"  data-product-id="<%= product._id %>"><i class="fa fa-trash-o"></i></button>
         
       </td>
     </tr>
@@ -330,7 +330,7 @@ initializeImageCropper(imageInput)
           div.classList.add('position-relative','mb-1')
 
         const image=document.createElement('img')
-        image.src=`/${img}`
+        image.src=`${img}`
         image.style.width='80px'
         image.style.height='80px'
         image.classList.add('img-thumbnail')
@@ -452,6 +452,38 @@ initializeImageCropper(imageInput)
  })
  //=========
  //remove the product
+ //=========
+ const removeBtns=document.querySelectorAll('.removeBtn')
+ removeBtns.forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    console.log("button clicked");
+    const result=await Swal.fire({
+      icon:'warning',
+      title:'Are You Sure?',
+      text:'This action will permenantly delete the product',
+      showCancelButton:true,
+      confirmButtonText:'Yes,Delete it!'
+    })
+    if(result.isConfirmed){
+      try {
+        const productId=btn.dataset.productId
+        const response=await fetch(`/product/remove/${productId}`,{
+          method:'DELETE',
+          headers:{'Content-Type':'application/json'}
+        })
+        const result=await response.json()
+        if(result.success){
+          Swal.fire({
+            
+          })
+        }
+      } catch (error) {
+        
+      }
+    }
+    
+  })
+ })
   })
 </script>
 

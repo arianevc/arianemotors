@@ -143,13 +143,13 @@ try {
     }
     const userId=req.session.userId
     //this takes the file buffer,resizes/compresses it, saves it and returns the path
-    const imagePath=await processProfileImage(req.file)
+    const imageUrl=await processProfileImage(req.file)
     //update the user's record in the database
-    await User.findByIdAndUpdate(userId,{profileImage:'/'+imagePath.replace(/\\/g,'/')})
+    await User.findByIdAndUpdate(userId,{profileImage:imageUrl})
     res.json({
         success:true,
         message:"Profile image uploaded successfully!",
-        newImagePath:'/'+imagePath.replace(/\\/g,'/')
+        newImagePath:imageUrl
     })
 } catch (error) {
     console.error("Error uploading profile image: ",error);

@@ -31,9 +31,7 @@ res.render('admin/productList', {products, categories,currentPage:page,totalPage
 }
 
 const loadAddProduct=async(req,res)=>{
-   if(!req.session.admin){
- return res.redirect('/login')
-  }
+
   try {
     const categories = await Category.find({ isDeleted: false })
     res.render('admin/addProduct',{categories})
@@ -79,20 +77,20 @@ try {
 
 const editProduct=async(req,res)=>{
 try {
-    const product=await Product.findById(req.params.id)
+  const product=await Product.findById(req.params.id)
+  if(!product){
+    return res.status(404).send("Product not found")
+  }
     //remove the selected images
     if(req.body.removeImages && Array.isArray(req.body.removeImages)){
-     
-      req.body.removeImages.forEach(img => {
-        const imagePath=path.join(__dirname,'..','public','uploads',img)
-        // console.log(imagePath)
-        
-        if(fs.existsSync(imagePath)){
-          fs.unlinkSync(imagePath)//to delete the image from the folder
-        }
-        product.images=product.images.filter(i=>i!==img)//remove the path from DB array
-      });
+     const urlsToRemove=req.body.removeImages
+     console.log('removed images: ',urlsToRemove)
+     product.images=product.images.filter(
+      imgUrl=>!urlsToRemove.includes(imgUrl)
+     )
     }
+    console.log(product.images);
+    
     //to add new images 
     let newImages=[]
     if(req.files&&req.files.length>0){

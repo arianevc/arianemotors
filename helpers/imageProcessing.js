@@ -1,24 +1,36 @@
 const sharp=require('sharp')
-const fs=require('fs')
-const path=require('path')
+const cloudinary=require('cloudinary').v2
+
+function uploadToCloudinary(fileBuffer,options){
+    return new Promise((resolve,reject)=>{
+        const uploadStream=cloudinary.uploader.upload_stream(
+            options,
+            (error,result)=>{
+                if(error){
+                    return reject(error)
+                }
+                resolve(result)
+            }
+        )
+        sharp(fileBuffer).pipe(uploadStream)
+    })
+}
+
 
 async function processImages(files) {
     const imagePaths=[]
-    for(let i=0;i<files.length;i++){
-        const filename=`product-${Date.now()}-${i}.jpeg`
-        const outputPath=path.join('public/uploads/products',filename)
-
-        fs.mkdirSync(path.dirname(outputPath),{recursive:true})//to ensure the directory exists
-
-        await sharp(files[i].buffer)
+    for(const file of files){
+        const processedBuffer=await sharp(file.buffer)
         .resize(500,500,{
             fit:sharp.fit.cover,
             position:sharp.strategy.entropy
         })
-        .jpeg({quality:80})
-        .toFile(outputPath)
-
-        imagePaths.push(`uploads/products/${filename}`)
+        .webp({quality:80})
+        .toBuffer()
+        const result=await uploadToCloudinary(processedBuffer,{
+            folder:'product_images'
+        })
+        imagePaths.push(result.secure_url)//store the url
     }
     return imagePaths
 }
@@ -26,18 +38,17 @@ async function processProfileImage(file) {
     if(!file){
         throw new Error('No file provided for processing')
     }
-    const filename=`profile-${Date.now()}.jpeg`
-    const outputPath=path.join('public/uploads/profile_images',filename)
+    //resize/compress with sharp
 
-    fs.mkdirSync(path.dirname(outputPath),{recursive:true})//to make sure directory exists
+    const processedBuffer=await sharp(file.buffer)
+    .resize(250,250,{fit:'cover'})
+    .webp({quality:90})
+    .toBuffer()//get the processed image as a buffer
 
-    //Process the image buffer with sharp
-    await sharp(file.buffer)
-    .resize(250,250,{
-        fit:'cover',
+    //uploads buffer to Cloudinary
+    const result=await uploadToCloudinary(processedBuffer,{
+        folder:'profile_images'
     })
-    .jpeg({quality:90})
-    .toFile(outputPath)
-    return `uploads/profile_images/${filename}`
+    return result.secure_url//return https url
 }
 module.exports={processImages,processProfileImage}

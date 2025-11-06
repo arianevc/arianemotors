@@ -1,12 +1,13 @@
 const express=require("express")
 const router=express.Router()
 const shopController=require('../../controller/controller.shop')
+const orderController=require('../../controller/controller.order')
 const authenticate=require('../../helpers/authenticate')
 
 
 //shop functions
-router.get('/',authenticate.checkBlocked,shopController.loadShop);
-router.get('/sort',authenticate.checkBlocked,shopController.loadShop)
+router.get('/products',authenticate.checkBlocked,shopController.loadShop);
+router.get('/products/sort',authenticate.checkBlocked,shopController.loadShop)
 
 //product details
 router.get('/product/:id',shopController.loadProductDetails)
@@ -23,6 +24,6 @@ router.delete('/cart/delete/:productId',shopController.deleteFromCart)
 router.post('/cart/update-quantity',shopController.updateCartQuantity)
 
 //checkout
-router.get('/checkout',shopController.loadCheckout)
+router.get('/checkout',orderController.loadCheckout)
 
 module.exports=router

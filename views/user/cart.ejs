@@ -36,18 +36,23 @@
                                         <div class="">
                                         <p class="font-weight-bold  d-flex justify-content-center" style="color: #088178;">No Items in your cart.Please check the shop page</p>
                                         <br>
-                                         <a class="d-flex justify-content-center" href="/shop"><button class="btn"><i class="fi-rs-shopping-bag mr-10 "></i>Continue Shopping</button></a>
+                                         <a class="d-flex justify-content-center" href="/shop/products"><button class="btn"><i class="fi-rs-shopping-bag mr-10 "></i>Continue Shopping</button></a>
                                          </div>
                                     <% }else{ %>
                                     <% let total=0 %>
                                     <% cart.forEach(item=>{ %>
                                         <tr>
-                                            <td class="image product-thumbnail"><img src="<%= item.productId.images[0] %>" alt="#"></td>
+                                            <td class="image product-thumbnail"><img src="<%= item.productId.images[0] %>" alt="product_img"></td>
                                             <td class="product-des product-name">
                                                 <h5 class="product-name"><a href="/product/<%=item.productId._id %>"><%= item.productId.name %></a></h5>
                                                 <p class="font-xs"><%= item.productId.productDescription %><br>
                                                 </p>
                                             </td>
+                                            <% if(item.productId.isDeleted) {%>
+                                            <td colspan="4">
+                                                <p class="text-danger">Item is blocked by admin</p>
+                                            </td>
+                                            <% }else{ %>
                                             <td class="price" data-title="Price">
                                                 <span id="product-price-<%=item.productId._id%>">₹<%= item.productId.price %> </span>
                                                 </td>
@@ -64,6 +69,7 @@
                                                 <span id="subtotal-<%=item.productId._id %>">₹<%=subtotal.toFixed(2) %> </span>
                                             </td>
                                             <td class="action removebtn" data-product-id="<%=item.productId._id %>" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
+                                        <% } %>
                                         </tr>
                                         <% }) %>
                                     
@@ -124,7 +130,7 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <a href="#" class="btn "> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
+                                    <a href="/shop/checkout" class="btn "> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
                                 </div>
                             </div>
                         </div>
@@ -269,10 +275,12 @@
             .then((result=>{
                 if(result.success){
                     Swal.fire('Success',result.message,"success").then(()=>{
-                        window.location.reload()
+                        location.reload()
                     })
                 }else{
-                    Swal.fire("Error!",result.message,"error")
+                    Swal.fire("Error!",result.message,"error").then(()=>{
+                        location.reload()
+                    })
                 }
             })).catch(result=>{
                 Swal.fire("Error!",result.message,"error")

@@ -75,7 +75,7 @@
                     <div class="header-right">
                         <div class="search-style-2">
                         
-                            <form action="/shop" method="get">
+                            <form action="/shop/products/" method="get">
   <select class="select-active" name="category">
     <option value="">All Categories</option>
     <% if (categoryList) { %>
@@ -93,7 +93,7 @@
     <% if(!search){ %>
         <button type="submit"><i class="fi-rs-search"></i></button>
 <% }else{ %>
-    <a href="/shop">
+    <a href="/shop/products">
       <button type="button" class="btn btn-close"></button>
     </a>
     <% } %>
@@ -105,13 +105,13 @@
                         <div class="header-action-right">
                             <div class="header-action-2">
                                 <div class="header-action-icon-2">
-                                    <a title="View Wishlist" href="/wishlist">
+                                    <a title="View Wishlist" href="/shop/wishlist">
                                         <img class="svgInject" alt="Evara" src="/frontend/assets/imgs/theme/icons/icon-heart.svg">
                                         <!-- <span class="pro-count blue">4</span> -->
                                     </a>
                                 </div>
                                 <div class="header-action-icon-2">
-                                    <a title="View Cart" class="mini-cart-icon" href="/cart">
+                                    <a title="View Cart" class="mini-cart-icon" href="/shop/cart">
                                         <img alt="Evara" src="/frontend/assets/imgs/theme/icons/icon-cart.svg">
                                         <!-- <span class="pro-count blue">2</span> -->
                                     </a>
@@ -155,8 +155,12 @@
                                 </div>
                                  <div class="header-action-icon-2">
                                     <a title="View Profile" href="/account">
-                                        <img class="svgInject" alt="Evara" src="/frontend/assets/imgs/theme/icons/icon-profile.svg">
-                                        <!-- <span class="pro-count blue">4</span> -->
+                                        <% if(loggedUser &&loggedUserImage){%>
+                                            <img class="border rounded" alt="profile_Image" src="<%=loggedUserImage %>">
+                                            <% }else{ %>
+                                            <img class="svgInject" alt="profile_Image" src="/frontend/assets/imgs/theme/icons/icon-profile.svg">
+                                            <% } %>
+                                            <!-- <span class="pro-count blue">4</span> -->
                                     </a>
                                 </div>
                             </div>
@@ -363,7 +367,7 @@
                                         <a href="page-about.html">About</a>
                                     </li>
                                     <li>
-                                        <a href="/shop">Shop</a>
+                                        <a href="/shop/products/">Shop</a>
                                     </li>
                                     <!-- <li><a href="shop-grid-right.html">Shop <i class="fi-rs-angle-down"></i></a>
                                         <ul class="sub-menu">

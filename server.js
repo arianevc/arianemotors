@@ -3,6 +3,7 @@ const app=express()
 
 const session=require('express-session')
 const path = require("path")
+const cloudinary=require('cloudinary').v2
 const connectDB = require("./config/db")
 const dotenv=require('dotenv')
 const nocache=require('nocache')
@@ -68,6 +69,7 @@ app.use(async(req,res,next)=>{
         try {
             const user=await User.findById(req.session.userId)
             res.locals.loggedUser=user?user.name:null
+            res.locals.loggedUserImage=user?user.profileImage:null
         } catch (error) {
             console.error("Error in setting loggedUser local: ",error);
             res.locals.loggedUser=null
@@ -77,13 +79,19 @@ app.use(async(req,res,next)=>{
     }
     next()
 })
-
+cloudinary.config({
+    cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:process.env.CLOUDINARY_API_KEY,
+    api_secret:process.env.CLOUDINARY_API_SECRET
+})
 
 app.use('/',userRoutes)
 app.use('/shop',shopRoutes)
 app.use('/admin',adminRoutes)
 
-
+app.use((req,res,next)=>{
+    res.status(404).render('user/error',{statusCode:404,statusMessage:"Page Not Found"})
+})
 app.listen(port,(err)=>{
     if(err)console.log(err)
     console.log(`Server running on http://localhost:${port}` )

@@ -98,7 +98,7 @@
                             <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
                             <ul class="categories">
                               <% categoryList.forEach(category => {%>
-                                <li><a href="/shop?category=<%= category._id %>&search=<%= search || "" %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort || "" %>"
+                                <li><a href="/shop/products/?category=<%= category._id %>&search=<%= search || "" %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort || "" %>"
                                     class="<%= categoryId == category._id.toString() ? 'active-category' : '' %>"><%= category.name %></a>
                                 </li>
                                 <% }) %>
@@ -110,7 +110,7 @@
                                 <h5 class="widget-title mb-10">Filter by price</h5>
                                 <div class="bt-1 border-color-1"></div>
                             </div>
-                            <form method="GET" action="/shop">
+                            <form method="GET" action="/shop/products/">
                                 <input type="hidden" name="search" value="<%= search || '' %>">
                                 <input type="hidden" name="category" value="<%= categoryId || '' %>">
                                 <input type="hidden" name="sort" value="<%= sort || '' %>">
@@ -201,7 +201,7 @@
             urlParams.set('sort',sortValue)//add or update the sortvalue
 
             try {
-                const response=await fetch(`shop/?${urlParams.toString()}`,{
+                const response=await fetch(`/shop/products/?${urlParams.toString()}`,{
                     headers:{"X-Requested-With":"XMLHttpRequest"}//helps server to identify the AJAX request
                 })
                 const html=await response.text()
@@ -224,14 +224,14 @@
             urlParams.delete('maxPrice')
             urlParams.delete('page')
             try {
-                const response = await fetch(`/shop?${urlParams.toString()}`, {
+                const response = await fetch(`/shop/products/?${urlParams.toString()}`, {
                     headers: { "X-Requested-With": "XMLHttpRequest" }
                 });
                 const html = await response.text();
                 
                 document.getElementById('product-container').innerHTML = html;
                 
-                window.history.pushState({}, '', `/shop?${urlParams.toString()}`);
+                window.history.pushState({}, '', `/shop/products/?${urlParams.toString()}`);
             } catch (error) {
                 console.error("error while clearing filter",error);
                 
