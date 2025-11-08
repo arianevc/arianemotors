@@ -7,6 +7,8 @@ const nodemailer=require('nodemailer')
 const User=require('../model/userSchema')
 const Category=require('../model/categorySchema')
 const Product=require('../model/productSchema')
+const Order=require('../model/orderSchema')
+const PDFDocument=require('pdfkit')
 const {processImages, processProfileImage}=require('../helpers/imageProcessing')
 const { configDotenv } = require('dotenv')
 const verifyEmail=require("../helpers/verifyEmail")
@@ -306,6 +308,165 @@ const userLogout=async (req,res)=>{
     })
 }
 
+//order management
+const loadOrderSuccess=async(req,res)=>{
+try {
+    const orderId=req.query.orderId
+    console.log("given orderId: ",orderId);
+    const search=req.query.search||""
+    const categoryId=req.query.category||""
+    const categories=await Category.find()
+    if(!orderId){
+       return res.redirect('/')
+    }
+    res.render('user/orderSuccessPage',{categoryList:categories,categoryId,search,orderId:orderId})
+} catch (error) {
+    console.error("error in loading order success page: ",error);
+    res.status(500).render('user/error',{statusCode:500,statusMessage:"Page Unavailable due to server error"})
+    
+}
+}
+const loadOrderDetails=async(req,res)=>{
+    try {
+        const orderId=req.params.orderId
+    const search=req.query.search||""
+    const categoryId=req.query.category||""
+    const categories=await Category.find()    
+    const userId=req.session.userId
+    const order=await Order.findOne({orderId:orderId,userId:userId}).populate('items.productId')
+    if(!order){
+        return res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
+    }
+    res.render('user/orderDetails',{categoryList:categories,categoryId,search,order:order})
+
+    } catch (error) {
+        console.error("error in displaying order details: ",error);
+        res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
+    }
+}
+const downloadInvoice=async(req,res)=>{
+    try{
+    const orderId=req.params.orderId
+    const userId=req.session.userId
+    const order=await Order.findOne({orderId:orderId,userId:userId}).populate('items.productId')
+    if(!order){
+        return res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
+    }
+    const doc=new PDFDocument({size:'A4',margin:50})
+
+    // Set response headers to trigger a PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="invoice-${order.orderId}.pdf"`);
+
+        // Pipe the PDF document directly to the response
+        doc.pipe(res);
+
+        // --- Add Content to the PDF ---
+        // Header
+        doc.fontSize(25).text('Invoice', { align: 'center' });
+        doc.moveDown();
+
+        // Order Details
+        doc.fontSize(14);
+        doc.text(`Order ID: ${order.orderId}`);
+        doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`);
+        doc.text(`Status: ${order.orderStatus}`);
+        doc.moveDown();
+
+        // Shipping Address
+        doc.fontSize(16).text('Shipping To:');
+        doc.fontSize(12);
+        doc.text(order.shippingAddress.name);
+        doc.text(order.shippingAddress.street);
+        doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}`);
+        doc.text(`Phone: ${order.shippingAddress.phone}`);
+        doc.moveDown();
+
+        // Items Table
+        doc.fontSize(16).text('Items Purchased:');
+        doc.moveDown(0.5);
+        
+        // Table Header
+        let tableTop = doc.y;
+        const itemX = 50;
+        const qtyX = 350;
+        const priceX = 420;
+        const totalX = 500;
+
+        doc.fontSize(12).text('Item', itemX, tableTop);
+        doc.text('Qty', qtyX, tableTop);
+        doc.text('Price', priceX, tableTop);
+        doc.text('Total', totalX, tableTop);
+        doc.strokeColor('#aaa').moveTo(50, tableTop + 20).lineTo(550, tableTop + 20).stroke();
+        doc.moveDown(2);
+
+        // Table Rows
+        order.items.forEach(item => {
+            let itemY = doc.y;
+            doc.fontSize(10).text(item.productId.name, itemX, itemY);
+            doc.text(item.quantity, qtyX, itemY, { width: 50 });
+            doc.text(`Rs.${item.price.toFixed(2)}`, priceX, itemY);
+            doc.text(`Rs.${(item.price * item.quantity).toFixed(2)}`, totalX, itemY);
+            doc.moveDown(1);
+        });
+        doc.moveDown();
+        
+        // Grand Total
+        doc.fontSize(16).text(`Grand Total: Rs.${order.totalPrice.toFixed(2)}`);
+
+        // --- Finalize the PDF ---
+        doc.end();
+    }catch{
+        console.error("Error generating invoice:", error);
+        res.status(500).render('user/error',{statusCode:500,statusMessage:'Failed to generate invoice'})
+    }
+}
+const cancelOrder=async(req,res)=>{
+    try {
+        const orderId=req.params.orderId   
+    const userId=req.session.userId
+    const order=await Order.findOne({orderId:orderId,userId:userId})
+    if(!order){
+        return res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
+    }
+    if(order.orderStatus==="Pending"||order.orderStatus==="Processing"){
+        order.orderStatus="Cancelled"
+        await order.save()
+       return res.status(200).json({success:true,message:"Order is Cancelled"})
+    }else{
+        return res.status(406).json({success:false,message:"Order cancellation failed"})
+    }
+     } catch (error) {
+        console.error("error in cancelling the order")
+        return res.status(500).json({success:false,message:"Server Error"})
+    }
+
+}
+const returnOrder=async(req,res)=>{
+    try {
+        const orderId=req.params.orderId
+        const userId=req.session.userId
+        const reason=req.body.reason
+        console.log(reason)
+        if(!reason||reason.trim()===''){
+          return res.status(400).json({success:false,message:'A reason for return is required'})
+        }
+        const order=await Order.findOne({orderId:orderId,userId:userId})
+        if(!order){
+            return res.status(404).json({success:false,message:"Order Not Found"})
+        }
+        if(order.orderStatus==='Delivered'){
+            order.orderStatus='Return Requested'
+            order.returnReason=reason
+            await order.save()
+            res.json({success:true,message:"Return request submitted successfully"})             
+        }
+    } catch (error) {
+        console.error("Error in requesting return: ",error);
+        res.status(500).json({success:false,message:"Server Error"})
+    }
+}
 module.exports={LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
-    userloginPost,userLogout}
+    userloginPost,userLogout,loadOrderSuccess,loadOrderDetails,downloadInvoice,
+    cancelOrder,returnOrder}

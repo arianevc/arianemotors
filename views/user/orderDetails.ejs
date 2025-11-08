@@ -1,0 +1,174 @@
+<%- include('../partials/user/header.ejs') %>
+
+<main class="main">
+    <div class="container" style="padding: 40px 15px;">
+        <div class="mb-4">
+            <h2>Order Details</h2>
+            <p><strong>Order ID:</strong> <%= order.orderId %></p>
+            <p><strong>Date Placed:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p>
+            <p><strong>Status:</strong> <span class="badge bg-success" id="orderStatus"><%= order.orderStatus %></span></p>
+            <div class="mt-4">
+                <a href="/orders/invoice/<%= order.orderId %>" class="btn btn-primary">
+                    <i class="fi-rs-download mr-5"></i>Download Invoice
+                </a>    
+                <% if (order.orderStatus === 'Pending' || order.orderStatus === 'Processing') { %>
+                        <button style="background-color: rgb(153, 5, 5);" type="submit" id="orderCancelBtn" data-order-id="<%= order.orderId %>" class="btn btn-danger">Cancel Order</button>
+                
+                <% }else if (order.orderStatus === "Delivered") { %>
+                        <button style="background-color: rgb(132, 66, 0);" type="button" id="orderReturnBtn" data-order-id="<%= order.orderId %>" class="btn btn-warning">Return Order</button>
+                <% } %>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">Shipping Address</h5>
+                    </div>
+                    <div class="card-body">
+                        <address>
+                            <strong><%= order.shippingAddress.name %></strong><br>
+                            <%= order.shippingAddress.street %><br>
+                            <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> - <%= order.shippingAddress.pincode %><br>
+                            Phone: <%= order.shippingAddress.phone %>
+                        </address>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">Payment Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                        <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+                        <hr>
+                        <h4 class="mb-0">Total Price: ₹<%= order.totalPrice.toFixed(2) %></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h4>Items in this Order</h4>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col" class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% order.items.forEach(item => { %>
+                        <tr>
+                            <td>
+                                <%= item.productId ? item.productId.name : 'Product not available' %>
+                            </td>
+                            <td>₹<%= item.price.toFixed(2) %></td>
+                            <td><%= item.quantity %></td>
+                            <td class="text-end">₹<%= (item.price * item.quantity).toFixed(2) %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<%- include('../partials/user/footer.ejs') %>
+<script>
+    document.addEventListener('DOMContentLoaded',function(){
+        //order cancellation
+        const cancelOrderBtn=document.getElementById('orderCancelBtn')
+        const orderStatusField=document.getElementById('orderStatus')
+        if(cancelOrderBtn){
+        cancelOrderBtn.addEventListener('click',async(e)=>{
+            e.preventDefault()
+            const orderId=cancelOrderBtn.dataset.orderId
+            Swal.fire({
+                icon:'warning',
+                title:'Are you sure?',
+                text:'This action is irreversible',
+                showCancelButton:true,
+                confirmButtonText:'Yes!Cancel It'
+            }).then(async(response)=>{
+                if(response.isConfirmed){
+                    try {
+                        const res=await fetch(`/orders/cancel/${orderId}`,{
+                        method:'GET',
+                        headers:{'Content-Type':'application/json'}
+                    })
+                    const result=await res.json()
+                    if(result.success){
+                        Swal.fire("Success!",result.message,'success').then(()=>{
+                            orderStatusField.classList.remove('bg-success')
+                            orderStatusField.classList.add('bg-danger')
+                            orderStatusField.textContent='cancelled'
+                            cancelOrderBtn.style.display='none'
+                        })
+                    }else{
+                        Swal.fire("Error!",result.message,'error')
+                    }
+                    } catch (error) {
+                        Swal.fire("Error!", "Something went wrong", 'error');
+                      console.error(error);
+                    }
+                }
+            })
+        })
+    }
+        //order return
+        const returnOrderBtn=document.getElementById('orderReturnBtn')
+        if(returnOrderBtn){
+        returnOrderBtn.addEventListener('click',async(e)=>{
+            e.preventDefault()
+            console.log('button clicked');
+            
+            const orderId=returnOrderBtn.dataset.orderId
+            Swal.fire({
+                title:'Request a Return',
+                text:'Please Provide a reason for return',
+                input:'textarea',
+                inputPlaceholder:'Type your reason here....',
+                inputAttributes:{
+                    'aria-label':'Type your reason here'
+                },
+                showCancelButton:true,
+                confirmButtonText:'Submit Request',
+                inputValidator:(value)=>{
+                    if(!value){
+                        return 'You must provide a reason for returning order!'
+                    }
+                }
+            }).then(async(result)=>{
+                if(result.isConfirmed && result.value){
+                    const reason=result.value
+                    await fetch(`/orders/return/${orderId}`,{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({reason:reason})
+                    }).then(response=>response.json())
+                    .then(data=>{
+                        if(data.success){
+                            Swal.fire('Success!',data.message,'success').then(()=>{
+                                window.location.reload()
+                            })
+                        }else{
+                            Swal.fire('Error!',data.message,'error')
+                        }
+                    }).catch(err=>{
+                        console.error(err);
+                        Swal.fire('Error!','An unexpected error occured','error')
+                    })
+                }
+            })
+        })
+    }
+    })
+</script>

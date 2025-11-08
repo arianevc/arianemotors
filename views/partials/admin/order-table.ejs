@@ -1,0 +1,54 @@
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>User</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if(orders.length > 0) { %>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td><b><%= order.orderId %></b></td>
+                            <td><%= order.userId.name %></td>
+                            <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                            <td>₹<%= order.totalPrice.toFixed(2) %></td>
+                            <td>
+                                <select class="form-select status-dropdown" data-order-id="<%= order.orderId %>" style="width: 150px;">
+                                    <% ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled','Return Requested','Returned'].forEach(status => { %>
+                                        <option value="<%= status %>" <%= order.orderStatus === status ? 'selected' : '' %>>
+                                            <%= status %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                            </td>
+                            <td class="text-end">
+                                <a href="/admin/orders/details/<%= order.orderId %>" class="btn btn-sm btn-light">View</a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="6" class="text-center">No orders found.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="pagination-area mt-30 mb-50">
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-start" id="pagination-controls">
+            <% for(let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                </li>
+            <% } %>
+        </ul>
+    </nav>
+</div>

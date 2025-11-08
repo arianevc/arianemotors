@@ -670,7 +670,13 @@
                      Swal.fire({
                         icon:'success',
                         title:'Product added to cart',
-                        text:result.message
+                        text:result.message,
+                        showCancelButton:true,
+                        confirmButtonText:'View Cart'
+                    }).then((res)=>{
+                        if(res.isConfirmed){
+                            location.href='/shop/cart'
+                        }
                     })
                 }else if(result.redirectUrl){
                     console.log("link: ",result.redirectUrl);

@@ -1,0 +1,27 @@
+<%- include('../partials/user/header.ejs') %>
+
+<main class="main">
+    <div class="container text-center" style="padding: 100px 15px;">
+        
+        
+        <h1 class="display-4" style="font-weight: 700; margin-top: 20px;">Thank You!</h1>
+        <p class="lead" style="font-size: 1.25rem;">Your order has been placed successfully.</p>
+        
+        <p style="margin-top: 20px;">
+            Your Order ID is: <strong><%= orderId %></strong>
+        </p>
+        
+        <p>Thank you for shopping with us. You can track your order status in your account.</p>
+        
+        <div style="margin-top: 40px;">
+            <a href="/orders/<%= orderId %>" class="btn btn-primary" style="margin: 5px;">
+                View Order Details
+            </a>
+            <a href="/shop/products" class="btn btn-secondary" style="margin: 5px;">
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</main>
+
+<%- include('../partials/user/footer.ejs') %>

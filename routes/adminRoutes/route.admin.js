@@ -35,5 +35,9 @@ router.post(
   productController.editProduct
 );
 router.post("/products/:id/delete", productController.softDeleteProduct);
+//order management
 
+router.get('/orders', authenticate.checkUserSession,adminController.loadOrders);
+router.post('/orders/update-status/:orderId',authenticate.checkUserSession, adminController.updateOrderStatus);
+router.get('/orders/details/:orderId',authenticate.checkUserSession,adminController.loadOrderDetails)
 module.exports = router;

@@ -1,0 +1,176 @@
+<%- include('../partials/admin/header.ejs') %>
+
+<main class="main-wrap">
+    <section class="content-main">
+        <div class="content-header">
+            <h2 class="content-title">Order Management</h2>
+        </div>
+        <div class="card mb-4">
+            <header class="card-header">
+                <form id="filterForm" class="row gx-3">
+                    <div class="col-lg-3 col-md-6 me-auto">
+                        <input type="text" placeholder="Search by Order ID or User..." class="form-control" name="search" id="searchInput" value="<%= currentSearch %>">
+                    </div>
+                    <div class="col-lg-2 col-6 col-md-3">
+                        <select class="form-select" name="status" id="statusFilter">
+                            <option value="All" <%= currentStatus === 'All' ? 'selected' : '' %>>All Statuses</option>
+                            <option value="Pending" <%= currentStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="Processing" <%= currentStatus === 'Processing' ? 'selected' : '' %>>Processing</option>
+                            <option value="Shipped" <%= currentStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                            <option value="Delivered" <%= currentStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="Cancelled" <%= currentStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-6 col-md-3">
+                        <select class="form-select" name="sort" id="sortFilter">
+                            <option value="newest" <%= currentSort === 'newest' ? 'selected' : '' %>>Newest</option>
+                            <option value="oldest" <%= currentSort === 'oldest' ? 'selected' : '' %>>Oldest</option>
+                            <option value="total_desc" <%= currentSort === 'total_desc' ? 'selected' : '' %>>Total (High)</option>
+                            <option value="total_asc" <%= currentSort === 'total_asc' ? 'selected' : '' %>>Total (Low)</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-1">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </div>
+                    <div class="col-lg-1 ms-5">
+                        <button type="button" id="clearFilterBtn" class="btn btn-light"><i class="fa fa-close"></i></button>
+                    </div>
+                </form>
+            </header>
+
+            <div id="order-data-container">
+                <%- include('../partials/admin/order-table', { orders: orders, totalPages: totalPages, currentPage: currentPage, limit: limit }) %>
+            </div>
+            
+        </div>
+    </section>
+</main>
+<footer class="main-footer font-xs">
+            <div class="row pb-30 pt-15">
+                <div class="col-sm-6">
+                    <script>
+                    document.write(new Date().getFullYear())
+                    </script> ©, Evara - HTML Ecommerce Template .
+                </div>
+                <div class="col-sm-6">
+                    <div class="text-sm-end">
+                        All rights reserved
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+    <script src="/backend/assets/js/vendors/jquery-3.6.0.min.js"></script>
+    <script src="/backend/assets/js/vendors/bootstrap.bundle.min.js"></script>
+    <script src="/backend/assets/js/vendors/select2.min.js"></script>
+    <script src="/backend/assets/js/vendors/perfect-scrollbar.js"></script>
+    <script src="/backend/assets/js/vendors/jquery.fullscreen.min.js"></script>
+    <script src="/backend/assets/js/vendors/chart.js"></script>
+    <!-- Main Script -->
+    <script src="/backend/assets/js/main.js" type="text/javascript"></script>
+    <script src="/backend/assets/js/custom-chart.js" type="text/javascript"></script>
+</body>
+
+</html>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    
+    const filterForm = document.getElementById('filterForm');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const sortFilter = document.getElementById('sortFilter');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const dataContainer = document.getElementById('order-data-container');
+
+    // --- Main function to fetch and update orders ---
+    async function fetchOrders(page = 1) {
+        const search = searchInput.value;
+        const status = statusFilter.value;
+        const sort = sortFilter.value;
+
+    
+        const urlParams = new URLSearchParams({ search, status, sort, page });
+        const url = `/admin/orders?${urlParams.toString()}`;
+
+        try {
+            
+            const response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const html = await response.text();
+            
+            
+            dataContainer.innerHTML = html;
+            window.history.pushState({}, '', url);
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+        }
+    }
+
+    // --- Event Listeners ---
+
+ 
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        fetchOrders(1); // Go to page 1 for a new filter
+    });
+
+
+    clearFilterBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = 'All';
+        sortFilter.value = 'newest';
+        fetchOrders(1);
+    });
+
+
+    dataContainer.addEventListener('click', (e) => {
+        if (e.target.matches('.page-link')) {
+            e.preventDefault();
+            const page = e.target.dataset.page;
+            if (page) {
+                fetchOrders(page);
+            }
+        }
+    });
+
+ 
+    dataContainer.addEventListener('change', (e) => {
+        if (e.target.classList.contains('status-dropdown')) {
+            const orderId = e.target.dataset.orderId;
+            const newStatus = e.target.value;
+
+            Swal.fire({
+                title: 'Change Order Status?',
+                text: `Set order ${orderId} to "${newStatus}"?`,
+                icon: 'warning',
+                showCancelButton: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/orders/update-status/${orderId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newStatus: newStatus })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Success!', data.message, 'success');
+                            // No need to reload, the dropdown is already changed
+                        } else {
+                            Swal.fire('Error!', data.message, 'error');
+                            fetchOrders(); // 
+                        }
+                    });
+                } else {
+                    
+                    fetchOrders(document.querySelector('.page-item.active .page-link')?.dataset.page || 1);
+                }
+            });
+        }
+    });
+});
+</script>

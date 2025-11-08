@@ -2,7 +2,7 @@ const Category=require('../model/categorySchema')
 
 
 const loadCategories=async(req,res)=>{
-    if(!req.session.admin){
+    if(!req.session.isAdmin){
        return res.redirect('/login')
     }
     try {

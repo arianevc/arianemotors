@@ -1,9 +1,11 @@
 const nodemailer=require('nodemailer')
 const User=require('../model/userSchema')
 const Category=require('../model/categorySchema')
+const Order=require('../model/orderSchema')
 const {processImages,processProfileImage}=require('../helpers/imageProcessing')
 const bcrypt = require('bcrypt')
 const crypto=require('crypto')
+const {validationResult}=require('express-validator')
 
 const loadAccountDetails=async(req,res)=>{
     try {
@@ -11,9 +13,11 @@ const loadAccountDetails=async(req,res)=>{
            return res.redirect('/login')
         }
         const user=await User.findById(req.session.userId)
+        const userOrders=await Order.find({userId:req.session.userId})
+        console.log("userOrders:",userOrders)
         const category=await Category.find()
         // console.log(user.addresses)
-        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user})
+        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user,orders:userOrders})
     } catch (error) {
         console.log("error in loading ")
     }
@@ -45,6 +49,12 @@ const editUserPost=async(req,res)=>{
     
 }
 const addAddress=async (req,res)=>{
+    const errors=validationResult(req)
+    console.log(errors);
+    
+    if(!errors.isEmpty()){
+       return res.status(400).json({success:false,message:'validation failed',errors:errors.array()})
+}
     try {
         const user=await User.findById(req.session.userId)
         user.addresses.push(req.body)

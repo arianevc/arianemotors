@@ -78,7 +78,7 @@
                         </div>
                         <div class="cart-action text-end">
                             <button id="clearCartBtn" class="btn btn-primary"> <i class="fi-rs-cross-small"></i> Clear Cart</button>
-                            <a class="btn " href="/shop"><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
+                            <a class="btn " href="/shop/products"><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
                         </div>
                         <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>
                         <div class="row mb-50">
@@ -244,7 +244,7 @@
         removebtns.forEach(btn=>{
            btn.addEventListener('click',async function (e) {
              const productId=btn.dataset.productId
-             await fetch(`/cart/delete/${productId}`,{
+             await fetch(`/shop/cart/delete/${productId}`,{
                 method:'DELETE',
                 headers:{'Content-Type':'application/json'}
              }).then(response=>response.json()).then(result=>{
@@ -268,7 +268,7 @@
         //clear cart
         const clearCartBtn=document.getElementById('clearCartBtn')
         clearCartBtn.addEventListener('click',async function(){
-            await fetch('/cart/clearCart',{
+            await fetch('/shop/cart/clearCart',{
                 method:"DELETE",
                 headers:{"Content-Type":"application/json"}
             }).then(response=>response.json())

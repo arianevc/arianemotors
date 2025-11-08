@@ -11,6 +11,7 @@
         </div>
         <section class="mt-50 mb-50">
             <div class="container">
+                <% if(cartItems&&cartItems.length>0) {%>
                 <div class="row">
                     
                     <div class="col-lg-6">
@@ -62,27 +63,37 @@
                                     
                                     <form method="post" id="addressForm">
                             <div class="form-group">
-                                <input type="text" required="" name="fname" id="name" placeholder="Name *" readonly>
+                                <input type="text" class="text-white" style="background-color: #088178;" required="" name="name" id="name" placeholder="Name *" readonly>
                                 <p style="color: red;" id="nameError"></p>
                             </div>
                             <div class="form-group">
-                                <input type="text" name="street" required="" id="street" placeholder="Street/Line *" readonly>
+                                <input type="text" class="text-white" style="background-color: #088178;" name="street" required="" id="street" placeholder="Street/Line *" readonly>
                                 <p style="color: red;" id="streetError"></p>
                             </div>
                             <div class="form-group">
-                                <input required="" type="text" name="city" id="city" placeholder="City / Town *" readonly>
+                                <input required="" class="text-white" style="background-color: #088178;" type="text" name="city" id="city" placeholder="City / Town *" readonly>
                                 <p style="color: red;" id="cityError"></p>
                             </div>
                             <div class="form-group">
-                                <input required="" type="text" name="state" id="state" placeholder="State*" readonly>
+                                <input required="" class="text-white" style="background-color: #088178;" type="text" name="state" id="state" placeholder="State*" readonly>
                                 <p style="color: red;" id="stateError"></p>
                             </div>
                             <div class="form-group">
-                                <input required="" type="text" name="zipcode" id="pinCode" placeholder="Postcode / PIN *" readonly>
+                                <input required="" class="text-white" style="background-color: #088178;" type="text" name="pinCode" id="pinCode" placeholder="Postcode / PIN *" readonly>
                                 <p style="color: red;" id="pinError"></p>
                             </div>
                             <button id="addAddressBtn" class="btn btn-primary" type="submit" hidden form="addressForm">Add Address</button>
                         </form>
+                        <br>
+                        <div class="form-group">
+                            <input class="text-white" style="background-color: #088178;" type="text" name="country" id="country" placeholder="Country" value="India">
+                        </div>
+                        <div class="form-group">
+                            <input class="text-white" style="background-color: #088178;" type="text" name="phone" id="phone" placeholder="Phone" value="<%=user.phone %>">
+                        </div>
+                        <div class="form-group">
+                            <input class="text-white" style="background-color: #088178;" type="text" name="email" id="email" placeholder="Email" value="<%= user.email %>">
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <div class="order_review">
@@ -132,32 +143,40 @@
                                 </div>
                                 <div class="payment_option">
                                     <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios3" checked="">
-                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">Direct Bank Transfer</label>
+                                        <input class="form-check-input" required="" type="radio" name="payment_option" value="upi" id="exampleRadios3" checked="">
+                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">UPI</label>
                                         <div class="form-group collapse in" id="bankTranfer">
                                             <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
                                         </div>
                                     </div>
                                     <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios4" checked="">
-                                        <label class="form-check-label" for="exampleRadios4" data-bs-toggle="collapse" data-target="#checkPayment" aria-controls="checkPayment">Check Payment</label>
+                                        <input class="form-check-input" required="" type="radio" name="payment_option" value="netbank" id="exampleRadios4" checked="">
+                                        <label class="form-check-label" for="exampleRadios4" data-bs-toggle="collapse" data-target="#checkPayment" aria-controls="checkPayment">Account Transfer</label>
                                         <div class="form-group collapse in" id="checkPayment">
                                             <p class="text-muted mt-5">Please send your cheque to Store Name, Store Street, Store Town, Store State / County, Store Postcode. </p>
                                         </div>
                                     </div>
                                     <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios5" checked="">
-                                        <label class="form-check-label" for="exampleRadios5" data-bs-toggle="collapse" data-target="#paypal" aria-controls="paypal">Paypal</label>
+                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios5" value="cash"checked="">
+                                        <label class="form-check-label" for="exampleRadios5" data-bs-toggle="collapse" data-target="#paypal" aria-controls="paypal">Cash on Delivery</label>
                                         <div class="form-group collapse in" id="paypal">
                                             <p class="text-muted mt-5">Pay via PayPal; you can pay with your credit card if you don't have a PayPal account.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <a href="#" class="btn btn-fill-out btn-block mt-30">Place Order</a>
+                            <a href="#" class="btn btn-fill-out btn-block mt-30" id="placeOrderButton">Place Order</a>
                         </div>
                     </div>
                 </div>
+                <% }else{ %>
+
+                    <h3 style="color: #088178;text-align: center;" class="justify-content-center">No available items in cart purchase. Please check the availability of products before checkout</h3>
+                    <div class="d-flex justify-content-center p-30">
+                        <a class="btn btn-primary me-2" href="/shop/cart">Go to Cart</a>
+                        <a class="btn btn-primary" href="/shop/products">Continue Shopping</a>
+                    </div>
+                    <% } %>
             </div>
         </section>
     </main>
@@ -187,16 +206,19 @@
 
        //to clear the previous values from fields
        function clearForm() {
+        const attributesToRemove=['readonly','style','class']
+        attributesToRemove.forEach(attribute=>{
+            nameField.removeAttribute(attribute)
+            streetField.removeAttribute(attribute)
+            cityField.removeAttribute(attribute)
+            stateField.removeAttribute(attribute)
+            pinCode.removeAttribute(attribute)
+        })
         nameField.value=""
-        nameField.removeAttribute('readonly')
         streetField.value=""
-        streetField.removeAttribute('readonly')
         cityField.value=""
-        cityField.removeAttribute('readonly')
         stateField.value=""
-        stateField.removeAttribute('readonly')
         pinCode.value=""
-        pinCode.removeAttribute('readonly')
        }
 
        //event listeners on radios
@@ -213,6 +235,11 @@
                 const selectedAddress=addresses[index]
                 populateForm(selectedAddress)
                 addAddressBtn.setAttribute('hidden',true)
+                  document.getElementById('nameError').textContent=''
+        document.getElementById('streetError').textContent=''
+        document.getElementById('cityError').textContent=''
+        document.getElementById('stateError').textContent=''
+        document.getElementById('pinError').textContent=''
             }
             
         })
@@ -236,7 +263,7 @@
 
        //submit add addressForm
        const addressForm=document.getElementById('addressForm')
-       addAddressBtn.addEventListener('click',(e)=>{
+       addAddressBtn.addEventListener('click',async(e)=>{
         e.preventDefault()
         //validation
         let valid=true
@@ -268,7 +295,7 @@
             valid=false
         }
         const numberRegex=/^\d+$/
-        if(typeof(parseInt(pin))!="number"||pin.length!==6||numberRegex.test(pin)){
+        if(typeof(parseInt(pin))!="number"||pin.length!=6){
                 document.getElementById('pinError').textContent="*Pin should have 6 digits & Must not contain alphabets"
             
             valid=false
@@ -277,6 +304,70 @@
         
         const data=Object.fromEntries(formData.entries())
         console.log(data);
+        const url=`/account/addresses`
+        if(valid){
+        const response =await fetch(url,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(data)
+        }).then(async response=>{
+            const result=await response.json()
+            if(!response.ok){
+                if(response.status==400){
+                    const errorMessages=result.errors.map(err=>err.msg).join('\n')
+                    Swal.fire('Validation error!',errorMessages,'error')
+                }else{
+                    Swal.fire('Error!',result.message,'error')
+                }
+                Swal.fire('Error!','Server Error','error')
+            }
+            return result
+        }).then(result=>{
+            Swal.fire("Success!",result.message,'success')
+        }).catch(err=>{
+            Swal.fire("Error!",result.message,'error')
+        })
+        }
+       })
+       //placing order
+       document.getElementById('placeOrderButton').addEventListener('click',async function(e){
+        e.preventDefault()
+        const selectRadio=document.querySelector('input[name="addressRadio"]:checked')
+        const paymentOption=document.querySelector('input[name="payment_option"]:checked')
+        console.log("payment option selected: ",paymentOption.value);
+        
+        let selectedAddressId=null
+        //make sure new address was added to the user addresses
+        if(selectRadio.value==='new'||!selectRadio){
+            Swal.fire("Error!","Please select an address or Add new address",'error')
+            return
+        }
+        //storing selected addresses's index
+        selectedAddressId=selectRadio.value
+        const totalPrice='<%=totalPrice%>'
+        console.log("selected Address index for placing order: ",selectedAddressId);
+        await fetch('/shop/place-order',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+                payment:paymentOption.value,
+                addressId:selectedAddressId,
+                totalPrice:totalPrice
+            })
+        }).then(res=>res.json())
+        .then(data=>{
+            if(data.success){
+                Swal.fire('Success!',data.message,'success').then(()=>{
+                    window.location.href=`/order-success?orderId=${data.orderId}`
+                })
+            }else{
+                Swal.fire('Error!',data.message||'Could not place order','error')
+            }
+        }).catch((err)=>{
+            Swal.fire('Error!','Server error & Could not place order','error')
+            console.error("Error in placing order: ",err);
+            
+        })
        })
     })
 </script>

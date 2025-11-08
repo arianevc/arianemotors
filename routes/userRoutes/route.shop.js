@@ -25,5 +25,7 @@ router.post('/cart/update-quantity',shopController.updateCartQuantity)
 
 //checkout
 router.get('/checkout',orderController.loadCheckout)
+//order management
+router.post('/place-order',authenticate.checkUserSession,orderController.placeOrder)
 
 module.exports=router

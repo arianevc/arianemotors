@@ -1,7 +1,8 @@
 const User=require('../model/userSchema')
 const Category=require('../model/categorySchema')
 const Product=require('../model/productSchema')
-const Address=require('../model/addressSchema')
+const Order=require('../model/orderSchema')
+const { log } = require('console')
 
 const loadCheckout=async(req,res)=>{
     try {
@@ -33,4 +34,51 @@ const loadCheckout=async(req,res)=>{
         res.render('user/error',{statusCode:500,statusMessage:"Server Error"})
     }
 }
-module.exports={loadCheckout}
+const placeOrder=async(req,res)=>{
+    try {
+        console.log(req.body)        
+        const {payment,addressId,totalPrice}=req.body
+        if(req.session.userId){
+            const user=await User.findById(req.session.userId).populate('cart.productId')
+            const orderAddress=user.addresses[addressId]
+
+            const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
+            console.log("create new order id: ",customOrderId);
+            
+            const newOrder=new Order({
+                orderId:customOrderId,
+                userId:req.session.userId,
+                shippingAddress:{
+                    name:orderAddress.name,
+                    street:orderAddress.street,
+                    city:orderAddress.city,
+                    state:orderAddress.state,
+                    pincode:orderAddress.pinCode,
+                    phone:user.phone,
+                    email:user.email
+                },
+                items:user.cart.map(item=>({
+                    productId:item.productId._id,
+                    quantity:item.quantity,
+                    price:item.productId.price
+                })),
+                totalPrice:totalPrice,
+                paymentMethod:'COD',
+                paymentStatus:'Pending',
+                orderStatus:'Pending'
+            })
+            await newOrder.save()
+            user.cart=[]
+            await user.save()
+            res.json({success:true,message:"Order Placed Successfully",orderId:customOrderId})
+            
+        }else{
+            res.status(404).json({success:false,message:"User unavailable.Please login and try again"})
+
+        }
+    } catch (error) {
+        console.error("Error in placing the order: ",error);
+        res.status(500).json({success:false,message:"Server Error"})
+    }
+}
+module.exports={loadCheckout,placeOrder}
