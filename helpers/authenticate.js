@@ -1,4 +1,4 @@
-const User=require('../model/userSchema')
+import User from "../model/userSchema.js"
 
 const checkLoggedIn=async (req,res,next)=>{
     if(req.session.isAdmin){
@@ -44,4 +44,4 @@ const checkBlocked=async(req,res,next)=> {
         next()
     }
 }
-module.exports={checkLoggedIn,checkUserSession,checkBlocked,isAdmin}
+export{checkLoggedIn,checkUserSession,checkBlocked,isAdmin}

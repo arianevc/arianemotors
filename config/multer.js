@@ -1,5 +1,5 @@
 
-const multer=require('multer')
+import multer from "multer"
 const storage=multer.memoryStorage()//to store files in memory as buffer
 
 const fileFilter=(req,file,cb)=>{
@@ -16,6 +16,6 @@ const upload=multer({
 })
 
 
-module.exports=upload
+export default upload
     
 

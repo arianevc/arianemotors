@@ -1,4 +1,4 @@
-const nodemailer=require('nodemailer')
+import nodemailer from "nodemailer"
 
 async function verifyEmail(email,otp) {
     try {
@@ -31,4 +31,4 @@ async function verifyEmail(email,otp) {
     }
     
 }
-module.exports=verifyEmail
+export default verifyEmail

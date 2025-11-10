@@ -1,11 +1,11 @@
-const express=require('express')
+import express from 'express'
 const router=express.Router()
-const passport=require('passport')
-const userController=require('../../controller/controller.user')
-const profileController=require("../../controller/controller.profile")
-const authenticate=require('../../helpers/authenticate')
-const upload = require("../../config/multer");
-const {body,validationResult}=require('express-validator')
+import passport from 'passport';
+import * as userController from "../../controller/controller.user.js";
+import * as profileController from "../../controller/controller.profile.js"
+import * as authenticate from '../../helpers/authenticate.js'
+import upload from "../../config/multer.js"
+import {body,validationResult} from "express-validator"
 
 
 const addressValidationRules=[
@@ -73,4 +73,5 @@ router.get('/orders/:orderId',authenticate.checkUserSession,userController.loadO
 router.get('/orders/invoice/:orderId',authenticate.checkUserSession,userController.downloadInvoice)
 router.get('/orders/cancel/:orderId',authenticate.checkUserSession,userController.cancelOrder)
 router.post('/orders/return/:orderId',authenticate.checkUserSession,userController.returnOrder)
-module.exports=router
+
+export default router

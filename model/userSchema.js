@@ -1,7 +1,4 @@
-const mongoose=require('mongoose') 
-const { ref } = require('process')
-// const { resetPassword } = require('../controller/controller.user')
-const { type } = require('os')
+import mongoose from 'mongoose'
 const{Schema}=mongoose
 const addressSchema=new Schema({
     name:{
@@ -107,4 +104,5 @@ const userSchema= new Schema({
     
 
 })
-module.exports=mongoose.model('User',userSchema)
+const User=mongoose.model('User',userSchema)
+export default User

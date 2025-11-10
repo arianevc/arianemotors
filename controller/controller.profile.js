@@ -1,11 +1,8 @@
-const nodemailer=require('nodemailer')
-const User=require('../model/userSchema')
-const Category=require('../model/categorySchema')
-const Order=require('../model/orderSchema')
-const {processImages,processProfileImage}=require('../helpers/imageProcessing')
-const bcrypt = require('bcrypt')
-const crypto=require('crypto')
-const {validationResult}=require('express-validator')
+import User from "../model/userSchema.js"
+import Category from "../model/categorySchema.js"
+import Order from "../model/orderSchema.js"
+import { processProfileImage } from "../helpers/imageProcessing.js"
+import { validationResult } from "express-validator"
 
 const loadAccountDetails=async(req,res)=>{
     try {
@@ -180,7 +177,7 @@ const removeImage=async(req,res)=>{
         res.status(500).json({success:false,message:"Server error during removal of image"})
     }
 }
-module.exports={loadAccountDetails,editProfile,editUserPost,addAddress,getSingleAddress
+export{loadAccountDetails,editProfile,editUserPost,addAddress,getSingleAddress
     ,editAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,
     removeImage
 }

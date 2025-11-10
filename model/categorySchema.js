@@ -1,4 +1,4 @@
-const mongoose=require('mongoose')
+import mongoose from "mongoose"
 const {Schema}=mongoose
 
 const categorySchema= new Schema({
@@ -20,4 +20,5 @@ const categorySchema= new Schema({
         default:Date.now
     }
 }) 
-module.exports=mongoose.model('Category',categorySchema)
+const Category=mongoose.model('Category',categorySchema)
+export default Category

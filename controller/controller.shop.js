@@ -1,6 +1,6 @@
-const User=require('../model/userSchema')
-const Category=require('../model/categorySchema')
-const Product=require('../model/productSchema')
+import User from '../model/userSchema.js'
+import Category from '../model/categorySchema.js'
+import Product from '../model/productSchema.js'
 
 
 const loadShop = async (req, res) => {
@@ -276,6 +276,6 @@ const deleteFromWishlist=async(req,res)=>{
     }
 }
 
-module.exports={loadShop,loadProductDetails,addProductToCart,
+export{loadShop,loadProductDetails,addProductToCart,
     loadCart,updateCartQuantity,deleteFromCart,clearCart,loadWishlist,
     toggleWishlist,deleteFromWishlist}

@@ -1,8 +1,8 @@
-const path=require('path')
-const fs=require('fs')
-const Product=require('../model/productSchema')
-const Category=require('../model/categorySchema')
-const {processImages}=require('../helpers/imageProcessing')
+
+import Category from '../model/categorySchema.js'
+import Product from '../model/productSchema.js'
+import { processImages } from '../helpers/imageProcessing.js'
+
 
 const loadProducts=async(req,res)=>{
   if(!req.session.isAdmin){
@@ -123,4 +123,4 @@ const softDeleteProduct=async(req,res)=>{
         console.log("error in deleting product",error)
     }
 }
-module.exports={loadProducts,addProduct,editProduct,softDeleteProduct,loadAddProduct}
+export{loadProducts,addProduct,editProduct,softDeleteProduct,loadAddProduct}

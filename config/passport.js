@@ -1,10 +1,8 @@
-const passport=require("passport")
-const googleStrategy=require('passport-google-oauth20').Strategy
-const User=require('../model/userSchema')
-const { profile } = require("console")
-const env=require('dotenv').config()
-
-
+import passport from "passport"
+import { Strategy as googleStrategy } from "passport-google-oauth20"
+import User from "../model/userSchema.js"
+import dotenv from 'dotenv'
+dotenv.config()
 passport.use(new googleStrategy({
     clientID:process.env.GOOGLE_CLIENT_ID,
     clientSecret:process.env.GOOGLE_CLIENT_SECRET,
@@ -46,4 +44,4 @@ passport.deserializeUser((id,done)=>{//to access the info in session
         done(err,null)
     })
 })
-module.exports=passport
+export default passport

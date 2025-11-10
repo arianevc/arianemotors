@@ -1,5 +1,5 @@
-const sharp=require('sharp')
-const cloudinary=require('cloudinary').v2
+import sharp from 'sharp'
+import { v2 as cloudinary } from 'cloudinary'
 
 function uploadToCloudinary(fileBuffer,options){
     return new Promise((resolve,reject)=>{
@@ -51,4 +51,4 @@ async function processProfileImage(file) {
     })
     return result.secure_url//return https url
 }
-module.exports={processImages,processProfileImage}
+export{processImages,processProfileImage}

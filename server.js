@@ -1,20 +1,24 @@
-const express=require("express")
+import express from "express";
 const app=express()
-
-const session=require('express-session')
-const path = require("path")
-const cloudinary=require('cloudinary').v2
-const connectDB = require("./config/db")
-const dotenv=require('dotenv')
-const nocache=require('nocache')
+import session from "express-session";
+import path from "path";
+import { fileURLToPath } from "url";
+import {v2 as cloudinary} from "cloudinary";
+import  {connectDB}  from "./config/db.js";
+import nocache from "nocache";
+import dotenv from 'dotenv'
 const port=process.env.PORT||5000
-const passport=require('./config/passport')//for google auths
-const userRoutes=require('./routes/userRoutes/route.user')
-const shopRoutes=require('./routes/userRoutes/route.shop')
-const adminRoutes=require('./routes/adminRoutes/route.admin')
+import passport from "./config/passport.js";
+import userRoutes from './routes/userRoutes/route.user.js'
+import shopRoutes from './routes/userRoutes/route.shop.js'
+import adminRoutes from './routes/adminRoutes/route.admin.js'
+import User from "./model/userSchema.js";
+
 dotenv.config()
 app.use(nocache())
 
+const __filename=fileURLToPath(import.meta.url)
+const __dirname=path.dirname(__filename)
 app.use( express.static(path.join(__dirname, 'public')));
 // app.use(nocache)
 app.use((req,res,next)=>{
@@ -63,7 +67,7 @@ app.use(express.json())
 app.set('view engine','ejs')
 app.set('views',path.join(__dirname,'views'))
 
-const User=require("./model/userSchema")
+
 app.use(async(req,res,next)=>{
     if(req.session.userId){
         try {

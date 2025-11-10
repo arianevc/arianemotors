@@ -1,8 +1,8 @@
-const express=require("express")
+import  express  from "express";
 const router=express.Router()
-const shopController=require('../../controller/controller.shop')
-const orderController=require('../../controller/controller.order')
-const authenticate=require('../../helpers/authenticate')
+import * as shopController from "../../controller/controller.shop.js";
+import * as orderController from "../../controller/controller.order.js"
+import * as authenticate from "../../helpers/authenticate.js"
 
 
 //shop functions
@@ -28,4 +28,4 @@ router.get('/checkout',orderController.loadCheckout)
 //order management
 router.post('/place-order',authenticate.checkUserSession,orderController.placeOrder)
 
-module.exports=router
+export default router

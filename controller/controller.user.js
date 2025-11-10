@@ -1,17 +1,11 @@
-const mongoose=require('mongoose')
-const bcrypt = require('bcrypt')
-const crypto=require('crypto')
-const session=require('express-session')
-const env=require('dotenv').config()
-const nodemailer=require('nodemailer')
-const User=require('../model/userSchema')
-const Category=require('../model/categorySchema')
-const Product=require('../model/productSchema')
-const Order=require('../model/orderSchema')
-const PDFDocument=require('pdfkit')
-const {processImages, processProfileImage}=require('../helpers/imageProcessing')
-const { configDotenv } = require('dotenv')
-const verifyEmail=require("../helpers/verifyEmail")
+import bcrypt from 'bcrypt' 
+import crypto from 'crypto'
+import nodemailer from 'nodemailer'
+import User from '../model/userSchema.js'
+import Category from '../model/categorySchema.js'
+import Order from '../model/orderSchema.js'
+import  PDFDocument  from "pdfkit";
+import verifyEmail from "../helpers/verifyEmail.js"
 
 
 
@@ -466,7 +460,7 @@ const returnOrder=async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
-module.exports={LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
+export{LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
     userloginPost,userLogout,loadOrderSuccess,loadOrderDetails,downloadInvoice,
     cancelOrder,returnOrder}

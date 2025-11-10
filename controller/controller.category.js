@@ -1,5 +1,4 @@
-const Category=require('../model/categorySchema')
-
+import Category from "../model/categorySchema.js"
 
 const loadCategories=async(req,res)=>{
     if(!req.session.isAdmin){
@@ -67,4 +66,4 @@ const softDeleteCategory=async(req,res)=>{
         return res.status(500).json({success:false,message:"Server Error"})
     }
 }
-module.exports={loadCategories,addCategory,editCategory,softDeleteCategory}
+export{loadCategories,addCategory,editCategory,softDeleteCategory}

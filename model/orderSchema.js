@@ -1,6 +1,4 @@
-const mongoose=require('mongoose')
-const { type } = require('os')
-const { ref } = require('process')
+import mongoose from 'mongoose'
 const{Schema}=mongoose
 
 const orderSchema=new Schema({
@@ -70,4 +68,5 @@ const orderSchema=new Schema({
 },{
     timestamps:true
 })
-module.exports=mongoose.model('Order',orderSchema)
+const Order=mongoose.model('Order',orderSchema)
+export default Order

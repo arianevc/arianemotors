@@ -1,10 +1,7 @@
-const mongoose=require('mongoose')
-const adminModel=require('../model/adminSchema')
-const User=require("../model/userSchema")
-const bcrypt=require('bcrypt')
-const Product=require('../model/productSchema')
-const Category=require('../model/categorySchema')
-const Order=require('../model/orderSchema')
+
+import User from '../model/userSchema.js'
+import Product from '../model/productSchema.js'
+import Order from '../model/orderSchema.js'
 
 
 
@@ -233,5 +230,5 @@ try {
 }
 
 
-module.exports={loadDashboard,loadUserList,userStatusFilter,blockUser,adminLogout,loadOrders,
+export {loadDashboard,loadUserList,userStatusFilter,blockUser,adminLogout,loadOrders,
     updateOrderStatus,loadOrderDetails}

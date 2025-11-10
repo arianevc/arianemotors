@@ -1,8 +1,6 @@
-const User=require('../model/userSchema')
-const Category=require('../model/categorySchema')
-const Product=require('../model/productSchema')
-const Order=require('../model/orderSchema')
-const { log } = require('console')
+import User from '../model/userSchema.js'
+import Category from '../model/categorySchema.js'
+import Order from '../model/orderSchema.js'
 
 const loadCheckout=async(req,res)=>{
     try {
@@ -81,4 +79,4 @@ const placeOrder=async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
-module.exports={loadCheckout,placeOrder}
+export{loadCheckout,placeOrder}

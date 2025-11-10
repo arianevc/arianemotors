@@ -1,5 +1,4 @@
-const mongoose=require('mongoose')
-const { type } = require('os')
+import mongoose from 'mongoose'
 const {Schema}=mongoose
 
 const productSchema=new Schema({
@@ -42,4 +41,5 @@ const productSchema=new Schema({
     //     required:true,
     // }
 })
-module.exports=mongoose.model('Product',productSchema)
+const Product=mongoose.model('Product',productSchema)
+export default Product
