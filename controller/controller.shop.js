@@ -133,7 +133,7 @@ const addProductToCart=async(req,res)=>{
            return res.status(404).json({success:false,message:"User not found"})
         }
         if(user.cart.length>=3){
-            return res.status(401).json({success:false,message:"Only 5 items allowed in cart"})
+            return res.status(401).json({success:false,message:"Only 3 items allowed in cart"})
         }
         const inWishlist=user.wishList.find(id=>id==productId)
         if(inWishlist){

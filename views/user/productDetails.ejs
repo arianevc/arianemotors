@@ -704,7 +704,7 @@
         const heartIcon=wishlistBtn.querySelector('i')
         wishlistBtn.addEventListener('click',function(e){
             // console.log("button clicked",productIdwl);
-            fetch(`/wishlist/toggle/${productIdwl}`,{
+            fetch(`/shop/wishlist/toggle/${productIdwl}`,{
                 method:'POST',
                 credentials:"include",
                 headers:{"Content-Type":"application/json"}

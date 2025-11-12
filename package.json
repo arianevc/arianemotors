@@ -15,11 +15,10 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pdfkit": "^0.17.2",
+    "razorpay": "^2.9.6",
     "sharp": "^0.34.2"
   },
-  "scripts": {
-   
-  },
+  "scripts": {},
   "type": "module",
   "name": "e-commerce_ariane_mtrs",
   "version": "1.0.0",

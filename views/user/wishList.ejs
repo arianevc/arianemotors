@@ -6,7 +6,7 @@
                 <div class="breadcrumb">
                     <a href="/" rel="nofollow">Home</a>
                     <span></span>
-                    <a href="/shop" rel="nofollow">Shop</a>
+                    <a href="/shop/products" rel="nofollow">Shop</a>
                     <span></span> Wishlist
                 </div>
             </div>
@@ -19,7 +19,7 @@
                             <% if(wishList.length<1||wishList==undefined){ %>
                                 <div>
                                 <p class="font-weight-bold d-flex justify-content-center" style="color: #088178;">No Items in wishlist.Please check the shop page</p>
-                                <a class="d-flex justify-content-center" href="/shop"> <button class="btn btn-sm" >Back to shopping</button></a>
+                                <a class="d-flex justify-content-center" href="/shop/products"> <button class="btn btn-sm" >Back to shopping</button></a>
                                 </div>
                                 <% }else{%>
                             <table class="table shopping-summery text-center">
@@ -35,7 +35,7 @@
                                 <tbody>
                                     <% wishList.forEach(item => {%>
                                     <tr>
-                                        <td class="image product-thumbnail"><img src="/<%=item.images[0]%>" alt="product_image"></td>
+                                        <td class="image product-thumbnail"><img src="<%=item.images[0]%>" alt="product_image"></td>
                                         <td class="product-des product-name">
                                             <h5 class="product-name"><a href="/product/<%=item._id%>"><%=item.name%></a></h5>
                                             <p class="font-xs"><%= item.productDescription.slice(0,80)%>...
@@ -119,7 +119,7 @@
             btn.addEventListener('click',function(e){
                 e.preventDefault()
                 const productId=btn.dataset.productId
-                fetch(`/wishlist/delete/${productId}`,{
+                fetch(`/shop/wishlist/delete/${productId}`,{
                     method:'DELETE',
                     headers:{'Content-Type':'application/json'}
                 }).then(response=>response.json())
@@ -148,7 +148,7 @@
             btn.addEventListener('click',function(e){
                 e.preventDefault()
                 const productId=btn.dataset.productId
-                fetch('/cart/add',{
+                fetch('/shop/cart/add',{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
                     body:JSON.stringify({

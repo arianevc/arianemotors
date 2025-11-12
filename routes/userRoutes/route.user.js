@@ -39,7 +39,9 @@ router.put('/account/update',profileController.editUserPost)
 router.get('/account/change-image',authenticate.checkUserSession,profileController.loadImageEditer)
 router.post('/account/change-image',authenticate.checkUserSession,upload.single('profileImage'),profileController.changeImagePost)
 router.delete('/account/change-image',profileController.removeImage)
+
 //user address management
+//to get add a new address
 router.post('/account/addresses',addressValidationRules,profileController.addAddress)
 //to get a single address among the addresses
 router.get('/account/addresses/:addressId',profileController.getSingleAddress)

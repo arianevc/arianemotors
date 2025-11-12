@@ -57,8 +57,8 @@
                                     </div>
                                 </div>
                                 <% }else{%>
-                                    <input type="hidden" name="addressRadio" value="new" checked>
-                                    <p></p>
+                                    <input type="radio" hidden name="addressRadio" value="new" checked>
+                                    <h3>Enter an address</h3>
                                     <% } %>
                                     
                                     <form method="post" id="addressForm">
@@ -114,7 +114,7 @@
                                             <tr>
                                                 <td class="image product-thumbnail"><img src="<%= item.productId.images[0] %>" alt="#"></td>
                                                 <td>
-                                                    <h5><a href="shop-product-full.html"><%= item.productId.name %></a></h5> <span class="product-qty">x <%= item.quantity %></span>
+                                                    <h5><a href="/shop/product/<%=item.productId._id%>"><%= item.productId.name %></a></h5> <span class="product-qty">x <%= item.quantity %></span>
                                                     </td>
                                                     <% let subTotal=item.productId.price*item.quantity %>
                                                     <td>₹<%= subTotal %></td>
@@ -143,17 +143,10 @@
                                 </div>
                                 <div class="payment_option">
                                     <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" value="upi" id="exampleRadios3" checked="">
-                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">UPI</label>
+                                        <input class="form-check-input" required="" type="radio" name="payment_option" value="razorpay" id="exampleRadios3" checked="">
+                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">Razorpay</label>
                                         <div class="form-group collapse in" id="bankTranfer">
                                             <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
-                                        </div>
-                                    </div>
-                                    <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" value="netbank" id="exampleRadios4" checked="">
-                                        <label class="form-check-label" for="exampleRadios4" data-bs-toggle="collapse" data-target="#checkPayment" aria-controls="checkPayment">Account Transfer</label>
-                                        <div class="form-group collapse in" id="checkPayment">
-                                            <p class="text-muted mt-5">Please send your cheque to Store Name, Store Street, Store Town, Store State / County, Store Postcode. </p>
                                         </div>
                                     </div>
                                     <div class="custome-radio">
@@ -323,7 +316,13 @@
             }
             return result
         }).then(result=>{
-            Swal.fire("Success!",result.message,'success')
+            if(result.success){
+            Swal.fire("Success!",result.message,'success').then(()=>{
+                location.reload()
+            })
+            }else{
+                Swal.fire("Error!",result.message,'error')
+            }
         }).catch(err=>{
             Swal.fire("Error!",result.message,'error')
         })

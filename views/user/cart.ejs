@@ -267,8 +267,16 @@
         })
         //clear cart
         const clearCartBtn=document.getElementById('clearCartBtn')
-        clearCartBtn.addEventListener('click',async function(){
-            await fetch('/shop/cart/clearCart',{
+        clearCartBtn.addEventListener('click', function(){
+            Swal.fire({
+                icon:'warning',
+                title:"Are Your Sure?",
+                text:"Items from the cart will be removed",
+                showCancelButton:true,
+                confirmButtonText:'Yes,remove it!'
+            }).then(async(res)=>{
+                if(res.isConfirmed){
+                  await fetch('/shop/cart/clearCart',{
                 method:"DELETE",
                 headers:{"Content-Type":"application/json"}
             }).then(response=>response.json())
@@ -285,6 +293,10 @@
             })).catch(result=>{
                 Swal.fire("Error!",result.message,"error")
             })
+        }
+            })
+        
+          
         })
     })
 </script>
