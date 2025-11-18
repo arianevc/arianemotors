@@ -11,7 +11,7 @@ const loadAccountDetails=async(req,res)=>{
         }
         const user=await User.findById(req.session.userId)
         const userOrders=await Order.find({userId:req.session.userId})
-        console.log("userOrders:",userOrders)
+     
         const category=await Category.find()
         // console.log(user.addresses)
         res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user,orders:userOrders})

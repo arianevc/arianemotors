@@ -1,0 +1,23 @@
+<%- include('../partials/user/header.ejs') %>
+
+<main class="main">
+    <div class="container text-center" style="padding: 100px 15px;">
+        
+        
+        <h1 class="display-4 text-danger" style="font-weight: 700; margin-top: 20px;">Payment Failed</h1>
+        <p class="lead" style="font-size: 1.25rem;">Your order was not placed or payment was not received</p>
+        
+       
+        
+        <div style="margin-top: 40px;">
+            <a href="/shop/checkout" class="btn btn-primary" style="margin: 5px;">
+                Retry
+            </a>
+            <a href="/shop/products" class="btn btn-secondary" style="margin: 5px;">
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</main>
+
+<%- include('../partials/user/footer.ejs') %>

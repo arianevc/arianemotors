@@ -49,9 +49,10 @@
                                                 </p>
                                             </td>
                                             <% if(item.productId.isDeleted) {%>
-                                            <td colspan="4">
+                                            <td colspan="3">
                                                 <p class="text-danger">Item is blocked by admin</p>
                                             </td>
+                                            <td class="action removebtn" data-product-id="<%=item.productId._id %>" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
                                             <% }else{ %>
                                             <td class="price" data-title="Price">
                                                 <span id="product-price-<%=item.productId._id%>">₹<%= item.productId.price %> </span>

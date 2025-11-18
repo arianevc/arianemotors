@@ -88,13 +88,17 @@ cloudinary.config({
     api_key:process.env.CLOUDINARY_API_KEY,
     api_secret:process.env.CLOUDINARY_API_SECRET
 })
-
+app.use((req,res,next)=>{
+    res.locals.logo='/frontend/assets/imgs/theme/am_logo_tiny.png'
+    next()
+})
 app.use('/',userRoutes)
 app.use('/shop',shopRoutes)
 app.use('/admin',adminRoutes)
 
 app.use((req,res,next)=>{
-    res.status(404).render('user/error',{statusCode:404,statusMessage:"Page Not Found"})
+    const isAdmin=req.session.isAdmin?true:false
+    res.status(404).render('user/error',{statusCode:404,isAdmin,statusMessage:"Page Not Found"})
 })
 app.listen(port,(err)=>{
     if(err)console.log(err)

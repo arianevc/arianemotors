@@ -140,9 +140,12 @@
                                            
                                                 
                                             <div class="form-group d-flex justify-content-center">
-                                                <button type="submit" class="btn btn-fill-out btn-block hover-up" name="login">Submit &amp; Register</button>
+                                                <button type="submit" id="submitBtnSignup" class="btn btn-fill-out btn-block hover-up" name="login">Submit &amp; Register</button>
                                             </div>
                                         </form>
+                                        <div  id="spinner" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                         </div>
                                         <div class="divider-text-center mt-15 mb-15">
                                             <span> or</span>
                                         </div>
@@ -264,6 +267,8 @@
                 if(!namevalidate||!phonevalidate|| !passvalidate){
                     e.preventDefault()
                 }
+                
+                document.getElementById('spinner').className='spinner-border text-success d-flex justify-content-center'
             })
             
             

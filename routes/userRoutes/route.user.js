@@ -32,7 +32,7 @@ router.post('/login',userController.userloginPost)
 router.post('/logout',userController.userLogout)
 
 //user account
-router.get('/account',profileController.loadAccountDetails)
+router.get('/account',authenticate.checkBlocked,profileController.loadAccountDetails)
 router.get('/account/editProfile/:userId',profileController.editProfile)
 router.put('/account/update',profileController.editUserPost)
 //user profileImage management
@@ -71,6 +71,7 @@ router.get('/auth/google/callback',passport.authenticate('google',{failureRedire
 })
 //Users order management
 router.get('/order-success',authenticate.checkUserSession,userController.loadOrderSuccess)
+router.get('/order-failure',authenticate.checkUserSession,userController.loadOrderFailure)
 router.get('/orders/:orderId',authenticate.checkUserSession,userController.loadOrderDetails)
 router.get('/orders/invoice/:orderId',authenticate.checkUserSession,userController.downloadInvoice)
 router.get('/orders/cancel/:orderId',authenticate.checkUserSession,userController.cancelOrder)

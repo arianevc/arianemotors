@@ -1,4 +1,7 @@
 <%-include("../partials/user/header") %>
+
+<!-- Load Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <main class="main">
         <div class="page-header breadcrumb-wrap">
             <div class="container">
@@ -85,6 +88,7 @@
                             <button id="addAddressBtn" class="btn btn-primary" type="submit" hidden form="addressForm">Add Address</button>
                         </form>
                         <br>
+                        <h5 class="p-2">You can edit your addresses <a href="/account" style="text-decoration: underline;">Here</a></h5>
                         <div class="form-group">
                             <input class="text-white" style="background-color: #088178;" type="text" name="country" id="country" placeholder="Country" value="India">
                         </div>
@@ -143,23 +147,21 @@
                                 </div>
                                 <div class="payment_option">
                                     <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" value="razorpay" id="exampleRadios3" checked="">
-                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">Razorpay</label>
-                                        <div class="form-group collapse in" id="bankTranfer">
-                                            <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
-                                        </div>
+                                        <input class="form-check-input" required="" type="radio" name="payment_option" value="Online" id="paymentOptionOnline" checked>
+                                        <label class="form-check-label" for="paymentOptionOnline" data-bs-toggle="collapse" >Online Payment</label>
+                                       
                                     </div>
                                     <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios5" value="cash"checked="">
-                                        <label class="form-check-label" for="exampleRadios5" data-bs-toggle="collapse" data-target="#paypal" aria-controls="paypal">Cash on Delivery</label>
-                                        <div class="form-group collapse in" id="paypal">
-                                            <p class="text-muted mt-5">Pay via PayPal; you can pay with your credit card if you don't have a PayPal account.</p>
-                                        </div>
+                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="paymentOptionCOD" value="COD">
+                                        <label class="form-check-label" for="paymentOptionCOD" data-bs-toggle="collapse" >Cash on Delivery</label>
+                                        
                                     </div>
                                 </div>
                             </div>
-                            <a href="#" class="btn btn-fill-out btn-block mt-30" id="placeOrderButton">Place Order</a>
+                            <a href="#" class="btn btn-fill-out btn-block mt-30" id="placeOrderButton">Make Payment</a>
                         </div>
+                         <!-- Message area for success/error -->
+        <div id="payment-message" class="mt-4 text-center"></div>
                     </div>
                 </div>
                 <% }else{ %>
@@ -180,6 +182,7 @@
        const addresses=<%-JSON.stringify(addresses||[]) %>
        
        
+       
        const nameField=document.getElementById('name')
        const streetField=document.getElementById('street')
        const cityField=document.getElementById('city')
@@ -187,31 +190,34 @@
        const pinCode=document.getElementById('pinCode')
 
        const addAddressBtn=document.getElementById('addAddressBtn')
+       
+       const fields={
+        name:nameField,
+        street:streetField,
+        city:cityField,
+        state:stateField,
+        pinCode:pinCode
+       }
        //for populating the fields
        function populateForm(address) {
         if(!address)return
-        nameField.value=address.name
-        stateField.value=address.state
-        streetField.value=address.street
-        cityField.value=address.city
-        pinCode.value=address.pinCode
+        Object.entries(fields).forEach(([key,field])=>{
+            field.value=address[key]
+            field.classList.add('text-white')
+            field.setAttribute('readonly','')
+            field.style.backgroundColor='#088178'
+        })
        }
 
        //to clear the previous values from fields
        function clearForm() {
-        const attributesToRemove=['readonly','style','class']
-        attributesToRemove.forEach(attribute=>{
-            nameField.removeAttribute(attribute)
-            streetField.removeAttribute(attribute)
-            cityField.removeAttribute(attribute)
-            stateField.removeAttribute(attribute)
-            pinCode.removeAttribute(attribute)
-        })
-        nameField.value=""
-        streetField.value=""
-        cityField.value=""
-        stateField.value=""
-        pinCode.value=""
+         Object.values(fields).forEach(field=>{
+                field.removeAttribute('style')
+                field.removeAttribute('readonly')
+                field.value=''
+                field.className=''
+        
+    })
        }
 
        //event listeners on radios
@@ -307,7 +313,7 @@
             const result=await response.json()
             if(!response.ok){
                 if(response.status==400){
-                    const errorMessages=result.errors.map(err=>err.msg).join('\n')
+                    const errorMessages=result.errors.map(err=>err.msg).join('\n*')
                     Swal.fire('Validation error!',errorMessages,'error')
                 }else{
                     Swal.fire('Error!',result.message,'error')
@@ -328,11 +334,27 @@
         })
         }
        })
+       //changing button text on payment option
+       const placeOrderBtn=document.getElementById('placeOrderButton')
+       const paymentMessage=document.getElementById('payment-message')
+       const paymentOptions=document.querySelectorAll('input[name="payment_option"]')
+       paymentOptions.forEach(radio=>{
+        radio.addEventListener('change',()=>{
+            console.log("radio clicked: ",radio.value);
+            
+            if(radio.value==='Online'&&radio.checked){
+                placeOrderBtn.textContent='Make Payment'
+            }else if(radio.checked&&radio.value==='COD'){
+                placeOrderBtn.textContent='Place Order'
+            }
+        })
+       })
        //placing order
-       document.getElementById('placeOrderButton').addEventListener('click',async function(e){
-        e.preventDefault()
-        const selectRadio=document.querySelector('input[name="addressRadio"]:checked')
-        const paymentOption=document.querySelector('input[name="payment_option"]:checked')
+     
+        placeOrderBtn.addEventListener('click',async function(e){
+            e.preventDefault()
+            const selectRadio=document.querySelector('input[name="addressRadio"]:checked')
+            const paymentOption=document.querySelector('input[name="payment_option"]:checked')
         console.log("payment option selected: ",paymentOption.value);
         
         let selectedAddressId=null
@@ -343,15 +365,24 @@
         }
         //storing selected addresses's index
         selectedAddressId=selectRadio.value
-        const totalPrice='<%=totalPrice%>'
         console.log("selected Address index for placing order: ",selectedAddressId);
+        const totalPrice='<%=totalPrice%>'
+        placeOrderBtn.disabled=true
+        placeOrderBtn.innerText='Processing...'
+        //choosing between payments
+        if(paymentOption.value=='Online'){
+            initiateRazorpayPayment(selectedAddressId,totalPrice)
+        }else if(paymentOption.value=='COD'){
+            placeOrderCOD(selectedAddressId,totalPrice)
+        }
+        //function for Cash on Delivery mode
+        async function placeOrderCOD(addressId,totalPrice) {
         await fetch('/shop/place-order',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
-                payment:paymentOption.value,
                 addressId:selectedAddressId,
-                totalPrice:totalPrice
+                totalPrice:totalPrice,
             })
         }).then(res=>res.json())
         .then(data=>{
@@ -360,13 +391,105 @@
                     window.location.href=`/order-success?orderId=${data.orderId}`
                 })
             }else{
-                Swal.fire('Error!',data.message||'Could not place order','error')
+                Swal.fire('Error!',data.message||'Could not place order','error').then(()=>{
+                    window.location.href=`/order-failure`
+                })
             }
         }).catch((err)=>{
-            Swal.fire('Error!','Server error & Could not place order','error')
+            Swal.fire('Error!','Server error & Could not place order','error').then(()=>{
+                    window.location.href=`/order-failure`
+                })
             console.error("Error in placing order: ",err);
             
-        })
+        })    
+        }
+        const razorpayKeyId='<%=razorpayKeyId%>'
+        async function initiateRazorpayPayment(addressId,totalPrice) {
+            try {
+                const response=await fetch('/shop/create-razorpay-order',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({totalPrice})
+                })
+                const orderData=await response.json()
+                if(!orderData.success){
+                    Swal.fire('Error!','Failed to create an order','error')
+                }
+                //options for the razorpay window
+                const options={
+                    "key":'<%=process.env.RAZORPAY_API_TEST_KEY_ID%>',
+                    "currency":'INR',
+                    "amount":orderData.order.amount,
+                    "name":"Ariane Motors",
+                    "image":'https://placehold.co/300x300/6001ff/white?text=AM',
+                    "description":"Order Payment",
+                    "order_id":orderData.order.id,
+                    "handler": function (response) {
+                        verifyRazorpayPayment(response,addressId,totalPrice)
+                    },
+                    "prefill":{
+                        "name":"<%=user.name%>",
+                        "email":"<%=user.email%>",
+                        "contact":"<%=user.phone%>"
+                    },
+                    "theme":{
+                        "color":"#088178"
+                    }
+                }
+                //open the razorpay window
+                const rzp=new Razorpay(options)
+
+                // Handle payment failure
+                rzp.on('payment.failed', function (response) {
+                    Swal.fire('Payment Failed!','an error occured','error').then(()=>{
+                    window.location.href=`/order-failure`
+                })
+                    paymentMessage.innerText = `Payment Failed: ${response.error.description}`;
+                    paymentMessage.className = 'mt-4 text-center text-red-600';
+                });
+
+                rzp.open()
+
+            } catch (error) {
+                console.error('Razorpay error: ',error)
+            }finally{
+                placeOrderBtn.disabled=false
+                placeOrderBtn.innerText='Make Payment'
+            }
+        }
+        //verify the payment in the backend with the key and signature
+        async function verifyRazorpayPayment(paymentResponse,addressId,totalPrice) {
+            try{
+            const response=await fetch('/shop/verify-razorpay-payment',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    razorpay_order_id:paymentResponse.razorpay_order_id,
+                    razorpay_payment_id:paymentResponse.razorpay_payment_id,
+                    razorpay_signature:paymentResponse.razorpay_signature,
+                    addressId:addressId,
+                    totalPrice:totalPrice
+                })
+            })
+            if(!response.ok){
+                throw new Error("Fetch for verification failed");
+                
+            }
+            const result=await response.json()
+            // console.log("result of verification: ",result )
+            if(result.success){
+                Swal.fire('Payment Successful!',result.message,'success').then(()=>{
+                    window.location.href=`/order-success?orderId=${result.orderId}`
+                })
+            }else{
+                Swal.fire('Payment Failed!',result.message,'error')
+            }
+        }catch(err){
+            console.error("error in razorpay payment verify: ",err);
+            Swal.fire('Payment Failed!','Server Error','error')
+        }
+        }
+        
        })
     })
 </script>

@@ -201,12 +201,15 @@ try {
     }
     if(otp===storedOtp){
         if(req.session.userData){
-        const user=req.session.userData
+            const user=req.session.userData
+            let abbr=user.name[0]+user.name[user.name.indexOf(' ')+1]
+            let image=`https://placehold.co/300x300/088178/white?text=${abbr}`
         const hashedPassword=await bcrypt.hash(user.password,10)
         const saveUserData=new User({
             name:user.name,
             phone:user.phone,
             email:user.email,
+            profileImage:image,
             password:hashedPassword
         })
         await saveUserData.save()
@@ -319,6 +322,18 @@ try {
     res.status(500).render('user/error',{statusCode:500,statusMessage:"Page Unavailable due to server error"})
     
 }
+}
+//order failure
+const loadOrderFailure=async(req,res)=>{
+    try {
+        const search=req.query.search||""
+    const categoryId=req.query.category||""
+    const categories=await Category.find()
+        res.render('user/orderFailurePage',{categoryList:categories,categoryId,search})
+    } catch (error) {
+        console.error("error in displaying payment failure page: ",error);
+        res.status(500).render('user/error',{statusCode:500,statusMessage:"Page Unavailable due to server error"})
+    }
 }
 const loadOrderDetails=async(req,res)=>{
     try {
@@ -462,5 +477,5 @@ const returnOrder=async(req,res)=>{
 }
 export{LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
-    userloginPost,userLogout,loadOrderSuccess,loadOrderDetails,downloadInvoice,
+    userloginPost,userLogout,loadOrderSuccess,loadOrderFailure,loadOrderDetails,downloadInvoice,
     cancelOrder,returnOrder}

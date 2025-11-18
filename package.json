@@ -18,7 +18,9 @@
     "razorpay": "^2.9.6",
     "sharp": "^0.34.2"
   },
-  "scripts": {},
+  "scripts": {
+    "start": "node --watch server.js"
+  },
   "type": "module",
   "name": "e-commerce_ariane_mtrs",
   "version": "1.0.0",

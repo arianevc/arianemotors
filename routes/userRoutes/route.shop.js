@@ -27,5 +27,6 @@ router.post('/cart/update-quantity',shopController.updateCartQuantity)
 router.get('/checkout',orderController.loadCheckout)
 //order management
 router.post('/place-order',authenticate.checkUserSession,orderController.placeOrder)
-
+router.post('/create-razorpay-order',authenticate.checkUserSession,orderController.createRazorpayOrder)
+router.post('/verify-razorpay-payment',authenticate.checkUserSession,orderController.verifyRazorpayOrder)
 export default router
