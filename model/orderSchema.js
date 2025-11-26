@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { type } from 'os'
 const{Schema}=mongoose
 
 const orderSchema=new Schema({
@@ -50,10 +51,16 @@ const orderSchema=new Schema({
         type:Number,
         required:true
     },
+    paymentId:{
+        type:String
+    },
     paymentMethod:{
         type:String,
         enum:['COD','Online'],
         required:true
+    },
+    razorpayOrderId:{
+        type:String,
     },
     // paymentId:{
     //     type:String,

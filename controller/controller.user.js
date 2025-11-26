@@ -8,7 +8,7 @@ import  PDFDocument  from "pdfkit";
 import verifyEmail from "../helpers/verifyEmail.js"
 
 
-
+//load Home page
 const LoadHomepage=async (req,res)=>{
     try{
         const category=await Category.find()
@@ -19,7 +19,7 @@ const LoadHomepage=async (req,res)=>{
         res.status(500).send("Server Error")
     }
 }
-
+//Load login page & signup for both admin & user
 const loadUserLogin=async (req,res)=>{
     const successMsg = req.session.signupSuccess;
     req.session.signupSuccess = null
@@ -31,7 +31,7 @@ const loadUserLogin=async (req,res)=>{
      
     res.render('user/login', { message: "", success: successMsg});
 }
-
+//forgot password window
 const loadforgotPassword=async (req,res)=>{
     return res.render('user/forgotpwd',{message:""})
 }
@@ -134,7 +134,7 @@ const resetPasswordPost=async (req,res)=>{//to save the new password
 const loadUserSignup=async(req,res)=>{
     try {
         if(!req.session.userData)
-        return res.render('user/login',{success:"",message:""})
+        return res.render('user/createAccount',{success:"",message:""})
     else{
         
          res.redirect('/')
@@ -272,25 +272,25 @@ const userloginPost=async (req,res)=>{
         const {email,password}=req.body
         const user=await User.findOne({email:email})
         if(!user){
-            return res.render('user/login',{success:false,message:"User Not Found"})
+            return res.json({success:false,message:"User Not Found"})
         }
         const passwordMatch=await bcrypt.compare(password,user.password)
         if(user.isBlocked){
-            return res.render('user/login',{success:false,message:"User is blocked by admin"})
+            return res.json({success:false,message:"User is blocked by admin"})
         }
         if(!passwordMatch){
-            return res.render('user/login',{success:false,message:"Invalid Password"})
+            return res.json({success:false,message:"Invalid Password"})
         }
         req.session.userId=user._id
         if(user.isAdmin){
             req.session.isAdmin=true
-            return res.redirect('/admin')
+            return res.json({success:true,redirectUrl:'/admin'})
         }
-         return res.redirect('/')
+         return res.json({success:true,redirectUrl:'/'})
         
     } catch (error) {
         console.log("Issue while user logging",error)
-        res.render('user/login',{sucess:false,message:"Login Failed . Please try again later"})
+        res.json({success:false,message:"Login Failed . Please try again later"})
     }
 }
 

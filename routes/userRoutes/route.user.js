@@ -24,6 +24,7 @@ router.get('/',authenticate.checkBlocked,userController.LoadHomepage)
 
 //login/signup routes
 router.get('/login',authenticate.checkLoggedIn,userController.loadUserLogin)//middleware chaining
+router.get('/signup',authenticate.checkLoggedIn,userController.loadUserSignup)
 router.post('/signup',userController.userSignupPost)
 router.get('/verify-otp',userController.loadVerfiyOtp)
 router.post('/verify-otp',userController.verifyOtp)
@@ -71,10 +72,19 @@ router.get('/auth/google/callback',passport.authenticate('google',{failureRedire
 })
 //Users order management
 router.get('/order-success',authenticate.checkUserSession,userController.loadOrderSuccess)
+//order fail page for user to retry or view the failed order
 router.get('/order-failure',authenticate.checkUserSession,userController.loadOrderFailure)
 router.get('/orders/:orderId',authenticate.checkUserSession,userController.loadOrderDetails)
 router.get('/orders/invoice/:orderId',authenticate.checkUserSession,userController.downloadInvoice)
 router.get('/orders/cancel/:orderId',authenticate.checkUserSession,userController.cancelOrder)
 router.post('/orders/return/:orderId',authenticate.checkUserSession,userController.returnOrder)
 
+//wallet management
+
+// //load wallet page
+// router.get('/wallet',authenticate.checkUserSession,profileController.loadWallet)
+// //create razorpay order to recharge wallet
+// router.post('/wallet/add-money',authenticate.checkUserSession,profileController.rechargeWallet)
+// //verify and update wallet balance
+// router.post('/wallet/verify-payment',authenticate.checkUserSession,profileController.verifyWalletPayment) 
 export default router

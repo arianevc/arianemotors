@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { type } from 'os';
 const{Schema}=mongoose
 const addressSchema=new Schema({
     name:{
@@ -96,12 +97,31 @@ const userSchema= new Schema({
         default:false
     },
     cart:[cartItemSchema],
-    wallet:{
-        type:Number,
-        default:0
+    // wallet:{
+    //     balance:{
+    //         type:Number,
+    //         default:0
+    //     },
+    //     transactions:[{
+    //         amount:{
+    //             type:Number,
+    //             required:true
+    //         },
+    //         type:{
+    //             type:String,
+    //             enum:['Credit','Debit'],
+    //             required:true,
+    //         },
+    //             date:{
+    //                 type:Date,
+    //                 default:Date.now()
+    //         },
+    //         description:{
+    //             type:String
+    //         }
+    //     }]
         
-    },
-    
+    // }
 
 })
 const User=mongoose.model('User',userSchema)

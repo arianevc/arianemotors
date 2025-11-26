@@ -43,7 +43,11 @@
                     </div>
                     <div class="card-body">
                         <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
-                        <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+                        <% if(order.paymentStatus=='Failed') {%>
+                        <p><strong>Payment Status:</strong> <span class="badge bg-danger"><%= order.paymentStatus %></span></p>
+                        <% }else{ %>
+                            <p><strong>Payment Status:</strong> <span class="badge bg-warning"><%= order.paymentStatus %></span></p>
+                            <% } %>
                         <hr>
                         <h4 class="mb-0">Total Price: ₹<%= order.totalPrice.toFixed(2) %></h4>
                     </div>

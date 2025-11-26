@@ -409,7 +409,7 @@
                 const response=await fetch('/shop/create-razorpay-order',{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({totalPrice})
+                    body:JSON.stringify({totalPrice,addressId})
                 })
                 const orderData=await response.json()
                 if(!orderData.success){
@@ -419,13 +419,13 @@
                 const options={
                     "key":'<%=process.env.RAZORPAY_API_TEST_KEY_ID%>',
                     "currency":'INR',
-                    "amount":orderData.order.amount,
+                    "amount":totalPrice*100,
                     "name":"Ariane Motors",
                     "image":'https://placehold.co/300x300/6001ff/white?text=AM',
                     "description":"Order Payment",
                     "order_id":orderData.order.id,
                     "handler": function (response) {
-                        verifyRazorpayPayment(response,addressId,totalPrice)
+                        verifyRazorpayPayment(response)
                     },
                     "prefill":{
                         "name":"<%=user.name%>",
@@ -439,8 +439,17 @@
                 //open the razorpay window
                 const rzp=new Razorpay(options)
 
-                // Handle payment failure
-                rzp.on('payment.failed', function (response) {
+                // Handle payment failure ie if user closes the payment window
+                rzp.on('payment.failed',async function (response) {
+                    await fetch('/shop/order-failed',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({order_id:response.error.metadata.order_id})
+                    }).then(res=>res.json()).then(result=>{
+                        if(!result.success){
+                            Swal.fire('Payment Failed!',result.message,'error')
+                        }
+                    })
                     Swal.fire('Payment Failed!','an error occured','error').then(()=>{
                     window.location.href=`/order-failure`
                 })
@@ -466,9 +475,7 @@
                 body:JSON.stringify({
                     razorpay_order_id:paymentResponse.razorpay_order_id,
                     razorpay_payment_id:paymentResponse.razorpay_payment_id,
-                    razorpay_signature:paymentResponse.razorpay_signature,
-                    addressId:addressId,
-                    totalPrice:totalPrice
+                    razorpay_signature:paymentResponse.razorpay_signature
                 })
             })
             if(!response.ok){

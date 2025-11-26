@@ -116,7 +116,7 @@
                                                     Swal.fire({
                                                         icon:'success',
                                                         timer:2000,
-                                                        title:'Item added to cart',
+                                                        title:result.message,
                                                         showConfirmButton:false
                                                     })
                                                     btn.setAttribute('style','background-color:#088178')
@@ -131,7 +131,7 @@
                                                     Swal.fire({
                                                          icon:'error',
                                                         timer:2000,
-                                                        title:'Item added to cart',
+                                                        title:'Error',
                                                         text:result.message||'Something wrong.Try again later',
                                                         showConfirmButton:false
                                                     })

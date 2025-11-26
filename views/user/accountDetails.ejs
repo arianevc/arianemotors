@@ -67,6 +67,7 @@
                                                                 <th>Order ID</th>
                                                                 <th>Date</th>
                                                                 <th>Status</th>
+                                                                <th>Payment</th>
                                                                 <th>Total</th>
                                                                 <th>Actions</th>
                                                             </tr>
@@ -77,6 +78,7 @@
                                                                 <td><%=order.orderId %></td>
                                                                 <td><%=new Date(order.createdAt).toLocaleDateString() %></td>
                                                                 <td><%= order.orderStatus %></td>
+                                                                <td><%= order.paymentStatus %></td>
                                                                 <td>₹<%=order.totalPrice.toFixed(2) %></td>
                                                                 <td><a href="/orders/<%= order.orderId %>" class="btn-small d-block">View</a></td>
                                                             </tr>

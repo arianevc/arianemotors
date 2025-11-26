@@ -2,7 +2,7 @@ import User from '../model/userSchema.js'
 import Category from '../model/categorySchema.js'
 import Product from '../model/productSchema.js'
 
-
+//render the shop page with all filters and search criteria
 const loadShop = async (req, res) => {
   try {
     const search=req.query.search ||""
@@ -69,7 +69,7 @@ const loadShop = async (req, res) => {
     res.status(500).send("Something went wrong.");
   }
 };
-
+//render product detailing page for a particular product
 const loadProductDetails=async(req,res)=>{
     try {
         const productId=req.params.id
@@ -91,6 +91,7 @@ const loadProductDetails=async(req,res)=>{
         res.status(500).send("Server Error")
     }
 }
+//display the user cart contents
 const loadCart=async(req,res)=>{
     try {
         if(!req.session.userId){
@@ -109,6 +110,7 @@ const loadCart=async(req,res)=>{
         res.status(500).send("Server Error")
     }
 }
+//add a particular product to cart with desired qty
 const addProductToCart=async(req,res)=>{
     try {
         if(!req.session.userId){
@@ -152,6 +154,7 @@ const addProductToCart=async(req,res)=>{
         res.status(500).json({success:false,message:"Server error occured while adding to cart"})
     }
 }
+//update the cart quantity
 const updateCartQuantity=async(req,res)=>{
     try {
         const{productId,quantity}=req.body
@@ -180,6 +183,7 @@ const updateCartQuantity=async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
+//remove an item from cart
 const deleteFromCart=async(req,res)=>{
     try {
         const productId=req.params.productId
@@ -196,6 +200,7 @@ const deleteFromCart=async(req,res)=>{
         
     }
     } 
+    //drop the entire cart
 const clearCart=async(req,res)=>{
     try {
         if(!req.session.userId){
@@ -211,6 +216,7 @@ const clearCart=async(req,res)=>{
         
     }
 }
+//display wishlist
 const loadWishlist=async (req,res)=>{
     try {
         if(req.session.userId){
@@ -227,6 +233,7 @@ const loadWishlist=async (req,res)=>{
         res.status(500).send("Server Error")
     }
 }
+//add or remove an item from wishlist using toggle button
 const toggleWishlist=async (req,res)=>{
     try {
         if(!req.session.userId){
@@ -244,20 +251,28 @@ const toggleWishlist=async (req,res)=>{
         if(productIndex>-1){
             //if product in wishlist then remove
             await user.updateOne({$pull:{wishList:productId}})
-            res.status(200).json({success:true,removed:true,message:"Product removed from wishlist"})
-        }else{
+           return res.status(200).json({success:true,removed:true,message:"Product removed from wishlist"})
+
+        
+        }
+        else{
             //add product to wishlist
+            //if item is in cart , cannot add to wishlist
+            if(user.cart.some(item=>item.productId.toString()===productId.toString())){
+                return res.status(400).json({success:false,message:"Product is already in cart"})
+            }
             await user.updateOne({$addToSet:{wishList:productId}})
             const updateUser=await User.findById(userId)
             // console.log("user wishlist: ",updateUser.wishList);
             
-            res.status(200).json({success:true,removed:false,message:"Product added to wishlist"})
+           return res.status(200).json({success:true,removed:false,message:"Product added to wishlist"})
         }
     } catch (error) {
         console.error("Error while toggling to the wishlist",error)
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
+//remove from wishlist
 const deleteFromWishlist=async(req,res)=>{
     try {
         const productId=req.params.productId

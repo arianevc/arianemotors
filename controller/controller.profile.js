@@ -4,6 +4,8 @@ import Order from "../model/orderSchema.js"
 import { processProfileImage } from "../helpers/imageProcessing.js"
 import { validationResult } from "express-validator"
 
+
+//load Account details
 const loadAccountDetails=async(req,res)=>{
     try {
         if(!req.session.userId){
@@ -19,6 +21,7 @@ const loadAccountDetails=async(req,res)=>{
         console.log("error in loading ")
     }
 }
+//load user details to edit or read
 const editProfile=async(req,res)=>{
     try {
         const userId=req.params.userId
@@ -29,6 +32,7 @@ const editProfile=async(req,res)=>{
         console.log("error in editing profile",error)
     }
 }
+//add or update user details
 const editUserPost=async(req,res)=>{
     try {
         // console.log(req.body)
@@ -45,6 +49,7 @@ const editUserPost=async(req,res)=>{
     }
     
 }
+//Add new address to user profile
 const addAddress=async (req,res)=>{
     const errors=validationResult(req)
     console.log(errors);
@@ -63,6 +68,7 @@ const addAddress=async (req,res)=>{
         res.status(500).json({success:false,message:'Server Error'})
     }
 }
+//retrieve a single address to edit and view
 const getSingleAddress=async (req,res)=>{
     try {
         const user=await User.findById(req.session.userId)
@@ -72,6 +78,7 @@ const getSingleAddress=async (req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
+//edit address and update the changes
 const editAddress=async(req,res)=>{
     try {
         const user=await User.findById(req.session.userId)
@@ -83,6 +90,7 @@ const editAddress=async(req,res)=>{
         console.error("error in updating user address",error)
     }
 }
+//remove unwanted address
 const deleteAddress=async(req,res)=>{
     try {
         const user=await User.findById(req.session.userId)
@@ -94,6 +102,7 @@ const deleteAddress=async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
+//display edit email page to enter new email
 const loadEditEmail=async(req,res)=>{
     try {
          if(!req.session.userId){
@@ -104,9 +113,11 @@ const loadEditEmail=async(req,res)=>{
         console.error("Error in loading edit mail page",error)
     }
 }
+//generate OTP to send it to the new mail
 function generateOtp() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
+//verify the otp and update the new email
 const emailVerify=async(req,res)=>{
     try {
         const {existingEmail,newEmail}=req.body
@@ -135,6 +146,7 @@ const emailVerify=async(req,res)=>{
         res.status(500).json("Server Error")
     }
 }
+//profile image editing page
 const loadImageEditer=async(req,res)=>{
     try {
         res.render('user/change-image')
@@ -143,6 +155,7 @@ const loadImageEditer=async(req,res)=>{
         res.status(500).json("Server Error")
     }
 }
+//add new image
 const changeImagePost=async(req,res)=>{
 try {
     if(!req.file){
@@ -164,6 +177,7 @@ try {
     
 }
 }
+//remove existing image
 const removeImage=async(req,res)=>{
     try {
         const userId=req.session.userId
