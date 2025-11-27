@@ -85,10 +85,12 @@
                                 <input required="" class="text-white" style="background-color: #088178;" type="text" name="pinCode" id="pinCode" placeholder="Postcode / PIN *" readonly>
                                 <p style="color: red;" id="pinError"></p>
                             </div>
+                            <div class="error-messages">
+                            </div>
                             <button id="addAddressBtn" class="btn btn-primary" type="submit" hidden form="addressForm">Add Address</button>
                         </form>
                         <br>
-                        <h5 class="p-2">You can edit your addresses <a href="/account" style="text-decoration: underline;">Here</a></h5>
+                        <h5 class="p-2">You can edit your addresses in <a href="/account" style="text-decoration: underline;">Your Profile</a></h5>
                         <div class="form-group">
                             <input class="text-white" style="background-color: #088178;" type="text" name="country" id="country" placeholder="Country" value="India">
                         </div>
@@ -264,47 +266,14 @@
        const addressForm=document.getElementById('addressForm')
        addAddressBtn.addEventListener('click',async(e)=>{
         e.preventDefault()
-        //validation
-        let valid=true
-        const name =nameField.value.trim()
-        const street =streetField.value.trim()
-        const city=cityField.value.trim()
-        const state =stateField.value.trim()
-        const pin=pinCode.value.trim()
-        document.getElementById('nameError').textContent=''
-        document.getElementById('streetError').textContent=''
-        document.getElementById('cityError').textContent=''
-        document.getElementById('stateError').textContent=''
-        document.getElementById('pinError').textContent=''
-        
-        if(name==""||name==undefined){
-            document.getElementById('nameError').textContent="*Enter a valid name"
-            valid=false
-        }
-        if(street==""||street==undefined){
-            document.getElementById('streetError').textContent="*Enter a valid street name"
-            valid=false
-        }
-        if(city==""||city==undefined){
-            document.getElementById('cityError').textContent="*Enter a valid city name"
-            valid=false
-        }
-        if(state==""||state==undefined){
-            document.getElementById('stateError').textContent="*Enter a valid state"
-            valid=false
-        }
-        const numberRegex=/^\d+$/
-        if(typeof(parseInt(pin))!="number"||pin.length!=6){
-                document.getElementById('pinError').textContent="*Pin should have 6 digits & Must not contain alphabets"
-            
-            valid=false
-        }
+        //Adding new address
+        const errorContainer=document.querySelector('.error-messages')
         const formData=new FormData(addressForm)
         
         const data=Object.fromEntries(formData.entries())
         console.log(data);
         const url=`/account/addresses`
-        if(valid){
+
         const response =await fetch(url,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
@@ -314,7 +283,11 @@
             if(!response.ok){
                 if(response.status==400){
                     const errorMessages=result.errors.map(err=>err.msg).join('\n*')
-                    Swal.fire('Validation error!',errorMessages,'error')
+                    const p=document.createElement('p')
+                    p.classList.add('text-danger')
+                    p.innerText=errorMessages
+                    errorContainer.appendChild(p)
+                    Swal.fire('Validation error!','Please validate your entries','error')
                 }else{
                     Swal.fire('Error!',result.message,'error')
                 }
@@ -332,7 +305,7 @@
         }).catch(err=>{
             Swal.fire("Error!",result.message,'error')
         })
-        }
+        
        })
        //changing button text on payment option
        const placeOrderBtn=document.getElementById('placeOrderButton')
