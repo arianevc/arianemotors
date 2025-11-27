@@ -6,6 +6,7 @@ import Category from '../model/categorySchema.js'
 import Order from '../model/orderSchema.js'
 import  PDFDocument  from "pdfkit";
 import verifyEmail from "../helpers/verifyEmail.js"
+import { validationResult } from 'express-validator'
 
 
 //load Home page
@@ -150,18 +151,19 @@ function generateOtp() {
 const userSignupPost=async (req,res)=>{
     try {
         const {name,phone,email,password,cpassword}=req.body
-        console.log(req.body)
-        if (password!==cpassword){
-            return res.render('user/login',{success:"false",message:"Passwords don't match"})
+        const errors=validationResult(req)
+        console.log("errors from validation",errors)
+        if(!errors.isEmpty()){
+            return res.status(400).json({success:false,errors:errors.array()})
         }
         const findUser=await User.findOne({email})
         if(findUser){
-            return res.render('user/login',{error:true,message:"Email already exists"})
+            return res.json({success:false,important:true,message:"Email already exists"})
         }
         const otp=generateOtp()
         const emailSent=await verifyEmail(email,otp)
         if(!emailSent){
-            return res.json('email-error')
+            return res.json({success:false,important:true,message:'Unable to sent Email'})
         }
         req.session.otpData={
             otp:otp,
@@ -170,11 +172,11 @@ const userSignupPost=async (req,res)=>{
         }
         console.log(req.session.otpData)
         req.session.userData={name,phone,email,password}
-        res.render('user/verify-otp',{email:email})
         console.log("OTP Sent: ",otp)
+        return res.json({success:true,email:email,message:"An OTP mail is sent to your E-mail ID "})
     } catch (error) {
         console.log("Signup error: ",error)
-        res.redirect('/login')
+        res.redirect('/signup')
     }
 }
 const loadVerfiyOtp=async(req,res)=>{

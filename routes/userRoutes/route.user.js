@@ -6,7 +6,7 @@ import * as profileController from "../../controller/controller.profile.js"
 import * as authenticate from '../../helpers/authenticate.js'
 import upload from "../../config/multer.js"
 import {body,validationResult} from "express-validator"
-
+import {signupValidator} from '../helpers/expressValidator.js'
 
 const addressValidationRules=[
     body('name','Name is required').trim().notEmpty(),
@@ -25,7 +25,7 @@ router.get('/',authenticate.checkBlocked,userController.LoadHomepage)
 //login/signup routes
 router.get('/login',authenticate.checkLoggedIn,userController.loadUserLogin)//middleware chaining
 router.get('/signup',authenticate.checkLoggedIn,userController.loadUserSignup)
-router.post('/signup',userController.userSignupPost)
+router.post('/signup',signupValidator,userController.userSignupPost)
 router.get('/verify-otp',userController.loadVerfiyOtp)
 router.post('/verify-otp',userController.verifyOtp)
 router.post('/resend-otp',userController.resendOtp)

@@ -78,18 +78,18 @@
                                         <p class="mb-50 font-sm">
                                             Your personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our privacy policy
                                         </p>
-                                        <form id="formsignup" method="POST" action="/signup">
+                                        <form id="formsignup">
                                             <div class="form-group">
                                                 <input type="text" required="" id="name" name="name" placeholder="Name">
-                                                <div id="error1" class="error-message"></div>
+                                                
                                             </div>
                                             <div class="form-group">
                                                 <input type="email" required="" id="email" name="email" placeholder="Email">
-                                                <div id="error2" class="error-message"></div>
+                                                
                                             </div>
                                             <div class="form-group">
                                                 <input type="text" required="" id="phone" name="phone" placeholder="Phone">
-                                                <div id="error3" class="error-message"></div>
+                                                
                                             </div>
         
                                             <div class="form-group">
@@ -97,15 +97,17 @@
                                                 <input class="loginpassword" required="" id="password" type="password" name="password" placeholder="Password">
                                                 <button type="button" class="pwdtogglebutton"><i class="fa fa-eye"></i></button>
                                                 </div>
-                                                <div id="error4" class="error-message"></div>
+                                                
                                             </div>
                     
                                             <div class="form-group">
                                                 <input required="" id="cpassword" type="password" name="cpassword" placeholder="Confirm password">
-                                                <div id="error5" class="error-message"></div>
+                                               
                                             </div>
                                            
-                                                
+                                                <div class="error-messages">
+                                                    <p class="text-danger" hidden></p>
+                                                </div>
                                             <div class="form-group d-flex justify-content-center">
                                                 <button type="submit" id="submitBtnSignup" class="btn btn-fill-out btn-block hover-up" name="login">Submit &amp; Register</button>
                                             </div>
@@ -134,6 +136,7 @@
     <script>
         
         document.addEventListener('DOMContentLoaded',function(){
+            const errorContainer=document.querySelector('.error-messages')
             //eye button for password toggle
             const toggleButtons=document.querySelectorAll(".pwdtogglebutton")
             
@@ -148,96 +151,59 @@
             icon.classList.toggle("fa-eye",!isPassword)
             })
             })
-            
 
-             const params=new URLSearchParams(window.location.search)
-        if(params.get('blocked')=="true"){
-            Swal.fire({
-                icon:"error",
-                title:"Account Blocked",
-                text:"Your account is blocked by admin",
-                confirmButtonText:"OK"
+            //signup form submission
+            const signupForm=document.getElementById('formsignup')
+            
+            signupForm.addEventListener('submit',async function(e){
+                e.preventDefault()
+                errorContainer.innerHTML=''
+                const formData=new FormData(signupForm)
+            const data={
+                name:signupForm.name.value,
+                email:signupForm.email.value,
+                phone:signupForm.phone.value,
+                password:signupForm.password.value,
+                cpassword:signupForm.cpassword.value
+            }
+           try {
+             const response=await fetch('/signup',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(data)
             })
-        }
-        const nameid=document.getElementById('name')
-        const emailid=document.getElementById('email')
-        const phoneid=document.getElementById('phone')
-        const passid=document.getElementById('password')
-        const cpassid=document.getElementById('cpassword')
-
-        const error1=document.getElementById("error1")
-        const error2=document.getElementById("error2")
-        const error3=document.getElementById("error3")
-        const error4=document.getElementById("error4")
-        const error5=document.getElementById("error5")
-        const formsignup=document.getElementById('formsignup')
-
-        function clearErrors() {
-        error1.innerHTML = "";
-        error2.innerHTML = "";
-        error3.innerHTML = "";
-        error4.innerHTML = "";
-        error5.innerHTML = "";
-    }
-
-        function nameValidate(e) {
-            const nameval=nameid.value.trim()
-            console.log(nameval)
-            const namepattern=/^[a-zA-Z\s]+$/
-            if(nameval===""){
-                error1.style.display='block'
-                error1.innerHTML="Please enter a valid name"
-                return false
-            }else if(!namepattern.test(nameval)){
-                error1.style.display='block'
-                error1.innerHTML="Please use alphabets only for the name"
-                return false
+            const result=await response.json()
+            if(result.errors){
+                result.errors.forEach((err)=>{
+                    const p=document.createElement("p")
+                    p.classList.add('text-danger')
+                    p.innerText=err.msg
+                    errorContainer.appendChild(p)
+                })
+            }else if(result.important){
+                Swal.fire({
+                    icon:'error',
+                    title:'Error!',
+                    text:result.message,
+                    timer:2000,
+                    showConfirmButton:false
+                })
+            }else if(result.success){
+                Swal.fire({
+                    icon:'error',
+                    title:'Error!',
+                    text:result.message,
+                    timer:2000,
+                    showConfirmButton:false
+                }).then(()=>{
+                    window.location.href='/verify-otp'
+                })
             }
-            return true
-            
-        }
-        function phoneValidate(e){
-            const phoneval=phoneid.value.trim()
-            console.log(phoneval)
-            const phonepattern=/^[0-9]{10}$/
-            if(phoneval===""){
-                error3.style.display='block'
-                error3.innerHTML="Please enter a valid phone number"
-                return false
-            }
-            else if(!phonepattern.test(phoneval)){
-                error3.style.display='block'
-                error3.innerHTML="Please enter a valid 10 digit phone number"
-                return false
-            }
-            return true
-        }
-        function passwordValidate(e) {
-            const passval=passid.value.trim()
-
-            const cpassval=cpassid.value.trim()
-            if(passval!==cpassval){
-                error5.style.display='block'
-                error5.innerHTML="Passwords do not match"
-                return false
-            }
-            return true
-            
-        }
-        
-            formsignup.addEventListener('submit',function(e){
-               clearErrors()
-                let namevalidate =nameValidate()
-                let phonevalidate=phoneValidate()
-                let passvalidate=passwordValidate()
-                if(!namevalidate||!phonevalidate|| !passvalidate){
-                    e.preventDefault()
-                }
-                
-                document.getElementById('spinner').className='spinner-border text-success d-flex justify-content-center'
+           } catch (error) {
+            console.error("error in registering user: ",error);
+            Swal.fire('Error!','Unable to register user','error')
+           }
             })
-            
-            
         })
 
     </script>
