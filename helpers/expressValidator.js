@@ -20,4 +20,13 @@ const signupValidator=[
         return true
     })
 ]
-export{signupValidator}
+//address Validation
+const addressValidator=[
+    body('name','*Name is required').trim().notEmpty(),
+    body('street','Street is required').trim().notEmpty(),
+    body('city','City is required').trim().notEmpty(),
+    body('state','State is required').trim().notEmpty(),
+    body('pinCode')
+    .trim().notEmpty().isPostalCode('IN').withMessage('Pincode is required')
+]
+export{signupValidator,addressValidator}

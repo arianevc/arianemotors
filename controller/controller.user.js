@@ -152,7 +152,6 @@ const userSignupPost=async (req,res)=>{
     try {
         const {name,phone,email,password,cpassword}=req.body
         const errors=validationResult(req)
-        console.log("errors from validation",errors)
         if(!errors.isEmpty()){
             return res.status(400).json({success:false,errors:errors.array()})
         }
@@ -170,13 +169,13 @@ const userSignupPost=async (req,res)=>{
             expiresAt:Date.now()+1*60*1000,
             email:email
         }
-        console.log(req.session.otpData)
+        // console.log(req.session.otpData)
         req.session.userData={name,phone,email,password}
         console.log("OTP Sent: ",otp)
         return res.json({success:true,email:email,message:"An OTP mail is sent to your E-mail ID "})
     } catch (error) {
         console.log("Signup error: ",error)
-        res.redirect('/signup')
+        res.status(500).json({success:false,message:"Server Error"})
     }
 }
 const loadVerfiyOtp=async(req,res)=>{

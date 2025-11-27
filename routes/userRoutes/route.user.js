@@ -5,17 +5,9 @@ import * as userController from "../../controller/controller.user.js";
 import * as profileController from "../../controller/controller.profile.js"
 import * as authenticate from '../../helpers/authenticate.js'
 import upload from "../../config/multer.js"
-import {body,validationResult} from "express-validator"
-import {signupValidator} from '../helpers/expressValidator.js'
+import * as Validators from '../../helpers/expressValidator.js'
 
-const addressValidationRules=[
-    body('name','Name is required').trim().notEmpty(),
-    body('street','Street is required').trim().notEmpty(),
-    body('city','City is required').trim().notEmpty(),
-    body('state','State is required').trim().notEmpty(),
-    body('pinCode')
-    .trim().notEmpty().isPostalCode('IN').withMessage('Pincode is required')
-]
+
 
 
 
@@ -25,7 +17,7 @@ router.get('/',authenticate.checkBlocked,userController.LoadHomepage)
 //login/signup routes
 router.get('/login',authenticate.checkLoggedIn,userController.loadUserLogin)//middleware chaining
 router.get('/signup',authenticate.checkLoggedIn,userController.loadUserSignup)
-router.post('/signup',signupValidator,userController.userSignupPost)
+router.post('/signup',Validators.signupValidator,userController.userSignupPost)
 router.get('/verify-otp',userController.loadVerfiyOtp)
 router.post('/verify-otp',userController.verifyOtp)
 router.post('/resend-otp',userController.resendOtp)
@@ -43,7 +35,7 @@ router.delete('/account/change-image',profileController.removeImage)
 
 //user address management
 //to get add a new address
-router.post('/account/addresses',addressValidationRules,profileController.addAddress)
+router.post('/account/addresses',Validators.addressValidator,profileController.addAddress)
 //to get a single address among the addresses
 router.get('/account/addresses/:addressId',profileController.getSingleAddress)
 router.put('/account/addresses/:addressId',profileController.editAddress)

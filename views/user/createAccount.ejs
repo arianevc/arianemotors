@@ -101,7 +101,7 @@
                                             </div>
                     
                                             <div class="form-group">
-                                                <input required="" id="cpassword" type="password" name="cpassword" placeholder="Confirm password">
+                                                <input id="cpassword" type="password" name="cpassword" placeholder="Confirm password">
                                                
                                             </div>
                                            
@@ -177,7 +177,7 @@
                 result.errors.forEach((err)=>{
                     const p=document.createElement("p")
                     p.classList.add('text-danger')
-                    p.innerText=err.msg
+                    p.innerText='*'+err.msg
                     errorContainer.appendChild(p)
                 })
             }else if(result.important){
@@ -190,10 +190,10 @@
                 })
             }else if(result.success){
                 Swal.fire({
-                    icon:'error',
-                    title:'Error!',
+                    icon:'success',
+                    title:'Email Sent',
                     text:result.message,
-                    timer:2000,
+                    timer:3000,
                     showConfirmButton:false
                 }).then(()=>{
                     window.location.href='/verify-otp'
