@@ -90,7 +90,7 @@
 <div class="modal fade" id="updatecategory" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form method="post" id="editcategoryform">
+      <form id="editcategoryform">
         <div class="modal-header">
           <h5 class="modal-title">Edit Category</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -132,7 +132,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const editButtons = document.querySelectorAll('.edit-btn');
-    const form = document.getElementById('editcategoryform');
+    const editForm = document.getElementById('editcategoryform');
     const toggleButtons=document.querySelectorAll(".toggle-btn")
     document.getElementById('categoryForm').addEventListener("submit",async function (e) {//for addcategory form
       e.preventDefault()
@@ -162,7 +162,7 @@
       }
       
     })
-
+//edit category
     editButtons.forEach(button => {
       button.addEventListener('click', () => {
         const id = button.dataset.id;
@@ -174,8 +174,39 @@
         document.getElementById('edit-category-name').value = name;
         document.getElementById('edit-category-description').value = description;
 
-        // Set form action dynamically
-        form.action = `/admin/categories/${id}/edit`;
+        editForm.addEventListener('submit',async function (e) {
+          e.preventDefault()
+          const formData=new FormData(editForm)  
+          const data=Object.fromEntries(formData.entries())     
+         try {
+           const response=await fetch(`/admin/categories/${id}/edit`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(data)
+          })
+            const result=await response.json()
+            const updated=result.category
+            if(result.success){
+              Swal.fire('Success!',result.message,'success')
+              //find the row
+              const row=document.querySelector(`button.edit-btn[data-id="${updated._id}"]`).closest("tr")
+              //update cells
+              row.querySelector('td:nth-child(2)').textContent=updated.name
+              row.querySelector('td:nth-child(3)').textContent=updated.description
+
+              const editBtn=row.querySelector('.edit-btn')
+              editBtn.dataset.name=updated.name
+              editBtn.dataset.description=updated.description
+              console.log("category updated");
+            }else{
+              Swal.fire('Error!',result.message,'error')
+            }
+         } catch (error) {
+          console.log(error)
+          Swal.fire('Error!','Server Error','error')
+         }
+
+        })
       });
     });
 

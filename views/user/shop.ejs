@@ -47,7 +47,7 @@
                                         </ul>
                                     </div>
                                 </div> -->
-                                <button type="submit" class="btn btn-sm btn-default w-100" id="clearfilterbtn">
+                                <button type="button" class="btn btn-sm btn-default" id="clearfilterbtn" hidden>
                                 <i class="fi-rs-cross mr-5"></i>Clear Filter
                             </button>
                                 <div class="sort-by-cover">
@@ -56,7 +56,7 @@
                                             <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
                                         </div>
                                         <div class="sort-by-dropdown-wrap">
-                                            <span> Featured <i class="fi-rs-angle-small-down"></i></span>
+                                            <span class="sort-title"> Featured <i class="fi-rs-angle-small-down"></i></span>
                                         </div>
                                     </div>
                                     <div class="sort-by-dropdown">
@@ -71,34 +71,16 @@
                             </div>
                         </div>
                         <!--Product card-->
-                        <%- include('../partials/user/productView',{products:products}) %>
-                        <!--pagination-->
-                        <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
-                            <nav aria-label="Page navigation example">
-                                <ul class="pagination justify-content-start">
-                                    <% if(currentPage>1){ %>
-                                    <li class="page-item"><a class="page-link" 
-                                href="?page=<%= currentPage-1 %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %>">Prev</a>
-                            </li><% } %>
-                            <% for(let i=1;i<=totalPages;i++){ %>
-                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>"><a class="page-link"
-                     href="?page=<%= i %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %>"><%= i %></a>
-                    </li><% } %>
-                    <% if(currentPage<totalPages){ %>
-                                    <li class="page-item"><a class="page-link" 
-                                href="?page=<%= currentPage+1 %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %>">Next</a>
-                            </li><% } %>
-                                    
-                                </ul>
-                            </nav>
-                        </div>
+                        <div id="product-container">
+                            <%- include('../partials/user/productView',{products:products}) %>
+                     </div>
                     </div>
                     <div class="col-lg-3 primary-sidebar sticky-sidebar">
                         <div class="widget-category mb-30">
                             <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
                             <ul class="categories">
                               <% categoryList.forEach(category => {%>
-                                <li><a href="/shop/products/?category=<%= category._id %>&search=<%= search || "" %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort || "" %>"
+                                <li><a href="/shop/products?category=<%= category._id %>&search=<%= search || "" %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort || "" %>"
                                     class="<%= categoryId == category._id.toString() ? 'active-category' : '' %>"><%= category.name %></a>
                                 </li>
                                 <% }) %>
@@ -110,7 +92,7 @@
                                 <h5 class="widget-title mb-10">Filter by price</h5>
                                 <div class="bt-1 border-color-1"></div>
                             </div>
-                            <form method="GET" action="/shop/products/">
+                            <form id="filterForm" method="get" action="/shop/products/">
                                 <input type="hidden" name="search" value="<%= search || '' %>">
                                 <input type="hidden" name="category" value="<%= categoryId || '' %>">
                                 <input type="hidden" name="sort" value="<%= sort || '' %>">
@@ -190,23 +172,36 @@
 
 <script>
     document.addEventListener('DOMContentLoaded',function(){
-
+        const clearfilterbtn=document.getElementById('clearfilterbtn')
+        const productContainer=document.getElementById('product-container')
     //sort filter
+    const sortTitle=document.querySelector(".sort-title")
     document.querySelectorAll(".sort-link").forEach(link => {
         link.addEventListener('click',async (e) => {
             e.preventDefault()
-
+            const i=document.createElement("i")
+            i.classList.add("fi-rs-angle-small-down")
             const sortValue=link.getAttribute('data-sort')
+            if(sortValue=='asc'){
+                sortTitle.textContent="Price: Low to High"
+                sortTitle.appendChild(i)
+            }else if(sortValue=='desc'){
+                sortTitle.textContent="Price: High to Low"
+                sortTitle.appendChild(i)
+            }else{
+                sortTitle.textContent="Featured"
+                sortTitle.appendChild(i)
+            }
             const urlParams=new URLSearchParams(window.location.search)//to get details about any filteres used in url 
             urlParams.set('sort',sortValue)//add or update the sortvalue
-
+            clearfilterbtn.removeAttribute('hidden')
             try {
-                const response=await fetch(`/shop/products/?${urlParams.toString()}`,{
+                const response=await fetch(`/shop/products?${urlParams.toString()}`,{
                     headers:{"X-Requested-With":"XMLHttpRequest"}//helps server to identify the AJAX request
                 })
                 const html=await response.text()
-                document.getElementById('product-container').innerHTML=html
-                 window.history.pushState({}, '', `/shop?${urlParams.toString()}`);//to make sure to update the url without
+               productContainer.innerHTML=html
+                 window.history.pushState({}, '', `/shop/products?${urlParams.toString()}`);//to make sure to update the url without
             } catch (error) {
                 console.error("Error while displaying sorted products",error)
                 
@@ -215,7 +210,6 @@
         })        
     });
     //clear filter
-    const clearfilterbtn=document.getElementById('clearfilterbtn')
     if(clearfilterbtn){
         clearfilterbtn.addEventListener('click',async function(e){
             e.preventDefault()
@@ -223,14 +217,16 @@
             urlParams.delete('minPrice')
             urlParams.delete('maxPrice')
             urlParams.delete('page')
+            urlParams.delete('category')
+            urlParams.delete('sort')
             try {
                 const response = await fetch(`/shop/products/?${urlParams.toString()}`, {
                     headers: { "X-Requested-With": "XMLHttpRequest" }
                 });
                 const html = await response.text();
                 
-                document.getElementById('product-container').innerHTML = html;
-                
+                productContainer.innerHTML = html;
+               clearfilterbtn.setAttribute('hidden','true')
                 window.history.pushState({}, '', `/shop/products/?${urlParams.toString()}`);
             } catch (error) {
                 console.error("error while clearing filter",error);
@@ -238,5 +234,29 @@
             }
         })
     }
+
+    //filter form
+    const filterForm=document.getElementById('filterForm')
+    filterForm.addEventListener('submit',async function(e){
+        e.preventDefault()
+        const formData=new FormData(filterForm)
+        const urlParams=new URLSearchParams(formData)
+        try {
+            const response=await fetch(`/shop/products/?${urlParams.toString()}`,{
+            headers:{"X-Requested-With":"XMLHttpRequest"}
+            })
+            const html=await response.text()
+            productContainer.innerHTML=html
+            if(clearfilterbtn){
+                clearfilterbtn.removeAttribute('hidden')
+            }
+            window.history.pushState({},'',`/shop/products/?${urlParams.toString()}`)
+        } catch (error) {
+           console.error("error while applying filter",error);
+            
+        }    
+    })
+    
+
 })
 </script>

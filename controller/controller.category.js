@@ -47,8 +47,25 @@ const addCategory=async(req,res)=>{
 }
 
 const editCategory=async (req,res)=>{
-await Category.findByIdAndUpdate(req.params.id,{name:req.body.name})
-res.redirect('/admin/categories')
+try {
+    const {id}=req.params
+    
+    const {name,description}=req.body
+    
+    
+    const duplicate=await Category.findOne({name:{ $regex: new RegExp(`^${name.trim()}$`, 'i') },_id:{$ne:id}})
+    if(duplicate){
+        return res.status(400).json({success:false,message:"Category name already exists"})
+    }
+    const updatedCategory=await Category.findByIdAndUpdate(id,{name,description},{new:true})
+    if(!updatedCategory){
+        return res.status(404).json({success:false,message:'Category not found'})
+    }
+    res.json({success:true,message:'Category updated',category:updatedCategory})
+} catch (error) {
+    console.error("Error updating category: ",error)
+    res.status(500).json({success:false,message:'Server Error'})
+}
 }
 
 const softDeleteCategory=async(req,res)=>{
