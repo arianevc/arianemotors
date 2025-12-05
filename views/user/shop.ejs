@@ -173,42 +173,58 @@
 <script>
     document.addEventListener('DOMContentLoaded',function(){
         const clearfilterbtn=document.getElementById('clearfilterbtn')
+        const sortTitle=document.querySelector(".sort-title")
         const productContainer=document.getElementById('product-container')
-    //sort filter
-    const sortTitle=document.querySelector(".sort-title")
-    document.querySelectorAll(".sort-link").forEach(link => {
+
+        //fetching products
+          async function fetchProducts(urlParams){
+            const url=`/shop/products?${urlParams.toString()}`
+            try {
+                const response=await fetch(url,{
+                    headers:{'X-Requested-With':'XMLHttpRequest'}
+                })
+                if(!response.ok)throw new Error('Network response was not ok')
+                const html=await response.text()
+            productContainer.innerHTML=html
+            //update browser URL without reloading
+            window.history.pushState({},'',url)
+            //scroll to top smoothly
+            productContainer.scrollIntoView({behavior:"smooth"})
+            } catch (error) {
+                console.error('Fetch error: ',error);
+                                
+            }
+        }
+        //sort filter
+        document.querySelectorAll(".sort-link").forEach(link => {
         link.addEventListener('click',async (e) => {
             e.preventDefault()
-            const i=document.createElement("i")
-            i.classList.add("fi-rs-angle-small-down")
             const sortValue=link.getAttribute('data-sort')
-            if(sortValue=='asc'){
-                sortTitle.textContent="Price: Low to High"
-                sortTitle.appendChild(i)
-            }else if(sortValue=='desc'){
-                sortTitle.textContent="Price: High to Low"
-                sortTitle.appendChild(i)
-            }else{
-                sortTitle.textContent="Featured"
-                sortTitle.appendChild(i)
-            }
-            const urlParams=new URLSearchParams(window.location.search)//to get details about any filteres used in url 
-            urlParams.set('sort',sortValue)//add or update the sortvalue
-            clearfilterbtn.removeAttribute('hidden')
-            try {
-                const response=await fetch(`/shop/products?${urlParams.toString()}`,{
-                    headers:{"X-Requested-With":"XMLHttpRequest"}//helps server to identify the AJAX request
-                })
-                const html=await response.text()
-               productContainer.innerHTML=html
-                 window.history.pushState({}, '', `/shop/products?${urlParams.toString()}`);//to make sure to update the url without
-            } catch (error) {
-                console.error("Error while displaying sorted products",error)
-                
-            }
-            
+            let text='Featured'
+            if(sortValue==='asc')text="Price: Low to High"
+            else if(sortValue==='desc')text="Price: High to Low"
+
+            sortTitle.innerHTML=`${text}<i class="fi-rs-angle-small-down"></i>`
+            const urlParams=new URLSearchParams(window.location.search)
+            urlParams.set('sort',sortValue)
+            urlParams.set('page',1)
+
+            await fetchProducts(urlParams)
         })        
-    });
+        });
+        //pagination logic
+        if(productContainer){
+            productContainer.addEventListener('click',async(e)=>{
+                const link=e.target.closest('.page-link')
+                if(!link)return
+                e.preventDefault()
+                const page=link.getAttribute('data-page')
+                const urlParams=new URLSearchParams(window.location.search)
+                urlParams.set('page',page)
+                await fetchProducts(urlParams)
+            })
+        }
+            
     //clear filter
     if(clearfilterbtn){
         clearfilterbtn.addEventListener('click',async function(e){
@@ -219,43 +235,12 @@
             urlParams.delete('page')
             urlParams.delete('category')
             urlParams.delete('sort')
-            try {
-                const response = await fetch(`/shop/products/?${urlParams.toString()}`, {
-                    headers: { "X-Requested-With": "XMLHttpRequest" }
-                });
-                const html = await response.text();
-                
-                productContainer.innerHTML = html;
-               clearfilterbtn.setAttribute('hidden','true')
-                window.history.pushState({}, '', `/shop/products/?${urlParams.toString()}`);
-            } catch (error) {
-                console.error("error while clearing filter",error);
-                
-            }
+           await fetchProducts(urlParams)
         })
     }
 
-    //filter form
-    const filterForm=document.getElementById('filterForm')
-    filterForm.addEventListener('submit',async function(e){
-        e.preventDefault()
-        const formData=new FormData(filterForm)
-        const urlParams=new URLSearchParams(formData)
-        try {
-            const response=await fetch(`/shop/products/?${urlParams.toString()}`,{
-            headers:{"X-Requested-With":"XMLHttpRequest"}
-            })
-            const html=await response.text()
-            productContainer.innerHTML=html
-            if(clearfilterbtn){
-                clearfilterbtn.removeAttribute('hidden')
-            }
-            window.history.pushState({},'',`/shop/products/?${urlParams.toString()}`)
-        } catch (error) {
-           console.error("error while applying filter",error);
-            
-        }    
-    })
+    
+    
     
 
 })

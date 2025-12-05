@@ -2,6 +2,9 @@ import User from '../model/userSchema.js'
 import Category from '../model/categorySchema.js'
 import Product from '../model/productSchema.js'
 import { paginateHelper } from '../helpers/pagination.js';
+import { populate } from 'dotenv';
+
+
 //render the shop page with all filters and search criteria
 const loadShop = async (req, res) => {
   try {
@@ -10,9 +13,10 @@ const loadShop = async (req, res) => {
     const minPrice=parseInt(req.query.minPrice)||0
     const maxPrice=parseInt(req.query.maxPrice)||100000
     const sort=req.query.sort||''
+    const page=req.query.page||1
    
+    //build filter
     const filter={isDeleted:false,price:{$gte:minPrice,$lte:maxPrice}}
-    // console.log(search,categoryId)
     //always apply search filter
     if(search)
         {
@@ -31,10 +35,20 @@ const loadShop = async (req, res) => {
         }else{
             sortOption.createdAt=-1
         }
-        const{totalPages,limit,skip,page}=await paginateHelper(Product,req,4,filter)
+        //pass the model and options
+        const paginatedData=await paginateHelper(Product,{
+            page:page,
+            limit:6,
+            filters:filter,
+            sort:sortOption,
+            populate:'category'
+        })
 
 
-    const products = await Product.find(filter).populate('category').sort(sortOption).skip(skip).limit(limit);
+    const products = paginatedData.results
+    const totalPages=paginatedData.pagination.totalPages    
+    const currentPage=paginatedData.pagination.currentPage
+
     const categories=await Category.find()
     let wishlistedProductIds=[]
     let cartProductIds=[]
@@ -49,15 +63,24 @@ const loadShop = async (req, res) => {
     const annotatedProducts=products.map(product=>{
         const id=product._id.toString()
         return{
-            ...product.toObject(),isWishlisted:wishlistedProductIds.includes(id),
+            ...product.toObject(),
+            isWishlisted:wishlistedProductIds.includes(id),
             isInCart:cartProductIds.includes(id)
         }
     })
     if (req.xhr) { // Check if request is AJAX
-        return res.render('partials/user/productView', { products:annotatedProducts });
+        return res.render('partials/user/productView', { products:annotatedProducts,currentPage:currentPage,totalPages:totalPages });
 }
 
-    res.render('user/shop', { products:annotatedProducts,categoryList:categories,search,minPrice,maxPrice,categoryId,currentPage:page,totalPages,sort }); // render 'shop.ejs' with products
+    res.render('user/shop', { products:annotatedProducts,
+        categoryList:categories,
+        search,
+        minPrice,
+        maxPrice,
+        categoryId,
+        currentPage,
+        totalPages,
+        sort }); // render 'shop.ejs' with products
   } catch (error) {
     console.error("Error loading shop:", error);
     res.status(500).send("Something went wrong.");

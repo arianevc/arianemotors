@@ -60,12 +60,28 @@
                             <% }) %>
                             <div class="pagination-area mt-30 mb-50">
                                 <nav aria-label="Page navigation example">
-                                    <ul class="pagination justify-content-start" id="pagination-controls">
-                                        <% for(let i = 1; i <= totalPages; i++) { %>
-                                             <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                                <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
-                                            </li>
-                                            <% } %>
+                                    <ul class="pagination justify-content-start" id="pagination-container">
+                                      <% if (currentPage > 1) { %>
+                                        <li class="page-item">
+                                           <a class="page-link" href="#" data-page="<%= currentPage - 1 %>">
+                                               <i class="fi-rs-angle-double-small-left"></i> Prev
+                                          </a>
+                                        </li>
+                                     <% } %>
+
+                               <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                         <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+
+                               <% if (currentPage < totalPages) { %>
+                                  <li class="page-item">
+                                        <a class="page-link" href="#" data-page="<%= currentPage + 1 %>">
+                                             Next <i class="fi-rs-angle-double-small-right"></i>
+                                        </a>
+                                  </li>
+                               <% } %>
                                         </ul>
                                     </nav>
                              </div>
@@ -73,12 +89,7 @@
                                 <h1>No products found</h1>
                                 <% } %>
                         </div>
-                        <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
-                    <nav aria-label="Page navigation example">
-                       <ul class="pagination justify-content-start" id="pagination-container">
-                          </ul>
-                         </nav>
-                      </div>
+                    
                        <script>
                         document.addEventListener('DOMContentLoaded',function(){
 

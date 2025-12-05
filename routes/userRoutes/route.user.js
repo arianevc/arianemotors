@@ -12,7 +12,7 @@ import * as Validators from '../../helpers/expressValidator.js'
 
 
 //homepage
-router.get('/',authenticate.checkBlocked,userController.LoadHomepage)
+router.get('/',authenticate.checkBlocked,authenticate.isAdmin,userController.LoadHomepage)
 
 //login/signup routes
 router.get('/login',authenticate.checkLoggedIn,userController.loadUserLogin)//middleware chaining
