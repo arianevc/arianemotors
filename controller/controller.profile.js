@@ -1,8 +1,10 @@
 import User from "../model/userSchema.js"
 import Category from "../model/categorySchema.js"
 import Order from "../model/orderSchema.js"
+import { paginateHelper } from "../helpers/pagination.js"
 import { processProfileImage } from "../helpers/imageProcessing.js"
 import { validationResult } from "express-validator"
+import { log } from "node:console"
 
 
 //load Account details
@@ -11,14 +13,32 @@ const loadAccountDetails=async(req,res)=>{
         if(!req.session.userId){
            return res.redirect('/login')
         }
+        const page=req.query.orderPage||1
+        // console.log("page no: ",page);
+        
+        const filters={userId:req.session.userId}
+        let sortOption={createdAt:-1}
+        const paginatedData=await paginateHelper(Order,{
+            limit:6,
+            sort:sortOption,
+            page:page
+        })
+        const userOrders=paginatedData.results
+        const totalPages=paginatedData.pagination.totalPages
+        // console.log("total documents: ",paginatedData.pagination.totalDocuments)
+        const currentPage=paginatedData.pagination.currentPage
+
         const user=await User.findById(req.session.userId)
-        const userOrders=await Order.find({userId:req.session.userId})
+       if(req.xhr){
+        return res.render('partials/user/orderList',{orders:userOrders,totalPages:totalPages,currentPage:currentPage})
+       }
      
         const category=await Category.find()
         // console.log(user.addresses)
-        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user,orders:userOrders})
+        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user,orders:userOrders,currentPage,totalPages})
     } catch (error) {
-        console.log("error in loading ")
+        console.log("error in loading account details: ",error)
+        res.status(500).render('user/errorPage')
     }
 }
 //load user details to edit or read

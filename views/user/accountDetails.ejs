@@ -52,48 +52,12 @@
                             </div>
                             <div class="col-md-8">
                                 <div class="tab-content dashboard-content">
-                                   
+
+                                    <!-- order partial -->
                                     <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
-                                        <%if(orders&&orders.length>0){ %>
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h5 class="mb-0">Your Orders</h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="table-responsive">
-                                                    <table class="table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Order ID</th>
-                                                                <th>Date</th>
-                                                                <th>Status</th>
-                                                                <th>Payment</th>
-                                                                <th>Total</th>
-                                                                <th>Actions</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <% orders.forEach((order)=>{%>
-                                                            <tr>
-                                                                <td><%=order.orderId %></td>
-                                                                <td><%=new Date(order.createdAt).toLocaleDateString() %></td>
-                                                                <td><%= order.orderStatus %></td>
-                                                                <td><%= order.paymentStatus %></td>
-                                                                <td>₹<%=order.totalPrice.toFixed(2) %></td>
-                                                                <td><a href="/orders/<%= order.orderId %>" class="btn-small d-block">View</a></td>
-                                                            </tr>
-                                                            <% }) %>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    
-                                    <% }else{ %>
-                                        <h4 style="color: #088178;">No Orders Available to Display</h4>
-                                        <% } %>
+                                        <%-include('../partials/user/orderList')  %>
                                     </div>
-                                  
+
                                     <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <h5>My Addresses</h5>
@@ -497,6 +461,30 @@
                 }
             })
         })
+        //order pagination
+        const orderContainer=document.getElementById('orders')
+        if(orderContainer){
+            orderContainer.addEventListener('click',async(e)=>{
+                const link=e.target.closest('.page-link')
+                if(!link)return
+                e.preventDefault()
+                const page=link.getAttribute('data-page')
+                const url=`/account?orderPage=${page}`
+                try {
+                    const response=await fetch(url,{
+                        headers:{'X-Requested-With':'XMLHttpRequest'}
+                    })
+                    if(!response.ok)throw new Error("Network response was not ok")
+                    const html=await response.text()
+                orderContainer.innerHTML=html
+                //update browser URL without reloading
+                window.history.pushState({},'',url)
+                } catch (error) {
+                    console.error("Order Fetch Error: ",error);
+                }
+            })
+        }
+
     })
     </script>
 </body>

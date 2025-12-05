@@ -1,0 +1,93 @@
+
+    <div class="content-header p-1">
+        <h2>Your Orders</h2>
+    </div>
+                                        <%if(orders&&orders.length>0){ %>
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <form id="filterForm" class="row g-3 align-items-center ">
+                                                    <div class="col-lg-3 col-md-6">
+                                                        <div class="row g-2 align-items-center">
+                                                        
+                                                        <div class="col-auto">
+                                                            <input type="text" placeholder="Search by Order ID " 
+                                                            class="form-control" name="search" id="searchInput" value="">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-3 col-md-6">
+                                                        <div class="row g-2 align-items-center">
+                                                          
+                                                            <div class="col-auto">
+                                                               <input type="date" style="max-width: 180px;min-width: 140px;" class="form-control form-control-sm" id="myDateInput">
+                                                        </div>
+                                                        </div>
+                                                    </div>
+                                                     <div class="col-lg-1">
+                                                        <button type="submit" class="btn btn"><i class="fi-rs-search"></i></button>
+                                                      </div>
+                                                </form>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Order ID</th>
+                                                                <th>Date</th>
+                                                                <th>Status</th>
+                                                                <th>Payment</th>
+                                                                <th>Total</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% orders.forEach((order)=>{%>
+                                                            <tr>
+                                                                <td><%=order.orderId %></td>
+                                                                <td><%=new Date(order.createdAt).toLocaleDateString() %></td>
+                                                                <td><%= order.orderStatus %></td>
+                                                                <td><%= order.paymentStatus %></td>
+                                                                <td>₹<%=order.totalPrice.toFixed(2) %></td>
+                                                                <td><a href="/orders/<%= order.orderId %>" class="btn-small d-block">View</a></td>
+                                                            </tr>
+                                                            <% }) %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- pagination -->
+                                        <div class="pagination-area mt-30 mb-50">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination justify-content-start" id="pagination-container">
+                                      <% if (currentPage > 1) { %>
+                                        <li class="page-item">
+                                           <a class="page-link" href="#" data-page="<%= currentPage - 1 %>">
+                                               <i class="fi-rs-angle-double-small-left"></i>
+                                          </a>
+                                        </li>
+                                     <% } %>
+
+                               <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                         <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+
+                               <% if (currentPage < totalPages) { %>
+                                  <li class="page-item">
+                                        <a class="page-link" href="#" data-page="<%= currentPage + 1 %>">
+                                              <i class="fi-rs-angle-double-small-right"></i>
+                                        </a>
+                                  </li>
+                               <% } %>
+                                        </ul>
+                                    </nav>
+                             </div>
+                                    <% }else{ %>
+                                        <h4 style="color: #088178;">No Orders Available to Display</h4>
+                                        <% } %>
+
+                                    
