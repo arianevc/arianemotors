@@ -1,7 +1,7 @@
 import  express  from "express";
 const router=express.Router()
-import * as shopController from "../../controller/controller.shop.js";
-import * as orderController from "../../controller/controller.order.js"
+import * as shopController from "../../controller/userController/controller.shop.js";
+import * as orderController from "../../controller/userController/controller.order.js"
 import * as authenticate from "../../helpers/authenticate.js"
 
 

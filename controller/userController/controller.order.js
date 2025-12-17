@@ -1,7 +1,8 @@
-import User from '../model/userSchema.js'
-import Category from '../model/categorySchema.js'
-import Order from '../model/orderSchema.js'
-import Product from '../model/productSchema.js'
+import User from '../../model/userSchema.js'
+import Category from '../../model/categorySchema.js'
+import Order from '../../model/orderSchema.js'
+import Product from '../../model/productSchema.js'
+import { getCommonData } from '../../helpers/commonData.js'
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
 import { log } from 'console'
@@ -20,13 +21,12 @@ const loadCheckout=async(req,res)=>{
             return res.redirect('/login')
          }
         const userId=req.session.userId
-        const search=req.query.search||""
-        const categoryId=req.query.category||""
-        const categories=await Category.find()
+       const commonData=await getCommonData()
         const user=await User.findById(userId).populate({
             path:'cart.productId',//to populate the product with its details in the cart
             model:'Product'
         })
+        const walletBalance=user.wallet.balance
         const phoneAndEmail={phone:user.phone,email:user.email}
        const availableCartItems=user.cart.filter(
         item=>!item.productId.isDeleted
@@ -37,8 +37,8 @@ const loadCheckout=async(req,res)=>{
        })
         const userAddresses=user.addresses?user.addresses:[]
 
-           res.render('user/checkOutPage',{categoryList:categories,user:user,categoryId,search,
-            phoneEmail:phoneAndEmail,cartItems:availableCartItems,totalPrice:totalPrice,addresses:userAddresses,
+           res.render('user/checkOutPage',{categoryList:commonData.categoryList,user:user,categoryId:'',search:'',
+            phoneEmail:phoneAndEmail,cartItems:availableCartItems,walletBalance:walletBalance,totalPrice:totalPrice,addresses:userAddresses,
             razorpayKeyId:process.env.RAZORPAY_API_TEST_KEY_ID
         })
         
@@ -51,11 +51,23 @@ const loadCheckout=async(req,res)=>{
 const placeOrder=async(req,res)=>{
     try {
         console.log(req.body)        
-        const {addressId,totalPrice}=req.body
+        const {addressId,totalPrice,paymentOption}=req.body
         if(req.session.userId){
             const user=await User.findById(req.session.userId).populate('cart.productId')
             const orderAddress=user.addresses[addressId]
-           
+           if(paymentOption=='Wallet'){
+            if(user.wallet.balance<totalPrice){
+                return res.json({success:false,message:"Insufficient wallet balance"})
+            }
+            //deduct the amount from wallet
+            user.wallet.balance-=parseFloat(totalPrice)
+            user.wallet.transactions.push({
+                amount:totalPrice,
+                type:'Debit',
+                description:'Order Payment'
+            })
+            await user.save()
+           }
             const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
             console.log("create new order id: ",customOrderId);
             const newOrder=new Order({
@@ -76,11 +88,12 @@ const placeOrder=async(req,res)=>{
                     price:item.productId.price
                 })),
                 totalPrice:totalPrice,
-                paymentMethod:'COD',
-                paymentStatus:'Pending',
+                paymentMethod:paymentOption,
+                paymentStatus:paymentOption=='Wallet'?'Paid':'Pending',
                 orderStatus:'Pending'
             })
             await newOrder.save()
+            
             //to reduce items from stock
             for(let item of user.cart){
                 await Product.updateOne({_id:item.productId},

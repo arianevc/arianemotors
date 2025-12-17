@@ -19,12 +19,24 @@
                                                         <div class="row g-2 align-items-center">
                                                           
                                                             <div class="col-auto">
-                                                               <input type="date" style="max-width: 180px;min-width: 140px;" class="form-control form-control-sm" id="myDateInput">
+                                                               <input type="date" name="orderDate" style="max-width: 180px;min-width: 140px;" class="form-control form-control-sm" id="orderDateInput">
+                                                        </div>
+                                                        </div>
+                                                    </div>
+                                                <div class="col-lg-3 col-md-6">
+                                                        <div class="row g-2 align-items-center">
+                                                          
+                                                            <div class="col-auto">
+                                                               <select name="orderStatusDropdown" class="form-select" id="orderStatus">
+                                                                <option selected>Order Status</option>
+                                                                <option value="Paid">Paid</option>
+                                                                <option value="Paid">Processing</option>
+                                                               </select>
                                                         </div>
                                                         </div>
                                                     </div>
                                                      <div class="col-lg-1">
-                                                        <button type="submit" class="btn btn"><i class="fi-rs-search"></i></button>
+                                                        <button type="submit" class="btn order-filter-btn"><i class="fi-rs-search"></i></button>
                                                       </div>
                                                 </form>
                                             </div>

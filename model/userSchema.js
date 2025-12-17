@@ -1,3 +1,4 @@
+import { timeStamp } from 'console';
 import mongoose from 'mongoose'
 import { type } from 'os';
 const{Schema}=mongoose
@@ -97,32 +98,35 @@ const userSchema= new Schema({
         default:false
     },
     cart:[cartItemSchema],
-    // wallet:{
-    //     balance:{
-    //         type:Number,
-    //         default:0
-    //     },
-    //     transactions:[{
-    //         amount:{
-    //             type:Number,
-    //             required:true
-    //         },
-    //         type:{
-    //             type:String,
-    //             enum:['Credit','Debit'],
-    //             required:true,
-    //         },
-    //             date:{
-    //                 type:Date,
-    //                 default:Date.now()
-    //         },
-    //         description:{
-    //             type:String
-    //         }
-    //     }]
+    wallet:{
+        balance:{
+            type:Number,
+            default:0
+        },
+        transactions:[{
+            amount:{
+                type:Number,
+                required:true
+            },
+            type:{
+                type:String,
+                enum:['Credit','Debit'],
+                required:true,
+            },
+                date:{
+                    type:Date,
+                    default:Date.now()
+            },
+            description:{
+                type:String,
+                required:true
+            },
+            transactionId:{
+                type:String
+            }
+        }]
         
-    // }
-
-})
+    }
+},{timestamps:true})
 const User=mongoose.model('User',userSchema)
 export default User

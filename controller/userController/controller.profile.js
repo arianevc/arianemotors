@@ -1,10 +1,12 @@
-import User from "../model/userSchema.js"
-import Category from "../model/categorySchema.js"
-import Order from "../model/orderSchema.js"
-import { paginateHelper } from "../helpers/pagination.js"
-import { processProfileImage } from "../helpers/imageProcessing.js"
+import User from "../../model/userSchema.js"
+import Category from "../../model/categorySchema.js"
+import Order from "../../model/orderSchema.js"
+import { paginateHelper } from "../../helpers/pagination.js"
+import { processProfileImage } from "../../helpers/imageProcessing.js"
 import { validationResult } from "express-validator"
-import { log } from "node:console"
+import { getCommonData } from "../../helpers/commonData.js"
+import Razorpay from "razorpay"
+import { log, timeStamp } from "node:console"
 
 
 //load Account details
@@ -21,6 +23,7 @@ const loadAccountDetails=async(req,res)=>{
         const paginatedData=await paginateHelper(Order,{
             limit:6,
             sort:sortOption,
+            filters:filters,
             page:page
         })
         const userOrders=paginatedData.results
@@ -41,6 +44,31 @@ const loadAccountDetails=async(req,res)=>{
         res.status(500).render('user/errorPage')
     }
 }
+//search for orders
+const orderSearch=async(req,res)=>{
+ try {
+    console.log(req.body) 
+       const filters={userId:req.session.userId,
+        timeStamp:req.body.orderDate||'',
+        orderStatus:req.body.orderStatus
+    }
+    console.log('filters: ',filters)
+    const sortOption={createdAt:-1}
+    const paginatedData=await paginateHelper(Order,{
+        sort:sortOption,
+        filters:filters,        
+    })
+    const userOrders=paginatedData.results
+    const totalPages=paginatedData.pagination.totalPages
+    const currentPage=paginatedData.pagination.currentPage
+    return res.json('partials/user/orderList',{orders:userOrders,totalPages:totalPages,currentPage:currentPage})
+
+ } catch (error) {
+    console.error("Error in displaying the searched order: ",error);
+        
+ }
+}
+
 //load user details to edit or read
 const editProfile=async(req,res)=>{
     try {
@@ -211,7 +239,7 @@ const removeImage=async(req,res)=>{
         res.status(500).json({success:false,message:"Server error during removal of image"})
     }
 }
-export{loadAccountDetails,editProfile,editUserPost,addAddress,getSingleAddress
+export{loadAccountDetails,orderSearch,editProfile,editUserPost,addAddress,getSingleAddress
     ,editAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,
     removeImage
 }

@@ -1,4 +1,4 @@
-import Category from "../model/categorySchema.js"
+import Category from "../../model/categorySchema.js"
 
 const loadCategories=async(req,res)=>{
     if(!req.session.isAdmin){

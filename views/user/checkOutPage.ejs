@@ -135,6 +135,10 @@
                                             <th>Shipping</th>
                                             <td colspan="2"><em>Free Shipping</em></td>
                                         </tr>
+                                        <tr hidden>
+                                            <th>Wallet Money</th>
+                                            <td colspan="2"><em>- ₹15.00</em></td>
+                                        </tr>
                                         <tr>
                                             <th>Total</th>
                                             <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹<%= totalPrice.toFixed(2) %></span></td>
@@ -150,15 +154,22 @@
                                 <div class="payment_option">
                                     <div class="custome-radio">
                                         <input class="form-check-input" required="" type="radio" name="payment_option" value="Online" id="paymentOptionOnline" checked>
-                                        <label class="form-check-label" for="paymentOptionOnline" data-bs-toggle="collapse" >Online Payment</label>
-                                       
+                                        <label class="form-check-label" for="paymentOptionOnline">Online Payment</label>
+                                    </div>
+                                     <div class="custome-radio">
+                                        <input class="form-check-input" required type="radio" name="payment_option" value="Wallet" id="paymentOptionWallet" >
+                                        <label class="form-check-label" for="paymentOptionWallet">Use Wallet</label>
+                                        <small class="text-muted">Wallet balance: ₹<%=walletBalance%></small>
                                     </div>
                                     <div class="custome-radio">
                                         <input class="form-check-input" required="" type="radio" name="payment_option" id="paymentOptionCOD" value="COD">
-                                        <label class="form-check-label" for="paymentOptionCOD" data-bs-toggle="collapse" >Cash on Delivery</label>
+                                        <label class="form-check-label" for="paymentOptionCOD">Cash on Delivery</label>
                                         
                                     </div>
                                 </div>
+                            </div>
+                            <div class="error-message">
+                                <p class="text-danger" id="errorMsg"></p>
                             </div>
                             <a href="#" class="btn btn-fill-out btn-block mt-30" id="placeOrderButton">Make Payment</a>
                         </div>
@@ -273,38 +284,37 @@
         const data=Object.fromEntries(formData.entries())
         console.log(data);
         const url=`/account/addresses`
-
-        const response =await fetch(url,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify(data)
-        }).then(async response=>{
+        try {
+            const response =await fetch(url,{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(data)
+            })
             const result=await response.json()
             if(!response.ok){
-                if(response.status==400){
+                if(response.status==400 &&result.errors){
                     const errorMessages=result.errors.map(err=>err.msg).join('\n*')
                     const p=document.createElement('p')
                     p.classList.add('text-danger')
                     p.innerText=errorMessages
                     errorContainer.appendChild(p)
+            
                     Swal.fire('Validation error!','Please validate your entries','error')
                 }else{
                     Swal.fire('Error!',result.message,'error')
                 }
-                Swal.fire('Error!','Server Error','error')
+                return
             }
-            return result
-        }).then(result=>{
             if(result.success){
-            Swal.fire("Success!",result.message,'success').then(()=>{
-                location.reload()
-            })
+                await Swal.fire("Success!",result.message,'success').then(()=>{
+                    location.reload()
+                })
             }else{
                 Swal.fire("Error!",result.message,'error')
             }
-        }).catch(err=>{
-            Swal.fire("Error!",result.message,'error')
-        })
+        } catch (error) {
+            Swal.fire("Error!",error.message,'Unexpected Erro Occurred')
+        }
         
        })
        //changing button text on payment option
@@ -315,13 +325,15 @@
         radio.addEventListener('change',()=>{
             console.log("radio clicked: ",radio.value);
             
-            if(radio.value==='Online'&&radio.checked){
+            if(radio.value==='Online'||radio.value=='Wallet'&&radio.checked){
                 placeOrderBtn.textContent='Make Payment'
             }else if(radio.checked&&radio.value==='COD'){
                 placeOrderBtn.textContent='Place Order'
             }
         })
        })
+
+
        //placing order
      
         placeOrderBtn.addEventListener('click',async function(e){
@@ -341,21 +353,24 @@
         console.log("selected Address index for placing order: ",selectedAddressId);
         const totalPrice='<%=totalPrice%>'
         placeOrderBtn.disabled=true
-        placeOrderBtn.innerText='Processing...'
+        
         //choosing between payments
         if(paymentOption.value=='Online'){
             initiateRazorpayPayment(selectedAddressId,totalPrice)
-        }else if(paymentOption.value=='COD'){
-            placeOrderCOD(selectedAddressId,totalPrice)
+            placeOrderBtn.innerText='Processing...'
+        }else if(paymentOption.value=='COD'||paymentOption.value=='Wallet'){
+            placeOrderCOD(selectedAddressId,totalPrice,paymentOption.value)
         }
-        //function for Cash on Delivery mode
-        async function placeOrderCOD(addressId,totalPrice) {
+
+        //function for Cash on Delivery & Wallet mode
+        async function placeOrderCOD(addressId,totalPrice,paymentOption) {
         await fetch('/shop/place-order',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
                 addressId:selectedAddressId,
                 totalPrice:totalPrice,
+                paymentOption:paymentOption
             })
         }).then(res=>res.json())
         .then(data=>{
@@ -364,9 +379,9 @@
                     window.location.href=`/order-success?orderId=${data.orderId}`
                 })
             }else{
-                Swal.fire('Error!',data.message||'Could not place order','error').then(()=>{
-                    window.location.href=`/order-failure`
-                })
+                // Swal.fire('Error!',data.message||'Could not place order','error')
+                document.getElementById('errorMsg').innerText="*"+data.message||'Could not place order'
+
             }
         }).catch((err)=>{
             Swal.fire('Error!','Server error & Could not place order','error').then(()=>{

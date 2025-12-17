@@ -1,7 +1,7 @@
 import express from 'express'
-import * as adminController from '../../controller/controller.admin.js'
-import * as categoryController from '../../controller/controller.category.js'
-import * as productController from '../../controller/controller.product.js'
+import * as adminController from '../../controller/adminController/controller.admin.js'
+import * as categoryController from '../../controller/adminController/controller.category.js'
+import * as productController from '../../controller/adminController/controller.product.js'
 import upload from '../../config/multer.js'
 import * as authenticate from '../../helpers/authenticate.js'
 const router = express.Router();

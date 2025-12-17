@@ -1,7 +1,7 @@
-import User from '../model/userSchema.js'
-import Category from '../model/categorySchema.js'
-import Product from '../model/productSchema.js'
-import { paginateHelper } from '../helpers/pagination.js';
+import User from '../../model/userSchema.js'
+import Category from '../../model/categorySchema.js'
+import Product from '../../model/productSchema.js'
+import { paginateHelper } from '../../helpers/pagination.js';
 import { populate } from 'dotenv';
 
 

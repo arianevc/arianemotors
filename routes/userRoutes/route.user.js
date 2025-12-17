@@ -1,8 +1,9 @@
 import express from 'express'
 const router=express.Router()
 import passport from 'passport';
-import * as userController from "../../controller/controller.user.js";
-import * as profileController from "../../controller/controller.profile.js"
+import * as userController from "../../controller/userController/controller.user.js";
+import * as profileController from "../../controller/userController/controller.profile.js"
+import * as walletController from "../../controller/userController/controller.wallet.js"
 import * as authenticate from '../../helpers/authenticate.js'
 import upload from "../../config/multer.js"
 import * as Validators from '../../helpers/expressValidator.js'
@@ -47,6 +48,7 @@ router.post('/edit/email',profileController.emailVerify)
 router.route("/forgotpwd")//router chaining
 
 
+
 .get(userController.loadforgotPassword)
 .post(userController.forgotPasswordPost)
 router.get('/resetpwd/:token',userController.loadResetPassword)
@@ -63,6 +65,10 @@ router.get('/auth/google/callback',passport.authenticate('google',{failureRedire
     res.redirect('/')
 })
 //Users order management
+
+//search for order on profile page
+router.post('/order/search',authenticate.checkUserSession,profileController.orderSearch)
+//load success page for the user order placed
 router.get('/order-success',authenticate.checkUserSession,userController.loadOrderSuccess)
 //order fail page for user to retry or view the failed order
 router.get('/order-failure',authenticate.checkUserSession,userController.loadOrderFailure)
@@ -74,9 +80,9 @@ router.post('/orders/return/:orderId',authenticate.checkUserSession,userControll
 //wallet management
 
 // //load wallet page
-// router.get('/wallet',authenticate.checkUserSession,profileController.loadWallet)
+router.get('/wallet',authenticate.checkUserSession,walletController.loadWallet)
 // //create razorpay order to recharge wallet
-// router.post('/wallet/add-money',authenticate.checkUserSession,profileController.rechargeWallet)
+router.post('/wallet/add-money',authenticate.checkUserSession,walletController.rechargeWallet)
 // //verify and update wallet balance
-// router.post('/wallet/verify-payment',authenticate.checkUserSession,profileController.verifyWalletPayment) 
+router.post('/wallet/verify-payment',authenticate.checkUserSession,walletController.verifyWalletPayment) 
 export default router

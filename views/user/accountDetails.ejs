@@ -1,4 +1,6 @@
 <%- include('../partials/user/header') %>
+
+
 <style>
     .edit-img-link:hover{
         text-decoration: underline;
@@ -35,6 +37,9 @@
                                         </li>
                                         <li class="nav-item">
                                             <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false"><i class="fi-rs-shopping-bag mr-10"></i>Orders</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/wallet"><i class="fi-rr-wallet mr-10"></i>My Wallet</a>
                                         </li>
                                        
                                         <li class="nav-item">
@@ -484,6 +489,27 @@
                 }
             })
         }
+        //order search
+        const orderFilterForm=document.getElementById('filterForm')
+        orderFilterForm.addEventListener('submit',async function(e){
+            e.preventDefault()
+            const formData=new FormData(orderFilterForm)
+            const data=Object.fromEntries(formData.entries())
+            console.log(data);
+            try{
+            const response=await fetch(`/order/search`,{
+                headers:{'Content-Type':'application/json'},
+                method:'POST',
+                body:JSON.stringify(data)
+            })
+            if(!response.ok)throw new Error('Network issue in fetching orders')
+            const html=await response.text()
+        orderContainer.innerHTML=html
+            }catch(error){
+                console.error("error in fetching orders: ",error);
+                
+            }
+        })
 
     })
     </script>

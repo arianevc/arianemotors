@@ -1,7 +1,7 @@
 
-import User from '../model/userSchema.js'
-import Product from '../model/productSchema.js'
-import Order from '../model/orderSchema.js'
+import User from '../../model/userSchema.js'
+import Product from '../../model/productSchema.js'
+import Order from '../../model/orderSchema.js'
 
 
 

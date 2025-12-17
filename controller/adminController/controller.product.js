@@ -1,7 +1,7 @@
 
-import Category from '../model/categorySchema.js'
-import Product from '../model/productSchema.js'
-import { processImages } from '../helpers/imageProcessing.js'
+import Category from '../../model/categorySchema.js'
+import Product from '../../model/productSchema.js'
+import { processImages } from '../../helpers/imageProcessing.js'
 
 
 const loadProducts=async(req,res)=>{

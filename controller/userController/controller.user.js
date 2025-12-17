@@ -1,19 +1,21 @@
 import bcrypt from 'bcrypt' 
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
-import User from '../model/userSchema.js'
-import Category from '../model/categorySchema.js'
-import Order from '../model/orderSchema.js'
+import User from '../../model/userSchema.js'
+import Category from '../../model/categorySchema.js'
+import Order from '../../model/orderSchema.js'
 import  PDFDocument  from "pdfkit";
-import verifyEmail from "../helpers/verifyEmail.js"
+import verifyEmail from "../../helpers/verifyEmail.js"
+import { getCommonData } from '../../helpers/commonData.js'
 import { validationResult } from 'express-validator'
 
 
 //load Home page
 const LoadHomepage=async (req,res)=>{
     try{
-        const category=await Category.find()
-       return res.render('user/homepage',{categoryList:category,search:"",categoryId:""})
+        const commonData=await getCommonData()
+                
+       return res.render('user/homepage',commonData)
     }
     catch(error){
         console.log("Error occured: ",error)
@@ -267,7 +269,7 @@ const resendOtp=async (req,res)=>{
         res.status(500).json({success:false,message:"Internal server error"})
     }
 }
-
+//Login of user or admin
 const userloginPost=async (req,res)=>{
     try {
         const {email,password}=req.body
@@ -283,6 +285,8 @@ const userloginPost=async (req,res)=>{
             return res.json({success:false,message:"Invalid Password"})
         }
         req.session.userId=user._id
+        req.session.loggedUser=user.name
+        req.session.loggedUserImage=user.profileImage
         if(user.isAdmin){
             req.session.isAdmin=true
             return res.json({success:true,redirectUrl:'/admin'})
@@ -291,6 +295,7 @@ const userloginPost=async (req,res)=>{
         
     } catch (error) {
         console.log("Issue while user logging",error)
+        res.locals.loggedUser=null
         res.json({success:false,message:"Login Failed . Please try again later"})
     }
 }
@@ -476,6 +481,7 @@ const returnOrder=async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
+
 export{LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
     userloginPost,userLogout,loadOrderSuccess,loadOrderFailure,loadOrderDetails,downloadInvoice,
