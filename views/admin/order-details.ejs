@@ -47,9 +47,32 @@
                         <hr>
                         <p><strong>Order Status:</strong> <span class="badge bg-primary"><%= order.orderStatus %></span></p>
                         <p><strong>Total Price:</strong> <span class="h5">₹<%= order.totalPrice.toFixed(2) %></span></p>
+                        <hr>
+                        <div class="d-flex gap-2 ">
+                            <p><strong>Change Status:</strong></p>
+                            <select class="form-select status-dropdown" data-order-id="<%= order.orderId %>" style="width: 150px;">
+                                    <% ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled','Return Requested','Returned'].forEach(status => { %>
+                                        <option value="<%= status %>" <%= order.orderStatus === status ? 'selected' : '' %>>
+                                            <%= status %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                        </div>
                     </div>
                 </div>
             </div>
+            <% if(order.returnReason) {%>
+            <div class="col-md-6 col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Return Request</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Reason for Return:</strong> <span><%= order.returnReason %></span></p>
+                    </div>
+                </div>
+            </div>
+            <% } %>
         </div>
 
         <div class="card">
@@ -81,6 +104,16 @@
                                     <td>₹<%= item.price.toFixed(2) %></td>
                                     <td><%= item.quantity %></td>
                                     <td class="text-end">₹<%= (item.price * item.quantity).toFixed(2) %></td>
+                                    <% if(item.itemStatus=='Return Requested'){ %>
+                                    <td>
+                                        <span class="badge bg-warning">Return Requested</span>
+                                        <p class="small text-muted">Reason:<%=item.reason%></p>
+                                        <button class="btn btn-xs approve-return-btn" 
+                                        data-orderId="<%= order.orderId %>" data-itemId="<%=item._id%>">
+                                        Approve
+                                        </button>
+                                    </td>
+                                <% } %>
                                 </tr>
                             <% }) %>
                         </tbody>
@@ -91,7 +124,88 @@
 
     </section>
 </main>
+<script>
+    document.addEventListener('DOMContentLoaded',function(){
+        //change status
+        const statusField=document.querySelector('.status-dropdown')
+        statusField.addEventListener('change',(e)=>{
+            const orderId=e.target.dataset.orderId
+            const newStatus=e.target.value
 
+              Swal.fire({
+                title: 'Change Order Status?',
+                text: `Set order ${orderId} to "${newStatus}"?`,
+                icon: 'warning',
+                showCancelButton: true
+            }).then(async(result) => {
+                if (result.isConfirmed){
+                    const response=await fetch(`/admin/orders/update-status/${orderId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newStatus: newStatus })
+                    })
+                    const data=await response.json()
+                    if(data.success){
+                        Swal.fire('Success!',data.message,'success')
+                    }else{
+                        Swal.fire('Error!', data.message, 'error');
+                    }
+                }
+            }) 
+        })
+
+
+        //approve the return of items
+        const approveButtons=document.querySelectorAll('.approve-btn-return')
+        approveButtons.forEach(btn=>{
+            btn.addEventListener('click',async function(e){
+                e.preventDefault()
+                const orderId=this.getAttribute('data-orderId')
+                const itemId=this.getAttribute('data-itemId')
+
+                const result=await Swal.fire({
+                    title:'Approve Return?',
+                    text:"This will refund the amount to user's wallet and restock the item",
+                    showCancelButton:true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText:'Yes, Approve Refund'
+                })
+                if(result.isConfirmed){
+                    try {
+                        Swal.fire({
+                            title:'Processing...',
+                            text:'Refunding to wallet...',
+                            allowOutsideClick:false,
+                            didOpen:()=>{
+                                Swal.showLoading()
+                            }
+                        })
+                        const response=await fetch('/orders/approve-return',{
+                            method:'POST',
+                            headers:{'Content-Type':'application/json'},
+                            body:JSON.stringify({
+                                orderId:orderId,
+                                itemId:itemId
+                            })
+                        })
+                        const data=await response.json()
+                        if(data.success){
+                            Swal.fire('Approved!','The amount is refunded to the user and item stock is updated','success').then(()=>{
+                                window.location.reload()
+                            })
+                        }else{
+                            Swal.fire('Error!',data.message||'Could not approve return','error')
+                        }
+                    } catch (error) {
+                        console.error("Error in approving return: ",error);
+                        Swal.fire('Error!','Something went wrong on the server','error')
+                    }
+                }
+            })
+        })
+    })
+</script>
  <script src="/backend/assets/js/vendors/jquery-3.6.0.min.js"></script>
     <script src="/backend/assets/js/vendors/bootstrap.bundle.min.js"></script>
     <script src="/backend/assets/js/vendors/select2.min.js"></script>

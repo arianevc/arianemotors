@@ -120,7 +120,7 @@ try {
             const orderAddress=user.addresses[addressId]
 
     const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
-            console.log("create new order id: ",customOrderId);
+            
             const newOrder=new Order({
                 orderId:customOrderId,
                 userId:req.session.userId,
@@ -144,14 +144,14 @@ try {
                 orderStatus:'Pending'
             })
             await newOrder.save()
-    console.log('Order Creation using razorpay: ',totalPrice)
+
     const options={
         amount:totalPrice*100,//convert to paise
         currency:'INR',
         receipt:"receipt#1"
     }
     const RazorpayOrder=await instance.orders.create(options)
-    console.log("razorpay order created ");
+    
     newOrder.razorpayOrderId=RazorpayOrder.id
     await newOrder.save()
     res.json({
@@ -168,20 +168,16 @@ try {
 //verification of Razorpay payment and Order is placed
 const verifyRazorpayOrder=async(req,res)=>{
     try {
-        console.log(req.body)
+      
         const {razorpay_order_id,razorpay_payment_id,razorpay_signature}=req.body
-        const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
-            console.log("create new order id: ",customOrderId);
         //verify signature
-        
-        console.log("Razorpay verification: ",req.body)
         const body=razorpay_order_id+"|"+razorpay_payment_id
         const expectedSignature=crypto
         .createHmac('sha256',process.env.RAZORPAY_API_TEST_SECRET_KEY).update(body.toString())
         .digest('hex')
-        // console.log("razorpay_signature: ",razorpay_signature);
-        // console.log("expected_signature: ",expectedSignature);
+       
         const order=await Order.findOne({razorpayOrderId:razorpay_order_id})
+        const orderId=order.orderId
         if(!order){
             res.status(404).json({success:false,message:"Order not found"})
         }
@@ -197,8 +193,8 @@ const verifyRazorpayOrder=async(req,res)=>{
                     {$inc:{quantity:-item.quantity}})
                 }
                 //update cart
-               await User.updateOne({_id:req.session._id},{$set:{cart:[]}})
-            res.json({success:true,message:"Order Placed Successfully",orderId:customOrderId})
+               await User.updateOne({_id:req.session.userId},{$set:{cart:[]}})
+            res.json({success:true,message:"Order Placed Successfully",orderId:orderId})
             //if both are different
     }else{
         order.paymentStatus='Failed'
@@ -231,4 +227,28 @@ const handlePaymentFailure =async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error in failed payment"})
     }
 }
-export{loadCheckout,placeOrder,createRazorpayOrder,verifyRazorpayOrder,handlePaymentFailure}
+//handle request for return of items
+const requestReturn=async(req,res)=>{
+try {
+    const{orderId,itemId,reason}=req.body
+    const order=await Order.findOne({orderId:orderId})
+
+    //find the item
+    const item=order.items.id(itemId)
+
+    if(item.itemStatus=='Delivered'){
+        item.itemStatus='Return Requested'
+        item.reason=reason
+        await order.save()
+        res.json({success:true,message:'Return requested successfully'})
+    }else{
+        res.json({success:false,message:'Cannot return this item'})
+    }
+} catch (error) {
+    console.error('Error in requesting return of item: ',error);
+    res.status(500).json({success:false})
+}
+}
+
+export{loadCheckout,placeOrder,createRazorpayOrder,
+    verifyRazorpayOrder,handlePaymentFailure,requestReturn}

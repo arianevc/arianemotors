@@ -27,6 +27,14 @@ const orderSchema=new Schema({
         price:{
             type:Number,
             required:true
+        },
+        itemStatus:{
+            type:String,
+            enum:['Ordered','Shipped','Delivered','Cancelled','Return Requested','Returned'],
+            default:'Ordered'
+        },
+        reason:{
+            type:String
         }
     }],
     shippingAddress: {
@@ -68,7 +76,7 @@ const orderSchema=new Schema({
     // },
     paymentStatus:{
         type:String,
-        enum:['Pending','Paid','Failed'],
+        enum:['Pending','Paid','Failed','Refunded'],
         default:'Paid'
     }
 

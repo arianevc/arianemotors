@@ -76,7 +76,7 @@ router.get('/orders/:orderId',authenticate.checkUserSession,userController.loadO
 router.get('/orders/invoice/:orderId',authenticate.checkUserSession,userController.downloadInvoice)
 router.get('/orders/cancel/:orderId',authenticate.checkUserSession,userController.cancelOrder)
 router.post('/orders/return/:orderId',authenticate.checkUserSession,userController.returnOrder)
-
+router.post('/orders/return-item',authenticate.checkUserSession,userController.returnItems)
 //wallet management
 
 // //load wallet page

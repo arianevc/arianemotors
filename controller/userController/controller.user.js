@@ -8,6 +8,7 @@ import  PDFDocument  from "pdfkit";
 import verifyEmail from "../../helpers/verifyEmail.js"
 import { getCommonData } from '../../helpers/commonData.js'
 import { validationResult } from 'express-validator'
+import Product from '../../model/productSchema.js'
 
 
 //load Home page
@@ -60,7 +61,7 @@ const forgotPasswordPost=async (req,res)=>{
     await user.save()
 
 
-    const resetlink=`http://localhost:3001/resetpwd/${token}`
+    const resetlink=`http://localhost:${process.env.PORT}/resetpwd/${token}`
     //sending the email
     console.log(resetlink)
     const transporter=nodemailer.createTransport({
@@ -312,6 +313,7 @@ const userLogout=async (req,res)=>{
 }
 
 //order management
+//order success page after payment or placing order
 const loadOrderSuccess=async(req,res)=>{
 try {
     const orderId=req.query.orderId
@@ -341,6 +343,7 @@ const loadOrderFailure=async(req,res)=>{
         res.status(500).render('user/error',{statusCode:500,statusMessage:"Page Unavailable due to server error"})
     }
 }
+//display the details about a particular order
 const loadOrderDetails=async(req,res)=>{
     try {
         const orderId=req.params.orderId
@@ -359,6 +362,7 @@ const loadOrderDetails=async(req,res)=>{
         res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
     }
 }
+//feature to download an invoice of the purchase
 const downloadInvoice=async(req,res)=>{
     try{
     const orderId=req.params.orderId
@@ -436,18 +440,37 @@ const downloadInvoice=async(req,res)=>{
         res.status(500).render('user/error',{statusCode:500,statusMessage:'Failed to generate invoice'})
     }
 }
+//cancel the order before shippment or delivery
 const cancelOrder=async(req,res)=>{
     try {
         const orderId=req.params.orderId   
     const userId=req.session.userId
     const order=await Order.findOne({orderId:orderId,userId:userId})
+    const user=await User.findById(userId)
     if(!order){
         return res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
     }
     if(order.orderStatus==="Pending"||order.orderStatus==="Processing"){
         order.orderStatus="Cancelled"
+        for(const item of order.items){
+            item.itemStatus='Cancelled'
+            await Product.updateOne({_id:item.productId},
+                {$inc:{quantity:item.quantity}})
+            }
+            //refund to wallet if order is paid
+            if(order.paymentStatus=='Paid'){
+            order.paymentStatus='Refunded'
+            user.wallet.balance+=parseFloat(order.totalPrice)
+            user.wallet.transactions.push({
+                amount:order.totalPrice,
+                type:'Credit',
+                description:'Refund for cancelled order',
+                transactionId:'Nil'
+            })
+        }
+        await user.save()
         await order.save()
-       return res.status(200).json({success:true,message:"Order is Cancelled"})
+       return res.status(200).json({success:true,message:"Order is Cancelled. If paid, refund will be credited to your wallet."})
     }else{
         return res.status(406).json({success:false,message:"Order cancellation failed"})
     }
@@ -457,6 +480,7 @@ const cancelOrder=async(req,res)=>{
     }
 
 }
+//return the order entirely
 const returnOrder=async(req,res)=>{
     try {
         const orderId=req.params.orderId
@@ -481,8 +505,27 @@ const returnOrder=async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
-
+//return only specific items in the order
+const returnItems=async(req,res)=>{
+    try {
+        const{orderId,itemId,reason}=req.body
+        const order=await Order.findOne({orderId:orderId})
+        //find the item
+        const item=order.items.id(itemId)
+        if(item.itemStatus=='Delivered'){
+            item.itemStatus='Return Requested'
+            item.reason=reason
+            await order.save()
+            res.json({success:true,message:"Request requested successfully"})
+        }else{
+            res.json({success:false,message:"Cannot return this item"})
+        }
+    } catch (error) {
+        console.error("Error in requesting the return of item: ",error);
+        res.json({success:false,message:'Server Error'})
+    }
+}
 export{LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
     userloginPost,userLogout,loadOrderSuccess,loadOrderFailure,loadOrderDetails,downloadInvoice,
-    cancelOrder,returnOrder}
+    cancelOrder,returnOrder,returnItems}
