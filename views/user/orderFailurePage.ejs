@@ -1,5 +1,7 @@
 <%- include('../partials/user/header.ejs') %>
 
+<!-- Load Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <main class="main">
     <div class="container text-center" style="padding: 100px 15px;">
         
@@ -7,12 +9,16 @@
         <h1 class="display-4 text-danger" style="font-weight: 700; margin-top: 20px;">Payment Failed</h1>
         <p class="lead" style="font-size: 1.25rem;">Your order was not placed or payment was not received</p>
         
+        <p style="margin-top: 20px;">
+            Your Order ID is: <strong><%= order.orderId %></strong>
+        </p>
+        
        
         
         <div style="margin-top: 40px;">
-            <a href="/shop/checkout" class="btn btn-primary" style="margin: 5px;">
+            <button id="pay-btn" class="btn btn-primary" style="margin: 5px;" data-orderid="<%=order.orderId %>">
                 Retry
-            </a>
+            </button>
             <a href="/shop/products" class="btn btn-secondary" style="margin: 5px;">
                 Continue Shopping
             </a>
@@ -21,3 +27,82 @@
 </main>
 
 <%- include('../partials/user/footer.ejs') %>
+<script>
+    document.addEventListener('DOMContentLoaded',function(){
+        const retryBtn=document.getElementById('pay-btn')
+        retryBtn.addEventListener('click',async()=>{
+            retryBtn.innerText='Processing...'
+            retryBtn.disabled=true
+            const orderId=retryBtn.dataset.orderid
+            try{
+            const response=await fetch('/shop/order/retryPayment',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    orderId:orderId
+                })
+            })
+            const data=await response.json()
+            if(!data.success){
+                Swal.fire("Error!",data.message||'Error in retrying payment','error')
+                retryBtn.innerText='Retry'
+                retryBtn.disabled=false
+                return
+            }
+
+            //options for razorpay
+                           
+                const options={
+                    "key":'<%=process.env.RAZORPAY_API_TEST_KEY_ID%>',
+                    "currency":'INR',
+                    "amount":data.order.amount,
+                    "name":"Ariane Motors",
+                    "image":'https://placehold.co/300x300/6001ff/white?text=AM',
+                    "description":"Retry Payment",
+                    "order_id":data.order.id,
+                    "handler": async function (response) {
+                        const verifyRes = await fetch('/shop/verify-razorpay-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    });
+
+                    const verifyData = await verifyRes.json();
+
+                    if (verifyData.success) {
+                        window.location.href = `/order-success?orderId=${verifyData.orderId}`;
+                    } else {
+                        Swal.fire('Error', 'Payment verification failed', 'error');
+                    }
+                    },
+                    "prefill":{
+                        "name":data.user.name,
+                        "email":data.user.email,
+                        "contact":data.user.phone
+                    },
+                    "theme":{
+                        "color":"#088178"
+                    }
+                }
+                //open the razorpay window
+                const rzp=new Razorpay(options)
+                rzp.on('payment.failed',function(response){
+                    Swal.fire('Error','Payment failed again. Please try again','error')
+                    retryBtn.innerText='Retry'
+                    retryBtn.disabled=false
+                })
+                rzp.open()
+            }catch(error){
+                console.error(error);
+                Swal.fire('Error','Something went wrong','error')
+                retryBtn.innerText="Retry"
+                retryBtn.disabled=false
+            }
+
+        })
+    })
+</script>

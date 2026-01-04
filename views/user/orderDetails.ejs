@@ -50,6 +50,9 @@
                             <% }else{ %>
                                 <p><strong>Payment Status:</strong> <span id="paymentStatus" class="badge bg-warning"><%= order.paymentStatus %></span></p>
                                 <% } %>
+                        <% if(order.couponApplied) {%>
+                            <p><strong>Coupon Applied:</strong><span class="badge bg-info"><%= order.couponApplied %></span></p>
+                            <% } %>
                         <hr>
                         <h4 class="mb-0">Total Price: ₹<%= order.totalPrice.toFixed(2) %></h4>
                     </div>

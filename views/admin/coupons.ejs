@@ -1,0 +1,190 @@
+<%- include('../partials/admin/header.ejs') %>
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Coupons Management</h2>
+            <p>Add, edit or delete coupons</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                
+                <div class="col-md-4">
+                    <div class="mb-4">
+                        <label for="coupon_code" class="form-label">Coupon Code</label>
+                        <input type="text" placeholder="Type here (e.g. SAVE20)" class="form-control" id="coupon_code" />
+                        <small class="text-muted">Code will be automatically uppercase.</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Discount Type</label>
+                        <select class="form-select" id="discount_type">
+                            <option value="fixed">Fixed Amount (₹)</option>
+                            <option value="percentage">Percentage (%)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="discount_value" class="form-label">Discount Value</label>
+                        <input type="number" placeholder="Enter value" class="form-control" id="discount_value" min="1" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="min_purchase" class="form-label">Min Purchase Amount</label>
+                        <input type="number" placeholder="Enter amount" class="form-control" id="min_purchase" min="0" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="expiry_date" class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control" id="expiry_date" />
+                    </div>
+
+                    <div class="d-grid">
+                        <button class="btn btn-primary" id="createCouponBtn">Create Coupon</button>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Discount</th>
+                                    <th>Min Purchase</th>
+                                    <th>Expiry</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if(coupons.length > 0) { %>
+                                    <% coupons.forEach(coupon => { %>
+                                        <tr>
+                                            <td>
+                                                <span class="fw-bold text-uppercase"><%= coupon.code %></span>
+                                            </td>
+                                            <td>
+                                                <% if(coupon.discountType === 'percentage') { %>
+                                                    <span class="badge bg-success"><%= coupon.discountValue %>% Off</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-success">₹<%= coupon.discountValue %> Off</span>
+                                                <% } %>
+                                            </td>
+                                            <td>₹<%= coupon.minPurchaseAmount %></td>
+                                            <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
+                                            <td>
+                                                <% if(new Date(coupon.expiryDate) < new Date()) { %>
+                                                    <span class="badge bg-danger">Expired</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-success">Active</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-light text-danger delete-coupon" 
+                                                        data-id="<%= coupon._id %>">
+                                                    <i class="material-icons md-delete_forever"></i> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No coupons found. Create one!</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+            </div> 
+        </div> 
+    </div>
+ </section>
+ <script>
+    document.addEventListener('DOMContentLoaded',function(){
+        //add coupon form submission
+        
+        createCouponBtn.addEventListener('click',async(e)=>{
+            const code=document.getElementById('coupon_code').value.trim()
+            const discountType=document.getElementById('discount_type').value
+            const discountValue=document.getElementById('discount_value').value
+            const minPurchase=document.getElementById('min_purchase').value
+            const expiryDate=document.getElementById('expiry_date').value
+            const createCouponBtn=document.getElementById('createCouponBtn')
+            e.preventDefault()
+            
+            if(!code||!discountType||!discountValue||!minPurchase||!expiryDate){
+                return Swal.fire("Error!","Please fill all the fields",'error')
+            }
+            if(discountValue<=0||minPurchase<=0){
+                return Swal.fire("Error!","Values cannot be negative","error")
+            }
+            //sending request
+            try {
+                const response=await fetch('/admin/coupons/addCoupon',{
+                    method:'POST',
+                    headers:{"Content-Type":'application/json'},
+                    body:JSON.stringify({
+                        code,discountType,
+                        discountValue,minPurchase,
+                        expiryDate
+                    })
+                })
+                const result=await response.json()
+
+                if(result.success){
+                    Swal.fire("Success!",result.message||"Successfully added coupon",'success').then(()=>{
+                        window.location.reload()
+                    })  
+                }else{
+                    Swal.fire("Error!",result.message,'error')
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error!','Server Error','error')
+            }
+        })
+        //delete coupon
+        const deleteButttons=document.querySelectorAll('.delete-coupon')
+        deleteButttons.forEach(btn=>{
+            btn.addEventListener('click',async(e)=>{
+                e.preventDefault()
+                const couponId=btn.dataset.id
+                console.log(("coupon Id: ",couponId));
+                const result=await Swal.fire({
+                    title:'Are you Sure?',
+                    text:'The coupon will be removed permenantly!',
+                    showCancelButton:true,
+                    confirmButtonText:'Yes, Delete It!'
+                })
+                if(result.isConfirmed){
+                    try {
+                        const response=await fetch(`/admin/coupons/deleteCoupon?id=${couponId}`,{
+                            method:'DELETE',
+                        })
+                        const data=await response.json()
+                        if(data.success){
+                            Swal.fire("Success!",result.message||"Successfully deleted coupon",'success').then(()=>{
+                                window.location.reload()
+                            })  
+                        }else{
+                            Swal.fire("Error!",result.message,'error')
+                        }
+                    } catch (error) {
+                        Swal.fire('Error!','Server Error','error')
+                        console.error(error);
+                        
+                    }
+                }
+                
+
+                
+            })
+        })
+
+    })
+ </script>

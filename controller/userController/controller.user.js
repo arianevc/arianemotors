@@ -334,10 +334,12 @@ try {
 //order failure
 const loadOrderFailure=async(req,res)=>{
     try {
+        const orderId=req.query.orderId
+        const order=await Order.findOne({orderId:orderId})
         const search=req.query.search||""
     const categoryId=req.query.category||""
     const categories=await Category.find()
-        res.render('user/orderFailurePage',{categoryList:categories,categoryId,search})
+        res.render('user/orderFailurePage',{categoryList:categories,categoryId,search,order:order})
     } catch (error) {
         console.error("error in displaying payment failure page: ",error);
         res.status(500).render('user/error',{statusCode:500,statusMessage:"Page Unavailable due to server error"})

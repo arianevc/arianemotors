@@ -5,6 +5,7 @@ import Product from '../../model/productSchema.js'
 import { getCommonData } from '../../helpers/commonData.js'
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
+import Coupon from '../../model/couponModel.js'
 import { log } from 'console'
 
 
@@ -26,20 +27,21 @@ const loadCheckout=async(req,res)=>{
             path:'cart.productId',//to populate the product with its details in the cart
             model:'Product'
         })
+        //load coupons
+        const coupons=await Coupon.find({isActive:true,expiryDate:{$gt:new Date()}})
         const walletBalance=user.wallet.balance
         const phoneAndEmail={phone:user.phone,email:user.email}
        const availableCartItems=user.cart.filter(
-        item=>!item.productId.isDeleted
+        item=>!item.productId.isDeleted||item.productId.quantity<=0
        )
        let totalPrice=0
        availableCartItems.forEach(item=>{
         totalPrice+=item.productId.price*item.quantity
        })
         const userAddresses=user.addresses?user.addresses:[]
-
            res.render('user/checkOutPage',{categoryList:commonData.categoryList,user:user,categoryId:'',search:'',
             phoneEmail:phoneAndEmail,cartItems:availableCartItems,walletBalance:walletBalance,totalPrice:totalPrice,addresses:userAddresses,
-            razorpayKeyId:process.env.RAZORPAY_API_TEST_KEY_ID
+            razorpayKeyId:process.env.RAZORPAY_API_TEST_KEY_ID,coupons:coupons
         })
         
     } catch (error) {
@@ -51,9 +53,41 @@ const loadCheckout=async(req,res)=>{
 const placeOrder=async(req,res)=>{
     try {
         console.log(req.body)        
-        const {addressId,totalPrice,paymentOption}=req.body
+        const {addressId,totalPrice,paymentOption,couponCode}=req.body
         if(req.session.userId){
             const user=await User.findById(req.session.userId).populate('cart.productId')
+            const cartItems=user.cart
+            if(!cartItems.length)return res.json({success:false,message:"Cart is empty"})
+            //calculate the subtotal from the cart item prices
+        let subtotal=0
+        cartItems.forEach(item=>{
+            subtotal+=item.productId.price*item.quantity
+        })
+        //coupon logic o
+        let finalAmount=subtotal
+        let discountAmount=0
+        let appliedCopounCode=null
+        if(couponCode){
+            const coupon=await Coupon.findOne({code:couponCode.toUpperCase()})
+            //check the coupon is valid again
+            if(coupon&&coupon.isActive&&new Date()<=coupon.expiryDate
+        &&subtotal<=coupon.minPurchaseAmount&&!coupon.usedBy.includes(req.session.userId)){
+            if(coupon.discountType=='fixed'){
+                discountAmount=coupon.discountValue
+            }else{
+                discountAmount=(subtotal*coupon.discountValue)/100
+            }
+            //to avoid negative pricing
+            if(discountAmount>subtotal)discountAmount=subtotal
+        }
+        finalAmount=subtotal-discountAmount
+        appliedCopounCode=coupon.code
+        //Mark it as usedby the user
+        coupon.usedBy.push(req.session.userId)
+        await coupon.save()
+        
+        }
+        //choosing the address among user addresses
             const orderAddress=user.addresses[addressId]
            if(paymentOption=='Wallet'){
             if(user.wallet.balance<totalPrice){
@@ -68,6 +102,7 @@ const placeOrder=async(req,res)=>{
             })
             await user.save()
            }
+           //create the order
             const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
             console.log("create new order id: ",customOrderId);
             const newOrder=new Order({
@@ -87,7 +122,9 @@ const placeOrder=async(req,res)=>{
                     quantity:item.quantity,
                     price:item.productId.price
                 })),
-                totalPrice:totalPrice,
+                totalPrice:finalAmount,
+                discount:discountAmount,
+                couponApplied:appliedCopounCode,
                 paymentMethod:paymentOption,
                 paymentStatus:paymentOption=='Wallet'?'Paid':'Pending',
                 orderStatus:'Pending'
@@ -115,10 +152,48 @@ const placeOrder=async(req,res)=>{
 //create a razorpay order
 const createRazorpayOrder=async(req,res)=>{
 try {
-    const {totalPrice,addressId}=req.body
-            const user=await User.findById(req.session.userId).populate('cart.productId')
+    const {totalPrice,addressId,couponCode}=req.body
+    // console.log(req.body)
+    const userId=req.session.userId
+            const user=await User.findById(userId).populate('cart.productId')
+
+            //for coupon logic
+            const cartItems=user.cart
+            if(!cartItems.length)return res.json({success:false,message:"Cart is empty"})
+            //calculate the subtotal from the cart item prices
+        let subtotal=0
+        cartItems.forEach(item=>{
+            subtotal+=item.productId.price*item.quantity
+        })
+        let finalAmount=subtotal
+        let discountAmount=0
+        let appliedCopounCode=null
+        if(couponCode){
+            const coupon=await Coupon.findOne({code:couponCode.toUpperCase()})
+           
+            //check the coupon is valid again
+            if(coupon&&coupon.isActive&&new Date()<=coupon.expiryDate
+        &&subtotal>=coupon.minPurchaseAmount&&!coupon.usedBy.includes(userId)){
+            if(coupon.discountType=='fixed'){
+                discountAmount=coupon.discountValue
+                
+            }else{
+                discountAmount=(subtotal*coupon.discountValue)/100
+                
+            }
+            //to avoid negative pricing
+            if(discountAmount>subtotal)discountAmount=subtotal
+        }
+        
+        finalAmount=subtotal-discountAmount
+        appliedCopounCode=coupon.code
+        
+        
+        }
+            //choose the address among the user addresses
             const orderAddress=user.addresses[addressId]
 
+            //orderCreation
     const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
             
             const newOrder=new Order({
@@ -138,7 +213,9 @@ try {
                     quantity:item.quantity,
                     price:item.productId.price
                 })),
-                totalPrice:totalPrice,
+                totalPrice:finalAmount,
+                discount:discountAmount,
+                couponApplied:appliedCopounCode,
                 paymentMethod:'Online',
                 paymentStatus:'Pending',
                 orderStatus:'Pending'
@@ -146,7 +223,7 @@ try {
             await newOrder.save()
 
     const options={
-        amount:totalPrice*100,//convert to paise
+        amount:finalAmount*100,//convert to paise
         currency:'INR',
         receipt:"receipt#1"
     }
@@ -168,7 +245,7 @@ try {
 //verification of Razorpay payment and Order is placed
 const verifyRazorpayOrder=async(req,res)=>{
     try {
-      
+      const userId=req.session.userId
         const {razorpay_order_id,razorpay_payment_id,razorpay_signature}=req.body
         //verify signature
         const body=razorpay_order_id+"|"+razorpay_payment_id
@@ -186,6 +263,12 @@ const verifyRazorpayOrder=async(req,res)=>{
           order.paymentStatus='Paid'
           order.orderStatus='Processing'
           order.paymentId=razorpay_payment_id
+          //Mark it as usedby the user
+          if(order.couponApplied){
+            const coupon=await Coupon.findOne({code:order.couponApplied})
+        coupon.usedBy.push(userId)
+        await coupon.save()
+          }
           await order.save()
             //to reduce items from stock
             for(let item of order.items){
@@ -210,10 +293,7 @@ const verifyRazorpayOrder=async(req,res)=>{
 //failed razorpay payment manage
 const handlePaymentFailure =async(req,res)=>{
     try {
-        
-        
         const {order_id}=req.body
-      
         const order=await Order.findOne({razorpayOrderId:order_id})
         console.log("order found",order)
         if(order){
@@ -221,10 +301,44 @@ const handlePaymentFailure =async(req,res)=>{
            
             await order.save()
         }
-        res.json({success:true})
+        res.json({success:true,orderId:order.orderId})
     } catch (error) {
         console.error("error in handling failed razorpay payment: ",error);
         res.status(500).json({success:false,message:"Server Error in failed payment"})
+    }
+}
+//retry payment
+const retryPayment=async(req,res)=>{
+    try {
+        const{orderId}=req.body
+        const order=await Order.findOne({orderId:orderId})
+        if(!order){
+            return res.status(404).json({success:false,message:'Order not found'})
+        }
+        if(order.paymentStatus=='Paid'){
+            return res.status(400).json({success:false,message:'Order is already paid'})
+        }
+        //create new Razorpay order
+        const options={
+            amount:Math.round(order.totalPrice*100),
+            currency:'INR',
+            receipt:`retry_${orderId}_${Date.now()}`
+        }
+        const newRazorpayOrder=await instance.orders.create(options)
+        order.razorpayOrderId=newRazorpayOrder.id
+        order.paymentStatus='Pending'
+        await order.save()
+        res.json({
+            success:true,
+            order:newRazorpayOrder,
+            user:{
+                name:order.shippingAddress.name,
+                phone:order.shippingAddress.phone,
+                email:order.shippingAddress.email
+            }
+        })
+    } catch (error) {
+        
     }
 }
 //handle request for return of items
@@ -250,5 +364,6 @@ try {
 }
 }
 
+
 export{loadCheckout,placeOrder,createRazorpayOrder,
-    verifyRazorpayOrder,handlePaymentFailure,requestReturn}
+    verifyRazorpayOrder,handlePaymentFailure,retryPayment,requestReturn}

@@ -192,9 +192,10 @@ try {
 
     item.itemStatus='Returned'
     //if all items are returned
-    const allReturned=order.items.every(i=>i.itemStatus=='Return Requested')
+    const allReturned=order.items.every(i=>i.itemStatus=='Returned')
     if(allReturned){
         order.orderStatus='Returned'
+        order.paymentStatus='Refunded'
     }
     await order.save()
     res.json({success:true,message:'Return Approved & Wallet Refunded'})

@@ -3,6 +3,7 @@ import * as adminController from '../../controller/adminController/controller.ad
 import * as categoryController from '../../controller/adminController/controller.category.js'
 import * as productController from '../../controller/adminController/controller.product.js'
 import * as userOrderController from "../../controller/adminController/controller.userOrders.js"
+import * as couponController from "../../controller/adminController/controller.coupon.js"
 import upload from '../../config/multer.js'
 import * as authenticate from '../../helpers/authenticate.js'
 const router = express.Router();
@@ -36,6 +37,7 @@ router.post(
   productController.editProduct
 );
 router.post("/products/:id/delete", productController.softDeleteProduct);
+
 //order management
 
 router.get('/orders', authenticate.checkUserSession,userOrderController.loadOrders);
@@ -43,4 +45,9 @@ router.post('/orders/update-status/:orderId',authenticate.checkUserSession, user
 router.get('/orders/details/:orderId',authenticate.checkUserSession,userOrderController.loadOrderDetails)
 router.post('/orders/approve-return',authenticate.checkAdmin,userOrderController.returnApprove)
 
+
+//coupon management
+router.get('/coupons',authenticate.checkAdmin,couponController.loadCoupons)
+router.post('/coupons/addCoupon',authenticate.checkAdmin,couponController.addCoupon)
+router.delete('/coupons/deleteCoupon',authenticate.checkAdmin,couponController.deleteCoupon)
 export default router;

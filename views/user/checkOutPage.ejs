@@ -17,24 +17,7 @@
                 <% if(cartItems&&cartItems.length>0) {%>
                 <div class="row">
                     
-                    <div class="col-lg-6">
-                        <div class="toggle_info">
-                            <span><i class="fi-rs-label mr-10"></i><span class="text-muted">Have a coupon?</span> <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to enter your code</a></span>
-                        </div>
-                        <div class="panel-collapse collapse coupon_form " id="coupon">
-                            <div class="panel-body">
-                                <p class="mb-30 font-sm">If you have a coupon code, please apply it below.</p>
-                                <form method="post">
-                                    <div class="form-group">
-                                        <input type="text" placeholder="Enter Coupon Code...">
-                                    </div>
-                                    <div class="form-group">
-                                        <button class="btn  btn-md" name="login">Apply Coupon</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                   
                 </div>
                 <div class="row">
                     <div class="col-12">
@@ -103,11 +86,34 @@
                     </div>
                     <div class="col-md-6">
                         <div class="order_review">
+                                <div class="mb-30 mt-50">
+                                    <div class="heading_s1 mb-3">
+                                        <h4>Apply Coupon</h4>
+                                    </div>
+                                    <div class="total-amount">
+                                        <div class="left">
+                                            <div class="coupon">
+                                                <form action="#" target="_blank">
+                                                    <div class="form-row row justify-content-center">
+                                                        <div class="form-group">
+                                                            <input class="font-medium" name="coupon" id="couponInput" placeholder="Enter Your Coupon">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <button class="btn  btn-sm" id="applyBtn"><i class="fi-rs-label mr-10"></i>Apply</button>
+                                                            <button type="button" class="btn-warning btn-outline-secondary btn-sm" id="showCouponsBtn"><i class="fi-rs-label mr-10"></i>Available Coupons</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                <p id="couponMessage" class="small mt-2"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             <div class="mb-20">
                                 <h4>Your Orders</h4>
                             </div>
                             <div class="table-responsive order_table text-center">
-                                <table class="table">
+                                <table class="table no-border">
                                     <thead>
                                         <tr>
                                             <th colspan="2">Product</th>
@@ -135,18 +141,56 @@
                                             <th>Shipping</th>
                                             <td colspan="2"><em>Free Shipping</em></td>
                                         </tr>
-                                        <tr hidden>
-                                            <th>Wallet Money</th>
-                                            <td colspan="2"><em>- ₹15.00</em></td>
+                                        <tr id="discountRow" style="display: none;">
+                                            <th class="cart_total_label">Coupon Discount <span id="appliedCodeBadge" class="badge bg-success ml-2"></span> 
+                                                <a href="#" id="removeCouponBtn" class="text-danger small ml-2">
+                                                    <i class="fi-rs-cross-small"></i>
+                                                </a>
+                                            </th>
+                                            <td colspan="2" class="cart_total_amount"> <i class="ti-gift"></i>
+                                                 -₹<span class="font-lg fw-900 text-brand" id="discountAmount">0.00</span>
+                                                </td>
                                         </tr>
                                         <tr>
                                             <th>Total</th>
-                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹<%= totalPrice.toFixed(2) %></span></td>
+                                            <td colspan="2" class="product-subtotal"><span id="totalSpan" class="font-xl text-brand fw-900">₹<%= totalPrice.toFixed(2) %></span></td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                            
+                            <!--Coupon Modal-->
+                            <div class="modal fade" id="couponModal" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Available Coupons</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <% if(coupons && coupons.length>0) {%>
+                                                <% coupons.forEach(coupon=>{ %>
+                                                    <div class=" card mb-2 border-dashed ">
+                                                        <div class="card-body ">
+                                                            <h6 class="mb-1"><%= coupon.code %></h6>
+                                                            <% if(coupon.discountType=='fixed'){ %>
+                                                            <small class="text-muted">Get a discount of ₹<%=coupon.discountValue%> for a minimum purchase of ₹<%=coupon.minPurchaseAmount%></small>
+                                                            <% }else{ %>
+                                                                <small class="text-muted">Get a discount of <%=coupon.discountValue%>% off on a minimum purchase of ₹<%=coupon.minPurchaseAmount%></small>
+                                                                <% } %>
+                                                        </div>
+                                                        <button class="btn btn-sm btn-light copy-button" data-code="<%=coupon.code%>">Copy</button>
+                                                    </div>
+                                                    <% }) %>
+                                                <% }else{ %>
+                                                    <p class="text-center text-muted">No Coupons available</p>
+                                                    <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
                             <div class="payment_method">
                                 <div class="mb-25">
                                     <h5>Payment</h5>
@@ -313,7 +357,7 @@
                 Swal.fire("Error!",result.message,'error')
             }
         } catch (error) {
-            Swal.fire("Error!",error.message,'Unexpected Erro Occurred')
+            Swal.fire("Error!",error.message,'Unexpected Error Occurred')
         }
         
        })
@@ -332,10 +376,99 @@
             }
         })
        })
+        //coupon management
+        const discountRow=document.getElementById('discountRow')
+        const discountDisplay=document.getElementById('discountAmount')
+        const totalDisplay=document.getElementById('totalSpan')
+        const applyCouponBtn=document.getElementById('applyBtn')
+        const removeCpnBtn=document.getElementById('removeCouponBtn')
+        const couponMessage=document.getElementById('couponMessage')
+        const showCouponsBtn=document.getElementById('showCouponsBtn')
+        const couponInput=document.getElementById('couponInput')
+        //apply coupon
+        let appliedCopounCode=null
+        applyCouponBtn.addEventListener('click',async(e)=>{
+            // applyCouponBtn.disabled=true
+            e.preventDefault()
+            let code=couponInput.value.trim()
+            console.log("coupon input: ",code)
+            if(!code)return Swal.fire('Error!','Please enter a proper coupon','error')
+            applyCouponBtn.disabled=true
+            applyCouponBtn.innerText='Checking..'
+        try {
+            const response=await fetch('/shop/checkout/applyCoupon',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    couponCode:code,
+                    totalAmount:totalPrice
+                })
+            })
+            if(!response.ok) throw new Error("Network issue in Applying coupon");
+            const result=await response.json()
+            if(result.success){
+                appliedCopounCode=result.code
+                discountRow.style.display='table-row'
+                discountDisplay.innerText="₹"+result.discount.toFixed(2)
+                totalDisplay.innerText="₹"+result.totalAmount.toFixed(2)
+                totalPrice=result.totalAmount
+                applyCouponBtn.disabled=true
+                showCouponsBtn.disabled=true
+                applyCouponBtn.innerText='Coupon Applied!'
+                couponMessage.className='small mt-2 text-success'
+                couponMessage.innerText=result.message
+                Swal.fire({
+                    icon:'success',
+                    title:`${result.code} Applied!`,
+                    text:result.message
+                })
 
-
+            }else{
+                couponMessage.className='small mt-2 text-danger'
+                couponMessage.innerText=result.message
+                Swal.fire('Error!',result.message,'error')
+                applyCouponBtn.disabled=false
+                applyCouponBtn.innerText='Apply'
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error','Something went wrong!','error')
+        }
+        
+        })
+        //show available coupons
+        const modalElement=new bootstrap.Modal(document.getElementById('couponModal'))
+        showCouponsBtn.addEventListener('click',()=>{
+            modalElement.show()
+        })
+        const copyBtns=document.querySelectorAll('.copy-button')
+        copyBtns.forEach(btn=>{
+            btn.addEventListener('click',function(){
+                const code=this.getAttribute('data-code')
+                couponInput.value=code
+                modalElement.hide()
+            })
+        })
+        //remove coupon
+        if(removeCpnBtn){
+            removeCpnBtn.addEventListener('click',async(e)=>{
+                e.preventDefault()
+                discountRow.style.display='none'
+                totalDisplay.innerText='₹'+ogTotalPrice.toFixed(2)
+                appliedCopounCode=null
+                totalPrice=ogTotalPrice
+                applyCouponBtn.disabled=false
+                showCouponsBtn.disabled=false
+                applyCouponBtn.innerText='Apply'
+                couponMessage.innerText=''
+                couponInput.value=''
+                Swal.fire("Success!",'coupon removed','success')
+            })
+        }
        //placing order
      
+       let totalPrice='<%=totalPrice%>'
+       let ogTotalPrice=parseFloat(totalPrice)
         placeOrderBtn.addEventListener('click',async function(e){
             e.preventDefault()
             const selectRadio=document.querySelector('input[name="addressRadio"]:checked')
@@ -351,25 +484,25 @@
         //storing selected addresses's index
         selectedAddressId=selectRadio.value
         console.log("selected Address index for placing order: ",selectedAddressId);
-        const totalPrice='<%=totalPrice%>'
         placeOrderBtn.disabled=true
         
         //choosing between payments
         if(paymentOption.value=='Online'){
-            initiateRazorpayPayment(selectedAddressId,totalPrice)
+            initiateRazorpayPayment(selectedAddressId,totalPrice,appliedCopounCode)
             placeOrderBtn.innerText='Processing...'
         }else if(paymentOption.value=='COD'||paymentOption.value=='Wallet'){
-            placeOrderCOD(selectedAddressId,totalPrice,paymentOption.value)
+            placeOrderCOD(selectedAddressId,ogtotalPrice,paymentOption.value,appliedCopounCode)
         }
 
         //function for Cash on Delivery & Wallet mode
-        async function placeOrderCOD(addressId,totalPrice,paymentOption) {
+        async function placeOrderCOD(addressId,totalPrice,paymentOption,couponCode) {
         await fetch('/shop/place-order',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
                 addressId:selectedAddressId,
                 totalPrice:totalPrice,
+                couponCode:couponCode,
                 paymentOption:paymentOption
             })
         }).then(res=>res.json())
@@ -392,12 +525,12 @@
         })    
         }
         const razorpayKeyId='<%=razorpayKeyId%>'
-        async function initiateRazorpayPayment(addressId,totalPrice) {
+        async function initiateRazorpayPayment(addressId,totalPrice,couponCode) {
             try {
                 const response=await fetch('/shop/create-razorpay-order',{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({totalPrice,addressId})
+                    body:JSON.stringify({totalPrice,addressId,couponCode})
                 })
                 const orderData=await response.json()
                 if(!orderData.success){
@@ -407,7 +540,7 @@
                 const options={
                     "key":'<%=process.env.RAZORPAY_API_TEST_KEY_ID%>',
                     "currency":'INR',
-                    "amount":totalPrice*100,
+                    "amount":orderData.order.amount,
                     "name":"Ariane Motors",
                     "image":'https://placehold.co/300x300/6001ff/white?text=AM',
                     "description":"Order Payment",
@@ -434,13 +567,13 @@
                         headers:{'Content-Type':'application/json'},
                         body:JSON.stringify({order_id:response.error.metadata.order_id})
                     }).then(res=>res.json()).then(result=>{
-                        if(!result.success){
-                            Swal.fire('Payment Failed!',result.message,'error')
+                        if(result.success){
+                            const orderId=result.orderId
+                            Swal.fire('Payment Failed!','an error occured','error').then(()=>{
+                            window.location.href=`/order-failure?orderId=${orderId}`
+                        })
                         }
                     })
-                    Swal.fire('Payment Failed!','an error occured','error').then(()=>{
-                    window.location.href=`/order-failure`
-                })
                     paymentMessage.innerText = `Payment Failed: ${response.error.description}`;
                     paymentMessage.className = 'mt-4 text-center text-red-600';
                 });
@@ -487,5 +620,6 @@
         }
         
        })
+       
     })
 </script>

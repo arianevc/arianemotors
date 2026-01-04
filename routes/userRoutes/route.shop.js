@@ -2,8 +2,8 @@ import  express  from "express";
 const router=express.Router()
 import * as shopController from "../../controller/userController/controller.shop.js";
 import * as orderController from "../../controller/userController/controller.order.js"
+import * as couponController from "../../controller/userController/controller.coupons.js"
 import * as authenticate from "../../helpers/authenticate.js"
-
 
 //shop functions
 router.get('/products',authenticate.checkBlocked,shopController.loadShop);
@@ -23,8 +23,10 @@ router.delete('/cart/clearCart',shopController.clearCart)
 router.delete('/cart/delete/:productId',shopController.deleteFromCart)
 router.post('/cart/update-quantity',shopController.updateCartQuantity)
 
+//coupon management
+router.post('/checkout/applyCoupon',authenticate.checkUserSession,couponController.applyCoupon)
 //checkout
-router.get('/checkout',orderController.loadCheckout)
+router.get('/checkout',authenticate.checkUserSession,orderController.loadCheckout)
 //order management
 router.post('/place-order',authenticate.checkUserSession,orderController.placeOrder)
 
@@ -32,4 +34,5 @@ router.post('/place-order',authenticate.checkUserSession,orderController.placeOr
 router.post('/order-failed',authenticate.checkUserSession,orderController.handlePaymentFailure)
 router.post('/create-razorpay-order',authenticate.checkUserSession,orderController.createRazorpayOrder)
 router.post('/verify-razorpay-payment',authenticate.checkUserSession,orderController.verifyRazorpayOrder)
+router.post('/order/retryPayment',authenticate.checkUserSession,orderController.retryPayment)
 export default router

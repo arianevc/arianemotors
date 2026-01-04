@@ -156,7 +156,7 @@
 
 
         //approve the return of items
-        const approveButtons=document.querySelectorAll('.approve-btn-return')
+        const approveButtons=document.querySelectorAll('.approve-return-btn')
         approveButtons.forEach(btn=>{
             btn.addEventListener('click',async function(e){
                 e.preventDefault()
@@ -181,7 +181,7 @@
                                 Swal.showLoading()
                             }
                         })
-                        const response=await fetch('/orders/approve-return',{
+                        const response=await fetch('/admin/orders/approve-return',{
                             method:'POST',
                             headers:{'Content-Type':'application/json'},
                             body:JSON.stringify({

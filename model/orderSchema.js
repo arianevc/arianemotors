@@ -78,6 +78,14 @@ const orderSchema=new Schema({
         type:String,
         enum:['Pending','Paid','Failed','Refunded'],
         default:'Paid'
+    },
+    discount:{
+        type:Number,
+        default:0
+    },
+    couponApplied:{
+        type:String,
+        default:null
     }
 
 },{
