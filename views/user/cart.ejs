@@ -53,16 +53,22 @@
                                                 <p class="text-danger">Item is blocked by admin</p>
                                             </td>
                                             <td class="action removebtn" data-product-id="<%=item.productId._id %>" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
+                                            <% }else if(item.productId.quantity<1){ %>
+                                                <td colspan="3">
+                                                    <p class="text-danger">Item is out of stock</p>
+                                                </td>
+                                                <td class="action removebtn" data-product-id="<%=item.productId._id %>" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
+
                                             <% }else{ %>
                                             <td class="price" data-title="Price">
-                                                <span id="product-price-<%=item.productId._id%>">₹<%= item.productId.price %> </span>
+                                                <span id="product-price-<%=item.productId._id%>">₹<%= item.productId.salePrice %> </span>
                                                 </td>
                                             <td class="text-center" data-title="Stock">
                                                 <div class="detail-qty border radius d-flex justify-content-center  m-auto">
                                                     <button class="qty-btn" data-action="dec" data-product-id="<%=item.productId._id %>" style="border: none;background: none;">-</button>
                                                     <span class="qty-val" id="qty-val-<%=item.productId._id%>"><%= item.quantity %></span>
                                                     <button class="qty-btn" data-action="inc" data-product-id="<%=item.productId._id %>" style="border: none;background: none;">+</button>
-                                                    <% let subtotal=item.quantity*item.productId.price %>
+                                                    <% let subtotal=item.quantity*item.productId.salePrice %>
                                                     <% total+=subtotal %>
                                                     </div>
                                             </td>
@@ -100,10 +106,6 @@
                                                 <tr>
                                                     <td class="cart_total_label">Shipping</td>
                                                     <td class="cart_total_amount"> <i class="ti-gift mr-5"></i> Free Shipping</td>
-                                                </tr>
-                                                <tr hidden id="coupon_field">
-                                                    <td class="cart_total_label">Coupon Applied</td>
-                                                    <td class="cart_total_amount">-100</td>
                                                 </tr>
                                                 
                                                 <tr>

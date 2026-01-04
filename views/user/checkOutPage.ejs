@@ -128,7 +128,7 @@
                                                 <td>
                                                     <h5><a href="/shop/product/<%=item.productId._id%>"><%= item.productId.name %></a></h5> <span class="product-qty">x <%= item.quantity %></span>
                                                     </td>
-                                                    <% let subTotal=item.productId.price*item.quantity %>
+                                                    <% let subTotal=item.productId.salePrice*item.quantity %>
                                                     <td>₹<%= subTotal %></td>
                                                     </tr>
                                                 <%}); %>
@@ -143,8 +143,8 @@
                                         </tr>
                                         <tr id="discountRow" style="display: none;">
                                             <th class="cart_total_label">Coupon Discount <span id="appliedCodeBadge" class="badge bg-success ml-2"></span> 
-                                                <a href="#" id="removeCouponBtn" class="text-danger small ml-2">
-                                                    <i class="fi-rs-cross-small"></i>
+                                                <a href="#" id="removeCouponBtn" class="btn-light text-danger small ml-2">
+                                                    Remove Coupon
                                                 </a>
                                             </th>
                                             <td colspan="2" class="cart_total_amount"> <i class="ti-gift"></i>

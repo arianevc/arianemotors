@@ -43,6 +43,7 @@
                                             <th>Category</th>
                                             <th>Price</th>
                                             <th>Quantity</th>
+                                            <th>Product Offer(%)</th>
                                             <th>Images</th>
                                             <th>Actions</th>
                                             
@@ -60,7 +61,8 @@
       <td></td>
       <td><%= product.category.name%></td>
       <td>₹<%= product.price %></td>
-      <td><%= product.quantity %></td>
+      <td><%= product.quantity %> Nos.</td>
+      <td><%=product.productOffer %>%</td>
       <td>
             <img src="<%= product.images[0] %>" width="200" alt="image">
             
@@ -77,6 +79,7 @@
           data-price="<%= product.price %>"
           data-quantity="<%= product.quantity %>"
           data-category="<%= product.category._id ||product.category%>"
+          data-offer="<%= product.productOffer%>"
           data-images="<%= product.images %>"
         ><i class="fa fa-pencil"></i>
         </button>
@@ -171,6 +174,10 @@
           <div class="mb-3">
             <label>Quantity</label>
             <input type="number" class="form-control" name="quantity" id="edit-product-quantity">
+          </div>
+          <div class="mb-3">
+            <label>Product Offer(in %)</label>
+            <input type="number" class="form-control" name="productOffer" id="edit-product-offer">
           </div>
          <div class="mb-3 d-flex">
           <label for="">Existing Images</label>
@@ -309,6 +316,7 @@ initializeImageCropper(imageInput)
         const quantity=button.dataset.quantity
         const brand=button.dataset.brand
         const category=button.dataset.category
+        const offer=button.dataset.offer
         const images=button.dataset.images?button.dataset.images.split(','):[]
         
 
@@ -320,6 +328,7 @@ initializeImageCropper(imageInput)
         document.getElementById('edit-product-quantity').value=quantity
         document.getElementById('edit-product-brand').value=brand
         document.getElementById('edit-product-category').value=category
+        document.getElementById('edit-product-offer').value=offer
         
         
         imagesContainer.innerHTML=""//to clear previous images

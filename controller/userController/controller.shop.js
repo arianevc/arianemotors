@@ -2,7 +2,7 @@ import User from '../../model/userSchema.js'
 import Category from '../../model/categorySchema.js'
 import Product from '../../model/productSchema.js'
 import { paginateHelper } from '../../helpers/pagination.js';
-import { populate } from 'dotenv';
+
 
 
 //render the shop page with all filters and search criteria
@@ -41,7 +41,7 @@ const loadShop = async (req, res) => {
             limit:6,
             filters:filter,
             sort:sortOption,
-            populate:'category'
+            populate:'category',
         })
 
 
@@ -92,6 +92,7 @@ const loadProductDetails=async(req,res)=>{
         const productId=req.params.id
         const categories=await Category.find()
         const product=await Product.findById(productId).populate('category')
+        if(!product)return res.redirect('/shop')
         const relatedProducts=(await Product.find({category:product.category,_id:{$ne:product._id}}))
         let isWishlisted=false
         if(req.session.userId){
@@ -103,7 +104,9 @@ const loadProductDetails=async(req,res)=>{
         if(!product){
             return res.status(404).send("Product Not Found")
         }
-        res.render('user/productDetails',{product,isWishlisted:isWishlisted,relatedProducts:relatedProducts,categoryList:categories,categoryId:"",search:""})
+        res.render('user/productDetails',{product,isWishlisted:isWishlisted,relatedProducts:relatedProducts,
+            discountPercentage:Math.round(((product.price-product.salePrice)/product.price)*100)
+            ,finalPrice:product.salePrice,categoryList:categories,categoryId:"",search:""})
     } catch (error) {
         console.error("Error in showing product details",error)
         res.status(500).send("Server Error")
@@ -118,10 +121,11 @@ const loadCart=async(req,res)=>{
         const search=req.query.search||""
         const categoryId=req.query.category||""
         const categories=await Category.find()
+        //nested populate
         const user=await User.findById(req.session.userId).populate({
-            path:'cart.productId',
-            model:'Product'
+            path:'cart.productId'
         })
+       
         res.render('user/cart',{categoryList:categories,categoryId,search,cart:user.cart})
     } catch (error) {
         console.error("error in displaying the cart: ",error);
@@ -194,7 +198,7 @@ const updateCartQuantity=async(req,res)=>{
         const updatedUser=await User.findById(userId).populate('cart.productId')
         let newGrandTotal=0
         updatedUser.cart.forEach(item=>{
-            newGrandTotal+=item.productId.price*item.quantity
+            newGrandTotal+=item.productId.salePrice*item.quantity
         })
         res.json({success:true,finalTotal:newGrandTotal})
     } catch (error) {

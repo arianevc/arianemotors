@@ -2,7 +2,7 @@
 import Category from '../../model/categorySchema.js'
 import Product from '../../model/productSchema.js'
 import { processImages } from '../../helpers/imageProcessing.js'
-
+import { updateProductPrice } from '../../helpers/priceCalculator.js'
 
 const loadProducts=async(req,res)=>{
   if(!req.session.isAdmin){
@@ -42,7 +42,7 @@ const loadAddProduct=async(req,res)=>{
 const addProduct=async (req,res)=>{
 try {
   // console.log("Uploaded images",req.files)
-  const { name,brand,description, price, quantity,category } = req.body;
+  const { name,brand,description, price, quantity,category,productOffer } = req.body;
   if(!price||isNaN(price)||Number(price)<1){
     return res.status(400).json({success:false,priceError:true})
   }
@@ -63,10 +63,12 @@ try {
       price,
       quantity,
       category,
+      productOffer,
       images
     });
 
     await product.save();
+    await updateProductPrice(product._id)
     return res.status(200).json({success:true})
   } catch (error) {
     console.error("Error adding product:", error);
@@ -89,13 +91,13 @@ try {
       imgUrl=>!urlsToRemove.includes(imgUrl)
      )
     }
-    console.log(product.images);
+    // console.log(product.images);
     
     //to add new images 
     let newImages=[]
     if(req.files&&req.files.length>0){
       newImages=await processImages(req.files)
-      console.log(newImages)
+      // console.log(newImages)
       product.images.push(...newImages)
     }
     product.name=req.body.name
@@ -103,9 +105,11 @@ try {
     product.price=req.body.price
     product.brand=req.body.brand
     product.quantity=req.body.quantity
+    product.productOffer=req.body.productOffer
     product.category=req.body.category
 
     await product.save()
+    await updateProductPrice(product._id)
     res.redirect('/admin/products')
 
 } catch (error) {
