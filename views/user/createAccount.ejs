@@ -104,6 +104,9 @@
                                                 <input id="cpassword" type="password" name="cpassword" placeholder="Confirm password">
                                                
                                             </div>
+                                            <div class="form-group">
+                                                <input id="referralCode" type="text" name="referralCode" placeholder="Enter Referral Code(Optional)">
+                                            </div>
                                            
                                                 <div class="error-messages">
                                                     <p class="text-danger" hidden></p>
@@ -164,7 +167,8 @@
                 email:signupForm.email.value,
                 phone:signupForm.phone.value,
                 password:signupForm.password.value,
-                cpassword:signupForm.cpassword.value
+                cpassword:signupForm.cpassword.value,
+                referralCode:signupForm.referralCode.value
             }
            try {
              const response=await fetch('/signup',{

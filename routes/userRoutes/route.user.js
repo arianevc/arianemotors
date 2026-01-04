@@ -45,6 +45,7 @@ router.delete('/account/addresses/:addressId',profileController.deleteAddress)
 router.get('/edit/email',profileController.loadEditEmail)
 router.post('/edit/email',profileController.emailVerify)
 
+
 router.route("/forgotpwd")//router chaining
 
 
