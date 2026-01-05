@@ -26,6 +26,9 @@
                                         <div class="product-category">
                                             <a href="/shop/products/?category=<%=product.category._id%>"><%=product.category.name %></a>
                                         </div>
+                                        <% if(product.price!=product.salePrice){ %>
+                                            <span class="badge bg-info offer-badge">Offer price!!</span>
+                                            <% } %>
                                         <h2><a href="/shop/product/<%= product._id %>"><%=product.brand%> <%= product.name %></a></h2>
                                         
                                         <!-- <div class="rating-result" title="90%">
@@ -34,8 +37,13 @@
                                             </span>
                                         </div> -->
                                         <div class="product-price">
-                                            <span>₹<%= product.price %>.00</span>
-                                            <span class="old-price">₹<%= (product.price*1.2).toFixed(2) %></span>
+                                            <% if(product.price==product.salePrice){ %>
+                                                <span>₹<%= product.price %>.00</span>
+                                                <span class="old-price">₹<%= (product.price*1.2).toFixed(2) %></span>
+                                                <% }else{ %>
+                                                    <span>₹<%= product.salePrice %>.00</span>
+                                                    <span class="old-price">₹<%= (product.price).toFixed(2) %></span>
+                                                    <% } %>
                                         </div>
                                         <% if(product.quantity<1||product.quantity===undefined) {%>
                                             <div>

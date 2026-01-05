@@ -4,6 +4,7 @@ import * as categoryController from '../../controller/adminController/controller
 import * as productController from '../../controller/adminController/controller.product.js'
 import * as userOrderController from "../../controller/adminController/controller.userOrders.js"
 import * as couponController from "../../controller/adminController/controller.coupon.js"
+import * as salesController from "../../controller/adminController/controller.sales.js"
 import upload from '../../config/multer.js'
 import * as authenticate from '../../helpers/authenticate.js'
 const router = express.Router();
@@ -50,4 +51,10 @@ router.post('/orders/approve-return',authenticate.checkAdmin,userOrderController
 router.get('/coupons',authenticate.checkAdmin,couponController.loadCoupons)
 router.post('/coupons/addCoupon',authenticate.checkAdmin,couponController.addCoupon)
 router.delete('/coupons/deleteCoupon',authenticate.checkAdmin,couponController.deleteCoupon)
+
+//sales report and view
+router.get('/sales-report', authenticate.checkAdmin, salesController.loadSalesReport);
+router.get('/sales-report/pdf', authenticate.checkAdmin, salesController.downloadPdf);
+router.get('/sales-report/excel', authenticate.checkAdmin, salesController.downloadExcel);
+
 export default router;
