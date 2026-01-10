@@ -1,4 +1,4 @@
-<div class="row product-grid-3" id="product-container">
+<div class="row product-grid-3">
     <% if(Array.isArray(products)){ %>
                             <% products.forEach(product=>{ %>
                             <div class="col-lg-4 col-md-4 col-12 col-sm-6 product-card">
@@ -58,11 +58,38 @@
                                 </div>
                             </div>
                             <% }) %>
-                            
+                            <div class="pagination-area mt-30 mb-50">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination justify-content-start" id="pagination-container">
+                                      <% if (currentPage > 1) { %>
+                                        <li class="page-item">
+                                           <a class="page-link" href="#" data-page="<%= currentPage - 1 %>">
+                                               <i class="fi-rs-angle-double-small-left"></i> Prev
+                                          </a>
+                                        </li>
+                                     <% } %>
+
+                               <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                         <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+
+                               <% if (currentPage < totalPages) { %>
+                                  <li class="page-item">
+                                        <a class="page-link" href="#" data-page="<%= currentPage + 1 %>">
+                                             Next <i class="fi-rs-angle-double-small-right"></i>
+                                        </a>
+                                  </li>
+                               <% } %>
+                                        </ul>
+                                    </nav>
+                             </div>
                             <% }else{ %>
                                 <h1>No products found</h1>
                                 <% } %>
                         </div>
+                    
                        <script>
                         document.addEventListener('DOMContentLoaded',function(){
 

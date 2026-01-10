@@ -1,6 +1,9 @@
 import User from '../model/userSchema.js'
 import Category from '../model/categorySchema.js'
 import Product from '../model/productSchema.js'
+import { paginateHelper } from '../helpers/pagination.js';
+import { populate } from 'dotenv';
+
 
 //render the shop page with all filters and search criteria
 const loadShop = async (req, res) => {
@@ -9,38 +12,43 @@ const loadShop = async (req, res) => {
     const categoryId=req.query.category||""
     const minPrice=parseInt(req.query.minPrice)||0
     const maxPrice=parseInt(req.query.maxPrice)||100000
-    const page=parseInt(req.query.page)||1
     const sort=req.query.sort||''
-    const limit=6
-    const skip=(page-1)*limit
-
+    const page=req.query.page||1
+   
+    //build filter
     const filter={isDeleted:false,price:{$gte:minPrice,$lte:maxPrice}}
-    // console.log(search,categoryId)
     //always apply search filter
     if(search)
-    {
-       filter.name={$regex:search,$options:"i"}
+        {
+            filter.name={$regex:search,$options:"i"}
+            
+        }
+        if(categoryId){
+            filter.category=categoryId
+        }
+        let sortOption={}//sort products according filter
+        
+        if(sort=='asc'){
+            sortOption.price=1
+        }else if(sort=="desc"){
+            sortOption.price=-1
+        }else{
+            sortOption.createdAt=-1
+        }
+        //pass the model and options
+        const paginatedData=await paginateHelper(Product,{
+            page:page,
+            limit:6,
+            filters:filter,
+            sort:sortOption,
+            populate:'category'
+        })
 
-    }
-    if(categoryId){
-    filter.category=categoryId
-    }
-    let sortOption={}//sort products according filter
-    
-    if(sort=='asc'){
-        sortOption.price=1
-    }else if(sort=="desc"){
-        sortOption.price=-1
-    }else{
-        sortOption.createdAt=-1
-    }
 
+    const products = paginatedData.results
+    const totalPages=paginatedData.pagination.totalPages    
+    const currentPage=paginatedData.pagination.currentPage
 
-    const totalProducts=await Product.countDocuments(filter)
-    const totalPages=Math.ceil(totalProducts/limit)
-
-
-    const products = await Product.find(filter).populate('category').sort(sortOption).skip(skip).limit(limit);
     const categories=await Category.find()
     let wishlistedProductIds=[]
     let cartProductIds=[]
@@ -55,15 +63,24 @@ const loadShop = async (req, res) => {
     const annotatedProducts=products.map(product=>{
         const id=product._id.toString()
         return{
-            ...product.toObject(),isWishlisted:wishlistedProductIds.includes(id),
+            ...product.toObject(),
+            isWishlisted:wishlistedProductIds.includes(id),
             isInCart:cartProductIds.includes(id)
         }
     })
     if (req.xhr) { // Check if request is AJAX
-        return res.render('partials/user/productView', { products:annotatedProducts });
+        return res.render('partials/user/productView', { products:annotatedProducts,currentPage:currentPage,totalPages:totalPages });
 }
 
-    res.render('user/shop', { products:annotatedProducts,categoryList:categories,search,minPrice,maxPrice,categoryId,currentPage:page,totalPages,sort }); // render 'shop.ejs' with products
+    res.render('user/shop', { products:annotatedProducts,
+        categoryList:categories,
+        search,
+        minPrice,
+        maxPrice,
+        categoryId,
+        currentPage,
+        totalPages,
+        sort }); // render 'shop.ejs' with products
   } catch (error) {
     console.error("Error loading shop:", error);
     res.status(500).send("Something went wrong.");
@@ -75,6 +92,7 @@ const loadProductDetails=async(req,res)=>{
         const productId=req.params.id
         const categories=await Category.find()
         const product=await Product.findById(productId).populate('category')
+        const relatedProducts=(await Product.find({category:product.category,_id:{$ne:product._id}}))
         let isWishlisted=false
         if(req.session.userId){
         const user=await User.findById(req.session.userId)
@@ -85,7 +103,7 @@ const loadProductDetails=async(req,res)=>{
         if(!product){
             return res.status(404).send("Product Not Found")
         }
-        res.render('user/productDetails',{product,isWishlisted:isWishlisted,categoryList:categories,categoryId:"",search:""})
+        res.render('user/productDetails',{product,isWishlisted:isWishlisted,relatedProducts:relatedProducts,categoryList:categories,categoryId:"",search:""})
     } catch (error) {
         console.error("Error in showing product details",error)
         res.status(500).send("Server Error")

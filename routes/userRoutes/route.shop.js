@@ -27,6 +27,7 @@ router.post('/cart/update-quantity',shopController.updateCartQuantity)
 router.get('/checkout',orderController.loadCheckout)
 //order management
 router.post('/place-order',authenticate.checkUserSession,orderController.placeOrder)
+
 //middleware for the failed razorpay payment
 router.post('/order-failed',authenticate.checkUserSession,orderController.handlePaymentFailure)
 router.post('/create-razorpay-order',authenticate.checkUserSession,orderController.createRazorpayOrder)

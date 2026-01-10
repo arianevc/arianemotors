@@ -17,10 +17,9 @@ const checkUserSession=async(req,res,next)=>{
 }
 const isAdmin=async(req,res,next)=>{
     if(req.session.userId&&req.session.isAdmin){
-        next()
-    }else{
-        res.redirect('/login')
+        res.redirect('/admin')
     }
+    next()
 }
 const checkBlocked=async(req,res,next)=> {
     try {
@@ -44,4 +43,5 @@ const checkBlocked=async(req,res,next)=> {
         next()
     }
 }
+
 export{checkLoggedIn,checkUserSession,checkBlocked,isAdmin}
