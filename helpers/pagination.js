@@ -38,6 +38,8 @@ if(populate){
 const [totalDocuments,results]=await Promise.all([
   model.countDocuments(queryCondition),dataQuery.exec()
 ])
+
+
 const totalPages=Math.ceil(totalDocuments/limitNum)
 
 return{

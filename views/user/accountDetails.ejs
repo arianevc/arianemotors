@@ -93,7 +93,7 @@
                                         </div>
                                         
                                     </div>
-                                    
+                                    <!--add address modal-->
                                     <div class="modal fade" id="addressModal" tabindex="-1">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
@@ -133,6 +133,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!--edit profile modal-->
                                     <div class="modal fade" id="editProfileModal" tabindex="-1">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
@@ -162,6 +163,42 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!--change password modal-->
+                                    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
+                                       <div class="modal-dialog">
+                                         <div class="modal-content">
+                                           <div class="modal-header">
+                                             <h5 class="modal-title" id="changePasswordLabel">Change Password</h5>
+                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                           </div>
+                                           <div class="modal-body">
+                                             <form id="changePasswordForm" onsubmit="submitPasswordChange(event)">
+            
+                                                 <div class="mb-3">
+                                                     <label for="currentPassword" class="form-label">Current Password</label>
+                                                     <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                                 </div>
+
+                                                 <div class="mb-3">
+                                                     <label for="newPassword" class="form-label">New Password</label>
+                                                     <input type="text" class="form-control" id="newPassword" name="newPassword" required>
+                                                 </div>
+
+                                                 <div class="mb-3">
+                                                     <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                                     <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                                     <small id="passwordError" class="text-danger"></small>
+                                                 </div>
+
+                                                 <div class="modal-footer">
+                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                     <button type="submit" class="btn btn-primary">Update Password</button>
+                                                 </div>
+                                             </form>
+                                           </div>
+                                         </div>
+                                       </div>
+                                     </div>
                                     <div class="tab-pane fade active show" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
                                         <div class="card">
                                             <div class="card-header">
@@ -191,8 +228,14 @@
                                                             <input required="" id="displayPhone" class="form-control square" name="phone" type="text" readonly value="<%= user.phone %>">
                                                         </div>
                                                        
-                                                        <div class="col-md-12">
-                                                            <button type="button" class="btn btn-secondary btn-sm edit-profile-btn" data-account-id="<%=user._id%>" data-bs-toggle="modal" id="editProfileBtn" data-bs-target="#editProfileModal">Edit User Details</button>
+
+                                                           <div class="col-md-12">
+                                                               <button type="button" class="btn btn-secondary btn-sm edit-profile-btn" data-account-id="<%=user._id%>" data-bs-toggle="modal" id="editProfileBtn" data-bs-target="#editProfileModal">Edit User Details</button>
+                                                               
+                                                               <button type="button" class="btn btn-warning btn-sm ms-2" 
+                                                               data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                                               Change Password
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </form>
@@ -510,7 +553,47 @@
                 
             }
         })
+        //change password
+        async function submitPasswordChange(event) {
+        event.preventDefault(); // Stop page reload
 
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const errorText = document.getElementById('passwordError');
+
+        // Basic Validation
+        if (newPassword !== confirmPassword) {
+            errorText.textContent = "New passwords do not match!";
+            return;
+        }
+        if (newPassword.length < 6) {
+            errorText.textContent = "Password must be at least 6 characters long.";
+            return;
+        }
+
+        errorText.textContent = ""; // Clear errors
+
+        try {
+            const response = await fetch('/account/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire('Success', 'Password updated successfully', 'success')
+                .then(() => location.reload());
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'Something went wrong', 'error');
+        }
+    }
     })
     </script>
 </body>

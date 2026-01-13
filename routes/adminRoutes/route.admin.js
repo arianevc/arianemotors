@@ -19,9 +19,9 @@ router.post("/users/:id/block", adminController.blockUser);
 
 //category management
 router.get("/categories",authenticate.checkUserSession,categoryController.loadCategories);
-router.post("/categories", categoryController.addCategory);
-router.post("/categories/:id/edit", categoryController.editCategory);
-router.patch("/categories/:id/delete", categoryController.softDeleteCategory);
+router.post("/categories", authenticate.checkUserSession,categoryController.addCategory);
+router.post("/categories/:id/edit", authenticate.checkUserSession,categoryController.editCategory);
+router.patch("/categories/:id/delete",authenticate.checkUserSession, categoryController.softDeleteCategory);
 
 //product management
 

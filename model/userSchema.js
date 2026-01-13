@@ -126,6 +126,10 @@ const userSchema= new Schema({
                     type:Date,
                     default:Date.now()
             },
+            createdAt:{
+                type:Date,
+                default:Date.now()
+            },
             description:{
                 type:String,
                 required:true
