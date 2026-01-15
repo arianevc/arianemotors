@@ -8,7 +8,9 @@ import { log } from "node:console";
 const getDateRange = (filterType, startDate, endDate) => {
     let start = new Date();
     let end = new Date();
-
+   console.log(startDate);
+   console.log(endDate);
+   
     if (filterType === 'daily') {
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
@@ -22,6 +24,9 @@ const getDateRange = (filterType, startDate, endDate) => {
         start.setHours(0, 0, 0, 0);
         end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
+        if(end<start){
+            throw new Error("End Date should be lesser than Start Date")
+        }
     }
     
     return { start, end };
@@ -60,7 +65,7 @@ const loadSalesReport = async (req, res) => {
 
     } catch (error) {
         console.error("Sales Report Error:", error);
-        res.status(500).send("Server Error");
+        res.status(500).send(error.message||"Server Error");
     }
 };
 
