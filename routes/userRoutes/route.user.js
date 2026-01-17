@@ -67,7 +67,7 @@ router.get('/auth/google/callback',passport.authenticate('google',{failureRedire
 //Users order management
 
 //search for order on profile page
-router.post('/order/search',authenticate.checkUserSession,profileController.orderSearch)
+router.get('/order/search',authenticate.checkUserSession,profileController.orderSearch)
 //load success page for the user order placed
 router.get('/order-success',authenticate.checkUserSession,userController.loadOrderSuccess)
 //order fail page for user to retry or view the failed order

@@ -1,45 +1,5 @@
 
-    <div class="content-header p-1">
-        <h2>Your Orders</h2>
-    </div>
-                                        <%if(orders&&orders.length>0){ %>
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <form id="filterForm" class="row g-3 align-items-center ">
-                                                    <div class="col-lg-3 col-md-6">
-                                                        <div class="row g-2 align-items-center">
-                                                        
-                                                        <div class="col-auto">
-                                                            <input type="text" placeholder="Search by Order ID " 
-                                                            class="form-control" name="search" id="searchInput" value="">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-3 col-md-6">
-                                                        <div class="row g-2 align-items-center">
-                                                          
-                                                            <div class="col-auto">
-                                                               <input type="date" name="orderDate" style="max-width: 180px;min-width: 140px;" class="form-control form-control-sm" id="orderDateInput">
-                                                        </div>
-                                                        </div>
-                                                    </div>
-                                                <div class="col-lg-3 col-md-6">
-                                                        <div class="row g-2 align-items-center">
-                                                          
-                                                            <div class="col-auto">
-                                                               <select name="orderStatusDropdown" class="form-select" id="orderStatus">
-                                                                <option selected>Order Status</option>
-                                                                <option value="Paid">Paid</option>
-                                                                <option value="Paid">Processing</option>
-                                                               </select>
-                                                        </div>
-                                                        </div>
-                                                    </div>
-                                                     <div class="col-lg-1">
-                                                        <button type="submit" class="btn order-filter-btn"><i class="fi-rs-search"></i></button>
-                                                      </div>
-                                                </form>
-                                            </div>
+    
                                             <div class="card-body">
                                                 <div class="table-responsive">
                                                     <table class="table">
@@ -54,6 +14,7 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
+                                                            <%if(orders&&orders.length>0){ %>
                                                             <% orders.forEach((order)=>{%>
                                                             <tr>
                                                                 <td><%=order.orderId %></td>
@@ -64,12 +25,16 @@
                                                                 <td><a href="/orders/<%= order.orderId %>" class="btn-small d-block">View</a></td>
                                                             </tr>
                                                             <% }) %>
+                                                            <% }else{ %>
+                                        <tr><td colspan="6" class="text-center" style="color: #088178;">No Orders Available to Display</td></tr>
+                                        <% } %>
                                                         </tbody>
                                                     </table>
                                                 </div>
                                             </div>
                                         </div>
 
+                        
                                         <!-- pagination -->
                                         <div class="pagination-area mt-30 mb-50">
                                 <nav aria-label="Page navigation example">
@@ -98,8 +63,7 @@
                                         </ul>
                                     </nav>
                              </div>
-                                    <% }else{ %>
-                                        <h4 style="color: #088178;">No Orders Available to Display</h4>
-                                        <% } %>
-
+                             
+                              
+                                    
                                     

@@ -15,7 +15,6 @@ const loadAccountDetails=async(req,res)=>{
         if(!req.session.userId){
            return res.redirect('/login')
         }
-        const page=req.query.orderPage||1
         // console.log("page no: ",page);
         
         const filters={userId:req.session.userId}
@@ -24,7 +23,7 @@ const loadAccountDetails=async(req,res)=>{
             limit:6,
             sort:sortOption,
             filters:filters,
-            page:page
+            page:1
         })
         const userOrders=paginatedData.results
         const totalPages=paginatedData.pagination.totalPages
@@ -47,21 +46,42 @@ const loadAccountDetails=async(req,res)=>{
 //search for orders
 const orderSearch=async(req,res)=>{
  try {
-    console.log(req.body) 
-       const filters={userId:req.session.userId,
-        timeStamp:req.body.orderDate||'',
-        orderStatus:req.body.orderStatus
+    console.log(req.query) 
+    const query={userId:req.session.userId}
+    //search regex for finding OrderId
+    if(req.query.search){
+        const searchRegex=new RegExp(req.query.search,'i')
+        query.orderId={$regex:searchRegex}
     }
-    console.log('filters: ',filters)
+    //setting a range for the date
+    if(req.query.date){
+        const dateStr=req.query.date
+
+        const startOfDate=new Date(dateStr)
+        startOfDate.setHours(0,0,0,0)
+        const endOfDate=new Date(dateStr)
+        endOfDate.setHours(23,59,59,999)
+        query.createdAt={$gte:startOfDate,$lte:endOfDate}
+    }
+    if(req.query.status&&req.query.status!=='All'){
+        query.orderStatus=req.query.status
+    }
+    console.log('final mongoQuery: ',query)
     const sortOption={createdAt:-1}
     const paginatedData=await paginateHelper(Order,{
         sort:sortOption,
-        filters:filters,        
+        limit:6,
+        page:req.query.page,
+        filters:query,
     })
+    console.log("paginatedData: ",paginatedData)
     const userOrders=paginatedData.results
+    console.log('fetched Orders: ',userOrders);
     const totalPages=paginatedData.pagination.totalPages
     const currentPage=paginatedData.pagination.currentPage
-    return res.json('partials/user/orderList',{orders:userOrders,totalPages:totalPages,currentPage:currentPage})
+    if(req.xhr){
+        return res.render('partials/user/orderList',{orders:userOrders,totalPages:totalPages,currentPage:currentPage})
+    }
 
  } catch (error) {
     console.error("Error in displaying the searched order: ",error);

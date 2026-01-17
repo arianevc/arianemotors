@@ -35,6 +35,7 @@ let dataQuery=model.find(queryCondition).sort(sort).skip(skip).limit(limitNum)
 if(populate){
   dataQuery=dataQuery.populate(populate)
 }
+
 const [totalDocuments,results]=await Promise.all([
   model.countDocuments(queryCondition),dataQuery.exec()
 ])
