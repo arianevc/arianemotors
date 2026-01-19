@@ -1,0 +1,130 @@
+<%- include('../partials/admin/header') %>
+
+<section class="content-main">
+    <div class="content-header">
+        <h2 class="content-title">Sales Report</h2>
+        <div>
+            <a href="/admin/sales-report/pdf?filterType=<%= filterType %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="btn btn-primary">
+                <i class="text-muted material-icons md-post_add"></i>Download PDF
+            </a>
+            <a href="/admin/sales-report/excel?filterType=<%= filterType %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="btn btn-primary">
+                <i class="text-muted material-icons md-post_add"></i>Download Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <header class="card-header">
+            <form action="/admin/sales-report" method="GET" id="filterForm">
+                <div class="row gx-3">
+                    <div class="col-lg-3 col-md-3 me-auto">
+                        <label>Filter By</label>
+                        <select class="form-select" name="filterType" id="filterType" onchange="toggleCustomDate()">
+                            <option value="daily" <%= filterType === 'daily' ? 'selected' : '' %>>Daily</option>
+                            <option value="weekly" <%= filterType === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                            <option value="yearly" <%= filterType === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                            <option value="custom" <%= filterType === 'custom' ? 'selected' : '' %>>Custom Date</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 custom-date" style="display: <%= filterType === 'custom' ? 'block' : 'none' %>;">
+                        <label>Start Date</label>
+                        <input type="date" name="startDate" value="<%= startDate %>" class="form-control">
+                    </div>
+                    <div class="col-lg-3 col-md-3 custom-date" style="display: <%= filterType === 'custom' ? 'block' : 'none' %>;">
+                        <label>End Date</label>
+                        <input type="date" name="endDate" value="<%= endDate %>" class="form-control">
+                    </div>
+                    
+                    <div class="col-lg-2 col-md-2 align-self-end">
+                        <button type="submit" class="btn btn-md btn-primary">Filter</button>
+                    </div>
+                </div>
+            </form>
+        </header>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-lg-4">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Sales</h6>
+                                <span>₹<%= totalOrderAmount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-success-light"><i class="text-success material-icons md-local_shipping"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Orders Count</h6>
+                                <span><%= totalSalesCount %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-warning-light"><i class="text-warning material-icons md-qr_code"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Discount</h6>
+                                <span>₹<%= totalDiscount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Discount</th>
+                            <th>Coupon</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if(orders.length > 0) { %>
+                            <% orders.forEach(order => { %>
+                                <tr>
+                                    <td><%= order.orderId %></td>
+                                    <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                    <td><%= order.userId ? order.userId.name : 'Unknown' %></td>
+                                    <td>₹<%= order.totalPrice.toFixed(2) %></td>
+                                    <td>₹<%= order.discount.toFixed(2) %></td>
+                                    <td><%= order.couponApplied || 'None' %></td>
+                                    <td><%= order.paymentMethod %></td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr><td colspan="7" class="text-center">No sales found for this period.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function toggleCustomDate() {
+        const type = document.getElementById('filterType').value;
+        const customInputs = document.querySelectorAll('.custom-date');
+        
+        customInputs.forEach(input => {
+            input.style.display = (type === 'custom') ? 'block' : 'none';
+        });
+    }
+</script>
+
+<%- include('../partials/admin/footer') %>

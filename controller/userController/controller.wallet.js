@@ -12,11 +12,19 @@ const razorpayInstance=new Razorpay({
 const loadWallet=async(req,res)=>{
     try {
         const user=await User.findById(req.session.userId)
+
         console.log("balance: ",user.wallet.balance)
         let transactions=[]
         if(user.wallet.transactions.length>0){
+            //show sorted transactions based on the date of transaction
             transactions=user.wallet.transactions.sort((a,b)=>{
-                return new Date(b.date)-new Date(a.date)
+                const dateA=new Date(a.date)
+                const dateB=new Date(b.date)
+                if(dateB-dateA!==0){
+                    return dateB-dateA
+                }
+                //if on same day
+                return b._id.toString().localeCompare(a._id.toString())
             })
         }
         const commonData=await getCommonData()

@@ -34,6 +34,9 @@ router.get('/account/change-image',authenticate.checkUserSession,profileControll
 router.post('/account/change-image',authenticate.checkUserSession,upload.single('profileImage'),profileController.changeImagePost)
 router.delete('/account/change-image',profileController.removeImage)
 
+//change user account password
+router.post('/account/change-password',authenticate.checkUserSession,profileController.changePassword)
+
 //user address management
 //to get add a new address
 router.post('/account/addresses',Validators.addressValidator,profileController.addAddress)
@@ -45,6 +48,7 @@ router.delete('/account/addresses/:addressId',profileController.deleteAddress)
 router.get('/edit/email',profileController.loadEditEmail)
 router.post('/edit/email',profileController.emailVerify)
 
+
 router.route("/forgotpwd")//router chaining
 
 
@@ -54,16 +58,23 @@ router.route("/forgotpwd")//router chaining
 router.get('/resetpwd/:token',userController.loadResetPassword)
 router.post('/resetpwd/:token',userController.resetPasswordPost)
 
-//google auth for google signin
-router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
-router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/login'}),(req,res)=>{
-    req.session.user={
-        _id:req.user._id,
-        name:req.user.name,
-        email:req.user.email
-    }
-    res.redirect('/')
-})
+// //google auth for google signin
+// router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
+// router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/login'}),(req,res)=>{
+//     console.log("Google Auth Success for the user: ",req.user.email);
+//     req.session.userId=req.user._id
+//     req.session.loggedUser=req.user.name
+//         req.session.loggedUserImage=req.user.profileImage
+//         req.session.loggedUserReferral=req.user.referralCode
+//     req.session.save((err)=>{
+//         if(err){
+//             console.error("Session save error: ",err);
+//             return res.redirect('/login')
+//         }
+//         console.log("Session saved .Redirecting to home...");
+//         res.redirect('/')
+//     })
+// })
 //Users order management
 
 //search for order on profile page

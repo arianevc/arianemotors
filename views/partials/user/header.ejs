@@ -66,6 +66,7 @@
                                     <li><form action="/logout" method="post">
                                         <button type="submit" style="background-color: red;border-radius: 28px;">SIGNOUT</button>
                                     </form></li>
+                                    <li><button class="btn-warning" data-bs-toggle="modal" data-bs-target="#referralModal">Refer a Friend</button></li>
                                     <%}%>
                             </ul>
                         </div>
@@ -73,6 +74,26 @@
                 </div>
             </div>
         </div> 
+        <!-- Modal -->
+<div class="modal fade" id="referralModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Referral Code</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Ask your friend to use this coupon code to create an account and get ₹100 credited to your wallet
+        <div class="p-5 d-flex justify-content-center">
+            <p>Code:</p><h1 class="font-xl"><%=loggedUserReferral %></h1>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
         <div class="header-middle header-middle-ptb-1 d-none d-lg-block">
             <div class="container">
                 <div class="header-wrap">
@@ -114,14 +135,18 @@
                                 <div class="header-action-icon-2">
                                     <a title="View Wishlist" href="/shop/wishlist">
                                         <img class="svgInject" alt="Evara" src="/frontend/assets/imgs/theme/icons/icon-heart.svg">
-                                        <!-- <span class="pro-count blue">4</span> -->
+                                        <% if(wishListCount){ %>
+                                        <span class="pro-count blue"><%=wishListCount %></span>
+                                        <% } %>
                                     </a>
                                 </div>
                                 <div class="header-action-icon-2">
                                     <a title="View Cart" class="mini-cart-icon" href="/shop/cart">
                                         <img alt="Evara" src="/frontend/assets/imgs/theme/icons/icon-cart.svg">
-                                        <!-- <span class="pro-count blue">2</span> -->
-                                    </a>
+                                        <% if(cartCount){ %>
+                                            <span class="pro-count blue"><%=cartCount %></span>
+                                            <% } %>
+                                        </a>
                                     <!-- <div class="cart-dropdown-wrap cart-dropdown-hm2">
                                         <ul>
                                             <li>
@@ -377,9 +402,6 @@
                                         <a href="/">Home</a>
                                     </li>
                                     <li>
-                                        <a href="page-about.html">About</a>
-                                    </li>
-                                    <li>
                                         <a href="/shop/products/">Shop</a>
                                     </li>
                                     <!-- <li><a href="shop-grid-right.html">Shop <i class="fi-rs-angle-down"></i></a>
@@ -403,40 +425,40 @@
                                             <li><a href="shop-compare.html">Shop – Compare</a></li>
                                         </ul>
                                     </li> -->
-                                    <li class="position-static"><a href="#">Mega menu <i class="fi-rs-angle-down"></i></a>
+                                    <!-- <li class="position-static"><a href="#">Mega menu <i class="fi-rs-angle-down"></i></a>
                                         <ul class="mega-menu">
                                             <li class="sub-mega-menu sub-mega-menu-width-22">
                                                 <a class="menu-title" href="#"> Spare Parts</a>
-                                                <ul>
+                                                <ul> -->
                                                     <!-- <li><a href="shop-product-right.html">Dresses</a></li>
                                                     <li><a href="shop-product-right.html">Blouses & Shirts</a></li>
                                                     <li><a href="shop-product-right.html">Hoodies & Sweatshirts</a></li>
                                                     <li><a href="shop-product-right.html">Wedding Dresses</a></li>
                                                     <li><a href="shop-product-right.html">Prom Dresses</a></li>
                                                     <li><a href="shop-product-right.html">Cosplay Costumes</a></li> -->
-                                                </ul>
-                                            </li>
+                                                <!-- </ul> -->
+                                            <!-- </li>
                                             <li class="sub-mega-menu sub-mega-menu-width-22">
                                                 <a class="menu-title" href="#">Brands</a>
-                                                <ul>
+                                                <ul> -->
                                                     <!-- <li><a href="shop-product-right.html">Jackets</a></li>
                                                     <li><a href="shop-product-right.html">Casual Faux Leather</a></li>
                                                     <li><a href="shop-product-right.html">Genuine Leather</a></li>
                                                     <li><a href="shop-product-right.html">Casual Pants</a></li>
                                                     <li><a href="shop-product-right.html">Sweatpants</a></li>
                                                     <li><a href="shop-product-right.html">Harem Pants</a></li> -->
-                                                </ul>
+                                                <!-- </ul>
                                             </li>
                                             <li class="sub-mega-menu sub-mega-menu-width-22">
                                                 <a class="menu-title" href="#">Technology</a>
-                                                <ul>
+                                                <ul> -->
                                                     <!-- <li><a href="shop-product-right.html">Gaming Laptops</a></li>
                                                     <li><a href="shop-product-right.html">Ultraslim Laptops</a></li>
                                                     <li><a href="shop-product-right.html">Tablets</a></li>
                                                     <li><a href="shop-product-right.html">Laptop Accessories</a></li>
                                                     <li><a href="shop-product-right.html">Tablet Accessories</a></li> -->
-                                                </ul>
-                                            </li>
+                                                <!-- </ul>
+                                            </li> -->
                                             <!-- <li class="sub-mega-menu sub-mega-menu-width-34">
                                                 <div class="menu-banner-wrap">
                                                     <a href="shop-product-right.html"><img src="frontend/assets/imgs/banner/menu-banner.jpg" alt="Evara"></a>
@@ -458,7 +480,7 @@
                                                     </div>
                                                 </div>
                                             </li> -->
-                                        </ul>
+                                        <!-- </ul>
                                     </li>
                                     <li><a href="blog-category-grid.html">Blog <i class="fi-rs-angle-down"></i></a>
                                         <ul class="sub-menu">
@@ -474,21 +496,19 @@
                                                 </ul>
                                             </li>
                                         </ul>
-                                    </li>
+                                    </li> -->
                                     <li><a href="#">Pages <i class="fi-rs-angle-down"></i></a>
                                         <ul class="sub-menu">
-                                            <li><a href="page-about.html">About Us</a></li>
-                                            <li><a href="page-contact.html">Contact</a></li>
-                                            <li><a href="/account">My Account</a></li>
+                                            <!-- <li><a href="page-about.html">About Us</a></li> -->
+                                            <!-- <li><a href="page-contact.html">Contact</a></li> -->
                                             <li><a href="/login">Login</a></li>
-                                            <li><a href="page-purchase-guide.html">Purchase Guide</a></li>
-                                            <li><a href="page-privacy-policy.html">Privacy Policy</a></li>
-                                            <li><a href="page-terms.html">Terms of Service</a></li>
-                                            <li><a href="/adfkasf">404 Page</a></li>
+                                            <li><a href="/account">My Account</a></li>
+                                            <li><a href="/wallet">My Wallet</a></li>
+                                            
                                         </ul>
                                     </li>
                                     <li>
-                                        <a href="page-contact.html">Contact</a>
+                                        <!-- <a href="page-contact.html">Contact</a> -->
                                     </li>
                                 </ul>
                             </nav>

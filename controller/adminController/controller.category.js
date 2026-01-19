@@ -1,4 +1,7 @@
+import { updateProductPrice } from "../../helpers/priceCalculator.js"
 import Category from "../../model/categorySchema.js"
+import Product from "../../model/productSchema.js"
+
 
 const loadCategories=async(req,res)=>{
     if(!req.session.isAdmin){
@@ -29,7 +32,7 @@ const loadCategories=async(req,res)=>{
 
 const addCategory=async(req,res)=>{
     try {
-        let {name,description}=req.body
+        let {name,description,categoryOffer}=req.body
         if(!name||!name.trim()){
             return res.status(400).json({success:false,message:"Category name should not be empty"})
         }
@@ -38,7 +41,15 @@ const addCategory=async(req,res)=>{
         if(existingCategory){
             return res.status(400).json({success:false,message:"Duplicate Category not allowed"})
         }
-        await new Category({name,description}).save()
+        if(categoryOffer<0 || categoryOffer>80){
+            return res.status(400).json({success:false,message:"Enter a valid number for category offer"})
+        }
+        const newCategory=await new Category({name,description,categoryOffer}).save()
+        //update prices of products under this category
+        const products=await Product.find({category:newCategory._id})
+        for(const product of products){
+            await updateProductPrice(product._id)
+        }
         res.json({success:true,message:"Category added Successfully"})
     } catch (error) {
         console.error("error in adding category: ",error)
@@ -50,14 +61,22 @@ const editCategory=async (req,res)=>{
 try {
     const {id}=req.params
     
-    const {name,description}=req.body
+    const {name,description,categoryOffer}=req.body
     
     
     const duplicate=await Category.findOne({name:{ $regex: new RegExp(`^${name.trim()}$`, 'i') },_id:{$ne:id}})
     if(duplicate){
         return res.status(400).json({success:false,message:"Category name already exists"})
     }
-    const updatedCategory=await Category.findByIdAndUpdate(id,{name,description},{new:true})
+    if(categoryOffer<0||categoryOffer>80){
+            return res.status(400).json({success:false,message:"Enter a valid number for category offer "})
+        }
+    const updatedCategory=await Category.findByIdAndUpdate(id,{name,description,categoryOffer},{new:true})
+    //update prices of products under this category
+        const products=await Product.find({category:updatedCategory._id})
+        for(const product of products){
+            await updateProductPrice(product._id)
+        }
     if(!updatedCategory){
         return res.status(404).json({success:false,message:'Category not found'})
     }

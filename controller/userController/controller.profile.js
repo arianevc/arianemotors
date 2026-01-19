@@ -1,6 +1,8 @@
 import User from "../../model/userSchema.js"
 import Category from "../../model/categorySchema.js"
 import Order from "../../model/orderSchema.js"
+import bcrypt from 'bcrypt' 
+import crypto from 'crypto'
 import { paginateHelper } from "../../helpers/pagination.js"
 import { processProfileImage } from "../../helpers/imageProcessing.js"
 import { validationResult } from "express-validator"
@@ -100,6 +102,54 @@ const editProfile=async(req,res)=>{
         console.log("error in editing profile",error)
     }
 }
+//change account password
+const changePassword=async(req,res)=>{
+try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.session.userId;
+
+        // 1. Find User
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        // 2. Check if user is Google Auth only (Optional safety check)
+        // If they logged in via Google, they might not have a password set.
+        if (!user.password) {
+            return res.json({ success: false, message: "You are logged in via Google. You cannot change password here." });
+        }
+
+        // 3. Verify Current Password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.json({ success: false, message: "Incorrect current password" });
+        }
+
+        // 4. Validate New Password Strength (Basic)
+        if (newPassword.length < 6) {
+            return res.json({ success: false, message: "Password must be at least 6 characters" });
+        }
+        
+        // 5. Prevent using the same password
+        const isSame = await bcrypt.compare(newPassword, user.password);
+        if (isSame) {
+            return res.json({ success: false, message: "New password cannot be the same as the old password" });
+        }
+
+        // 6. Hash New Password & Save
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedPassword;
+        await user.save();
+
+        res.json({ success: true, message: "Password changed successfully" });
+
+    } catch (error) {
+        console.error("Change Password Error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+}
 //add or update user details
 const editUserPost=async(req,res)=>{
     try {
@@ -110,10 +160,10 @@ const editUserPost=async(req,res)=>{
         }
         const user=await User.findByIdAndUpdate(req.session.userId,{name:name,phone:phone})
         
-        res.json({success:true,message:"User Profile updated successfully"})
+       return res.json({success:true,message:"User Profile updated successfully"})
     } catch (error) {
         console.error(error)
-        res.status(500).json({success:false,message:"Server Error"})
+       return res.status(500).json({success:false,message:"Server Error"})
     }
     
 }
@@ -133,7 +183,7 @@ const addAddress=async (req,res)=>{
         res.json({success:true,message:'Address added sucessfully!',addresses:user.addresses})
     } catch (error) {
         console.error("Error in adding address",error)
-        res.status(500).json({success:false,message:'Server Error'})
+        return res.status(500).json({success:false,message:'Server Error'})
     }
 }
 //retrieve a single address to edit and view
@@ -259,7 +309,7 @@ const removeImage=async(req,res)=>{
         res.status(500).json({success:false,message:"Server error during removal of image"})
     }
 }
-export{loadAccountDetails,orderSearch,editProfile,editUserPost,addAddress,getSingleAddress
+export{loadAccountDetails,orderSearch,editProfile,changePassword,editUserPost,addAddress,getSingleAddress
     ,editAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,
     removeImage
 }

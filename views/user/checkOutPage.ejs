@@ -128,7 +128,7 @@
                                                 <td>
                                                     <h5><a href="/shop/product/<%=item.productId._id%>"><%= item.productId.name %></a></h5> <span class="product-qty">x <%= item.quantity %></span>
                                                     </td>
-                                                    <% let subTotal=item.productId.price*item.quantity %>
+                                                    <% let subTotal=item.productId.salePrice*item.quantity %>
                                                     <td>₹<%= subTotal %></td>
                                                     </tr>
                                                 <%}); %>
@@ -143,8 +143,8 @@
                                         </tr>
                                         <tr id="discountRow" style="display: none;">
                                             <th class="cart_total_label">Coupon Discount <span id="appliedCodeBadge" class="badge bg-success ml-2"></span> 
-                                                <a href="#" id="removeCouponBtn" class="text-danger small ml-2">
-                                                    <i class="fi-rs-cross-small"></i>
+                                                <a href="#" id="removeCouponBtn" class="btn-light text-danger small ml-2">
+                                                    Remove Coupon
                                                 </a>
                                             </th>
                                             <td colspan="2" class="cart_total_amount"> <i class="ti-gift"></i>
@@ -167,7 +167,7 @@
                                             <h5 class="modal-title">Available Coupons</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
-                                        <div class="modal-body">
+                                      <div class="modal-body">
                                             <% if(coupons && coupons.length>0) {%>
                                                 <% coupons.forEach(coupon=>{ %>
                                                     <div class=" card mb-2 border-dashed ">
@@ -189,7 +189,6 @@
                                     </div>
                                 </div>
                             </div>
-
 
                             <div class="payment_method">
                                 <div class="mb-25">
@@ -361,6 +360,8 @@
         }
         
        })
+       //setting the default totalPrice value
+       let totalPrice=parseFloat('<%=totalPrice%>')
        //changing button text on payment option
        const placeOrderBtn=document.getElementById('placeOrderButton')
        const paymentMessage=document.getElementById('payment-message')
@@ -386,7 +387,7 @@
         const showCouponsBtn=document.getElementById('showCouponsBtn')
         const couponInput=document.getElementById('couponInput')
         //apply coupon
-        let appliedCopounCode=null
+        let appliedCouponCode=null
         applyCouponBtn.addEventListener('click',async(e)=>{
             // applyCouponBtn.disabled=true
             e.preventDefault()
@@ -407,7 +408,7 @@
             if(!response.ok) throw new Error("Network issue in Applying coupon");
             const result=await response.json()
             if(result.success){
-                appliedCopounCode=result.code
+                appliedCouponCode=result.code
                 discountRow.style.display='table-row'
                 discountDisplay.innerText="₹"+result.discount.toFixed(2)
                 totalDisplay.innerText="₹"+result.totalAmount.toFixed(2)
@@ -454,9 +455,9 @@
             removeCpnBtn.addEventListener('click',async(e)=>{
                 e.preventDefault()
                 discountRow.style.display='none'
-                totalDisplay.innerText='₹'+ogTotalPrice.toFixed(2)
-                appliedCopounCode=null
-                totalPrice=ogTotalPrice
+                totalDisplay.innerText='₹'+'<%=totalPrice%>'
+                appliedCouponCode=null
+                totalPrice='<%=totalPrice%>'
                 applyCouponBtn.disabled=false
                 showCouponsBtn.disabled=false
                 applyCouponBtn.innerText='Apply'
@@ -467,8 +468,8 @@
         }
        //placing order
      
-       let totalPrice='<%=totalPrice%>'
-       let ogTotalPrice=parseFloat(totalPrice)
+       
+       
         placeOrderBtn.addEventListener('click',async function(e){
             e.preventDefault()
             const selectRadio=document.querySelector('input[name="addressRadio"]:checked')
@@ -488,20 +489,19 @@
         
         //choosing between payments
         if(paymentOption.value=='Online'){
-            initiateRazorpayPayment(selectedAddressId,totalPrice,appliedCopounCode)
+            initiateRazorpayPayment(selectedAddressId,appliedCouponCode)
             placeOrderBtn.innerText='Processing...'
         }else if(paymentOption.value=='COD'||paymentOption.value=='Wallet'){
-            placeOrderCOD(selectedAddressId,ogtotalPrice,paymentOption.value,appliedCopounCode)
+            placeOrderCOD(selectedAddressId,paymentOption.value,appliedCouponCode)
         }
 
         //function for Cash on Delivery & Wallet mode
-        async function placeOrderCOD(addressId,totalPrice,paymentOption,couponCode) {
+        async function placeOrderCOD(addressId,paymentOption,couponCode) {
         await fetch('/shop/place-order',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
                 addressId:selectedAddressId,
-                totalPrice:totalPrice,
                 couponCode:couponCode,
                 paymentOption:paymentOption
             })
@@ -512,7 +512,7 @@
                     window.location.href=`/order-success?orderId=${data.orderId}`
                 })
             }else{
-                // Swal.fire('Error!',data.message||'Could not place order','error')
+                Swal.fire('Error!',data.message||'Could not place order','error')
                 document.getElementById('errorMsg').innerText="*"+data.message||'Could not place order'
 
             }
@@ -525,12 +525,12 @@
         })    
         }
         const razorpayKeyId='<%=razorpayKeyId%>'
-        async function initiateRazorpayPayment(addressId,totalPrice,couponCode) {
+        async function initiateRazorpayPayment(addressId,couponCode) {
             try {
                 const response=await fetch('/shop/create-razorpay-order',{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({totalPrice,addressId,couponCode})
+                    body:JSON.stringify({addressId,couponCode})
                 })
                 const orderData=await response.json()
                 if(!orderData.success){

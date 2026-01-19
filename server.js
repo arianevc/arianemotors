@@ -10,6 +10,7 @@ const port=process.env.PORT||5000
 import passport from "./config/passport.js";
 import { cloudinaryConfig } from "./config/cloudinary.js";
 import userRoutes from './routes/userRoutes/route.user.js'
+import authRoutes from './routes/authRoute.js'
 import shopRoutes from './routes/userRoutes/route.shop.js'
 import adminRoutes from './routes/adminRoutes/route.admin.js'
 import setLocals from "./helpers/setLocals.js";
@@ -63,6 +64,7 @@ app.use((req,res,next)=>{
 })
 //routes for different paths
 app.use('/',userRoutes)
+app.use('/auth',authRoutes)
 app.use('/shop',shopRoutes)
 app.use('/admin',adminRoutes)
 

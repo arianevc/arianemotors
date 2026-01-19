@@ -6,6 +6,7 @@ import { getCommonData } from '../../helpers/commonData.js'
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
 import Coupon from '../../model/couponModel.js'
+import { createOrderHelper } from '../../helpers/orderHelper.js'
 import { log } from 'console'
 
 
@@ -31,12 +32,13 @@ const loadCheckout=async(req,res)=>{
         const coupons=await Coupon.find({isActive:true,expiryDate:{$gt:new Date()}})
         const walletBalance=user.wallet.balance
         const phoneAndEmail={phone:user.phone,email:user.email}
+        //filter out unavailable or out of stock products
        const availableCartItems=user.cart.filter(
-        item=>!item.productId.isDeleted||item.productId.quantity<=0
+        item=>!item.productId.isDeleted&&item.productId.quantity>=1
        )
        let totalPrice=0
        availableCartItems.forEach(item=>{
-        totalPrice+=item.productId.price*item.quantity
+        totalPrice+=item.productId.salePrice*item.quantity
        })
         const userAddresses=user.addresses?user.addresses:[]
            res.render('user/checkOutPage',{categoryList:commonData.categoryList,user:user,categoryId:'',search:'',
@@ -53,184 +55,71 @@ const loadCheckout=async(req,res)=>{
 const placeOrder=async(req,res)=>{
     try {
         console.log(req.body)        
-        const {addressId,totalPrice,paymentOption,couponCode}=req.body
-        if(req.session.userId){
-            const user=await User.findById(req.session.userId).populate('cart.productId')
-            const cartItems=user.cart
-            if(!cartItems.length)return res.json({success:false,message:"Cart is empty"})
-            //calculate the subtotal from the cart item prices
-        let subtotal=0
-        cartItems.forEach(item=>{
-            subtotal+=item.productId.price*item.quantity
-        })
-        //coupon logic o
-        let finalAmount=subtotal
-        let discountAmount=0
-        let appliedCopounCode=null
-        if(couponCode){
-            const coupon=await Coupon.findOne({code:couponCode.toUpperCase()})
-            //check the coupon is valid again
-            if(coupon&&coupon.isActive&&new Date()<=coupon.expiryDate
-        &&subtotal<=coupon.minPurchaseAmount&&!coupon.usedBy.includes(req.session.userId)){
-            if(coupon.discountType=='fixed'){
-                discountAmount=coupon.discountValue
-            }else{
-                discountAmount=(subtotal*coupon.discountValue)/100
-            }
-            //to avoid negative pricing
-            if(discountAmount>subtotal)discountAmount=subtotal
+        const {addressId,paymentOption,couponCode}=req.body
+        const userId=req.session.userId
+        if(!userId){
+            return res.status(401).json({success:false,message:"User Not Found!"})
         }
-        finalAmount=subtotal-discountAmount
-        appliedCopounCode=coupon.code
-        //Mark it as usedby the user
-        coupon.usedBy.push(req.session.userId)
-        await coupon.save()
-        
-        }
-        //choosing the address among user addresses
-            const orderAddress=user.addresses[addressId]
+        //call the orderHelper
+        const{order,user,finalAmount,appliedCouponCode}=await createOrderHelper(userId,addressId,couponCode,paymentOption)
+
+        //if paymentOption is 'wallet'
            if(paymentOption=='Wallet'){
-            if(user.wallet.balance<totalPrice){
-                return res.json({success:false,message:"Insufficient wallet balance"})
-            }
             //deduct the amount from wallet
-            user.wallet.balance-=parseFloat(totalPrice)
+            user.wallet.balance-=parseFloat(finalAmount)
             user.wallet.transactions.push({
-                amount:totalPrice,
+                amount:finalAmount,
                 type:'Debit',
                 description:'Order Payment'
             })
             await user.save()
+            //update order payment status
+            order.paymentStatus='Paid'
+            await order.save()
            }
-           //create the order
-            const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
-            console.log("create new order id: ",customOrderId);
-            const newOrder=new Order({
-                orderId:customOrderId,
-                userId:req.session.userId,
-                shippingAddress:{
-                    name:orderAddress.name,
-                    street:orderAddress.street,
-                    city:orderAddress.city,
-                    state:orderAddress.state,
-                    pincode:orderAddress.pinCode,
-                    phone:user.phone,
-                    email:user.email
-                },
-                items:user.cart.map(item=>({
-                    productId:item.productId._id,
-                    quantity:item.quantity,
-                    price:item.productId.price
-                })),
-                totalPrice:finalAmount,
-                discount:discountAmount,
-                couponApplied:appliedCopounCode,
-                paymentMethod:paymentOption,
-                paymentStatus:paymentOption=='Wallet'?'Paid':'Pending',
-                orderStatus:'Pending'
-            })
-            await newOrder.save()
-            
+           const availableCartItems=user.cart.filter(item=>{
+             return !item.productId.isDeleted&&item.productId.quantity>=1&&item.quantity<=item.productId.quantity
+           })
             //to reduce items from stock
-            for(let item of user.cart){
+            for(let item of availableCartItems ){
                 await Product.updateOne({_id:item.productId},
                     {$inc:{quantity:-item.quantity}})
                 }
                 user.cart=[]
                 await user.save()
-            res.json({success:true,message:"Order Placed Successfully",orderId:customOrderId})
+             //Mark it as usedby the user
+             if(appliedCouponCode){
+                await Coupon.updateOne({code:appliedCouponCode,$addToSet:{usedBy:userId}})
+             }
+            res.json({success:true,message:"Order Placed Successfully",orderId:order.orderId})
             
-        }else{
-            res.status(404).json({success:false,message:"User unavailable.Please login and try again"})
-
-        }
+        
     } catch (error) {
-        console.error("Error in placing the order: ",error);
-        res.status(500).json({success:false,message:"Server Error"})
+        console.error("Error in placing the order: ",error.message);
+        res.status(500).json({success:false,message:error.message||"Server Error"})
     }
 }
 //create a razorpay order
 const createRazorpayOrder=async(req,res)=>{
 try {
-    const {totalPrice,addressId,couponCode}=req.body
+    const {addressId,couponCode}=req.body
     // console.log(req.body)
     const userId=req.session.userId
-            const user=await User.findById(userId).populate('cart.productId')
-
-            //for coupon logic
-            const cartItems=user.cart
-            if(!cartItems.length)return res.json({success:false,message:"Cart is empty"})
-            //calculate the subtotal from the cart item prices
-        let subtotal=0
-        cartItems.forEach(item=>{
-            subtotal+=item.productId.price*item.quantity
-        })
-        let finalAmount=subtotal
-        let discountAmount=0
-        let appliedCopounCode=null
-        if(couponCode){
-            const coupon=await Coupon.findOne({code:couponCode.toUpperCase()})
-           
-            //check the coupon is valid again
-            if(coupon&&coupon.isActive&&new Date()<=coupon.expiryDate
-        &&subtotal>=coupon.minPurchaseAmount&&!coupon.usedBy.includes(userId)){
-            if(coupon.discountType=='fixed'){
-                discountAmount=coupon.discountValue
-                
-            }else{
-                discountAmount=(subtotal*coupon.discountValue)/100
-                
-            }
-            //to avoid negative pricing
-            if(discountAmount>subtotal)discountAmount=subtotal
-        }
-        
-        finalAmount=subtotal-discountAmount
-        appliedCopounCode=coupon.code
-        
-        
-        }
-            //choose the address among the user addresses
-            const orderAddress=user.addresses[addressId]
-
-            //orderCreation
-    const customOrderId=`ORD-${Date.now().toString(36).toUpperCase()}`
-            
-            const newOrder=new Order({
-                orderId:customOrderId,
-                userId:req.session.userId,
-                shippingAddress:{
-                    name:orderAddress.name,
-                    street:orderAddress.street,
-                    city:orderAddress.city,
-                    state:orderAddress.state,
-                    pincode:orderAddress.pinCode,
-                    phone:user.phone,
-                    email:user.email
-                },
-                items:user.cart.map(item=>({
-                    productId:item.productId._id,
-                    quantity:item.quantity,
-                    price:item.productId.price
-                })),
-                totalPrice:finalAmount,
-                discount:discountAmount,
-                couponApplied:appliedCopounCode,
-                paymentMethod:'Online',
-                paymentStatus:'Pending',
-                orderStatus:'Pending'
-            })
-            await newOrder.save()
-
-    const options={
+    if(!userId){
+        return res.status(401).json({success:false,message:"User Not Found!"})
+    }
+           //call the orderHelper
+           const{order,finalAmount}=await createOrderHelper(userId,addressId,couponCode,'Online')
+       
+        const options={
         amount:finalAmount*100,//convert to paise
         currency:'INR',
         receipt:"receipt#1"
     }
     const RazorpayOrder=await instance.orders.create(options)
     
-    newOrder.razorpayOrderId=RazorpayOrder.id
-    await newOrder.save()
+    order.razorpayOrderId=RazorpayOrder.id
+    await order.save()
     res.json({
         success:true,
         order:RazorpayOrder,
