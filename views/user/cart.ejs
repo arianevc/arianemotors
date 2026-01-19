@@ -10,7 +10,7 @@
                 <div class="breadcrumb">
                     <a href="/" rel="nofollow">Home</a>
                     <span></span>
-                    <a href="/shop" rel="nofollow">Shop</a>
+                    <a href="/shop/products/" rel="nofollow">Shop</a>
                     <span></span> Your Cart
                 </div>
             </div>
@@ -41,36 +41,43 @@
                                     <% }else{ %>
                                     <% let total=0 %>
                                     <% cart.forEach(item=>{ %>
-                                        <tr>
+                                        <tr class="<%= item.stockStatus=='danger'?'bg-light-danger':'' %>">
                                             <td class="image product-thumbnail"><img src="<%= item.productId.images[0] %>" alt="product_img"></td>
                                             <td class="product-des product-name">
-                                                <h5 class="product-name"><a href="/product/<%=item.productId._id %>"><%= item.productId.name %></a></h5>
-                                                <p class="font-xs"><%= item.productId.productDescription %><br>
+                                                <h5 class="product-name"><a href="/shop/product/<%=item.productId._id %>"><%= item.productId.name.length>30?item.productId.name.slice(0,30)+"...":item.productId.name %></a></h5>
+                                                <p class="font-xs"><%= item.productId.productDescription.length>50?item.productId.productDescription.slice(0,30)+"...":item.productId.productDescription %><br>
                                                 </p>
-                                            </td>
-                                            <% if(item.productId.isDeleted) {%>
-                                            <td colspan="3">
-                                                <p class="text-danger">Item is blocked by admin</p>
-                                            </td>
-                                            <td class="action removebtn" data-product-id="<%=item.productId._id %>" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
-                                            <% }else{ %>
+                                                <% if(item.stockError){ %>
+                                                    <div class="text-danger mt-1 small">
+                                                        <i class="fi-rs-info"></i><strong><%=item.stockError %></strong>
+                                                    </div>
+                                                    <% } %>
+                                        
                                             <td class="price" data-title="Price">
-                                                <span id="product-price-<%=item.productId._id%>">₹<%= item.productId.price %> </span>
+                                                <span id="product-price-<%=item.productId._id%>">₹<%= item.productId.salePrice %> </span>
                                                 </td>
-                                            <td class="text-center" data-title="Stock">
+                                                <% if(item.stockStatus=='danger'){ %>
+                                                    <td class="text-center" colspan="2" data-title="Stock">
+                                                        <span  class="text-muted">Unavailable</span>
+                                                        </td>
+                                                        <% }else{ %>
+                                                            <td class="text-center" data-title="Stock">
                                                 <div class="detail-qty border radius d-flex justify-content-center  m-auto">
                                                     <button class="qty-btn" data-action="dec" data-product-id="<%=item.productId._id %>" style="border: none;background: none;">-</button>
                                                     <span class="qty-val" id="qty-val-<%=item.productId._id%>"><%= item.quantity %></span>
                                                     <button class="qty-btn" data-action="inc" data-product-id="<%=item.productId._id %>" style="border: none;background: none;">+</button>
-                                                    <% let subtotal=item.quantity*item.productId.price %>
-                                                    <% total+=subtotal %>
-                                                    </div>
+                                                </div>
                                             </td>
+                                            <% } %>
+                                            <% if(item.stockStatus!='danger'){ %>
                                             <td class="text-right" data-title="Cart">
-                                                <span id="subtotal-<%=item.productId._id %>">₹<%=subtotal.toFixed(2) %> </span>
-                                            </td>
+                                                <% let subtotal=item.quantity*item.productId.salePrice %>
+                                                <% total+=subtotal %>
+                                                    <span id="subtotal-<%=item.productId._id %>">₹<%=subtotal.toFixed(2) %> </span>
+                                                </td>
+                                            <% } %>
                                             <td class="action removebtn" data-product-id="<%=item.productId._id %>" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
-                                        <% } %>
+                                    
                                         </tr>
                                         <% }) %>
                                     
@@ -100,10 +107,6 @@
                                                 <tr>
                                                     <td class="cart_total_label">Shipping</td>
                                                     <td class="cart_total_amount"> <i class="ti-gift mr-5"></i> Free Shipping</td>
-                                                </tr>
-                                                <tr hidden id="coupon_field">
-                                                    <td class="cart_total_label">Coupon Applied</td>
-                                                    <td class="cart_total_amount">-100</td>
                                                 </tr>
                                                 
                                                 <tr>

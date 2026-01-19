@@ -9,7 +9,7 @@ import verifyEmail from "../../helpers/verifyEmail.js"
 import { getCommonData } from '../../helpers/commonData.js'
 import { validationResult } from 'express-validator'
 import Product from '../../model/productSchema.js'
-
+import { generateReferralCode } from '../../helpers/codeGenerator.js'
 
 //load Home page
 const LoadHomepage=async (req,res)=>{
@@ -153,7 +153,7 @@ function generateOtp() {
 }
 const userSignupPost=async (req,res)=>{
     try {
-        const {name,phone,email,password,cpassword}=req.body
+        const {name,phone,email,password,cpassword,referralCode}=req.body
         const errors=validationResult(req)
         if(!errors.isEmpty()){
             return res.status(400).json({success:false,errors:errors.array()})
@@ -170,11 +170,12 @@ const userSignupPost=async (req,res)=>{
         req.session.otpData={
             otp:otp,
             expiresAt:Date.now()+1*60*1000,
-            email:email
+            email:email,
         }
         // console.log(req.session.otpData)
-        req.session.userData={name,phone,email,password}
+        req.session.userData={name,phone,email,password,referralCode}
         console.log("OTP Sent: ",otp)
+       
         return res.json({success:true,email:email,message:"An OTP mail is sent to your E-mail ID "})
     } catch (error) {
         console.log("Signup error: ",error)
@@ -209,13 +210,44 @@ try {
             let abbr=user.name[0]+user.name[user.name.indexOf(' ')+1]
             let image=`https://placehold.co/300x300/088178/white?text=${abbr}`
         const hashedPassword=await bcrypt.hash(user.password,10)
+        //add referral code 
+        let newReferralCode=generateReferralCode()
+        //to avoid same referalcode(looping)
+        let codeExists=await User.findOne({referralCode:newReferralCode})
+        while(codeExists){
+            newReferralCode=generateReferralCode()
+            codeExists=await User.findOne({referralCode:newReferralCode})        
+        }
         const saveUserData=new User({
             name:user.name,
             phone:user.phone,
             email:user.email,
             profileImage:image,
-            password:hashedPassword
+            password:hashedPassword,
+            referralCode:newReferralCode
         })
+        //give reward coupon to the referrer
+        if(user.referralCode){
+            const referrer=await User.findOne({referralCode:user.referralCode})
+            if(referrer){
+                saveUserData.referredBy=referrer._id
+                referrer.wallet.balance+=100
+                referrer.wallet.transactions.push({
+                    amount:100,
+                    type:'Credit',
+                    description:`Referral bonus for inviting ${saveUserData.name}`,
+                    date:Date.now()
+                })
+                await referrer.save()
+            }
+            saveUserData.wallet.balance+=50
+            saveUserData.wallet.transactions.push({
+                    amount:50,
+                    type:'Credit',
+                    description:`Referral bonus for using referral code`,
+                    date:Date.now()
+                })
+        }
         await saveUserData.save()
         req.session.userData = null;
     }else if(req.session.userId){
@@ -288,6 +320,7 @@ const userloginPost=async (req,res)=>{
         req.session.userId=user._id
         req.session.loggedUser=user.name
         req.session.loggedUserImage=user.profileImage
+        req.session.loggedUserReferral=user.referralCode
         if(user.isAdmin){
             req.session.isAdmin=true
             return res.json({success:true,redirectUrl:'/admin'})

@@ -68,9 +68,15 @@
                                         </div>
                                         <div class="clearfix product-price-cover">
                                             <div class="product-price primary-color float-left">
-                                                <ins><span class="text-brand">₹<%=product.price%>.00</span></ins>
-                                                <ins><span class="old-price font-md ml-15">₹<%= (product.price*1.2).toFixed(2) %> </span></ins>
-                                                <span class="save-price  font-md color3 ml-15">10% Off</span>
+                                                <% if(discountPercentage&&discountPercentage>0){ %>
+                                                    <ins><span class="text-brand">₹<%=finalPrice%>.00</span></ins>
+                                                    <ins><span class="old-price font-md ml-15">₹<%= product.price.toFixed(2) %> </span></ins>
+                                                    <span class="save-price font-md color3 ml-15"><%=discountPercentage%>% Off</span>
+                                                    <span class="badge bg-info font-xl ms-3 offer-badge">Offer price!!</span>
+                                                    <% }else{ %>
+                                                        <ins><span class="text-brand">₹<%=product.price%>.00</span></ins>
+                                                        <ins><span class="old-price font-md ml-15">₹<%= (product.price*1.2).toFixed(2) %> </span></ins>
+                                                        <% } %>
                                             </div>
                                         </div>
                                         <div class="bt-1 border-color-1 mt-15 mb-15"></div>
@@ -134,14 +140,22 @@
                                                     </div>
                                                 </div>
                                                 <div class="product-content-wrap">
+                                                    <% if(product.price!=product.salePrice){ %>
+                                            <span class="badge bg-info offer-badge">Offer price!!</span>
+                                            <% } %>
                                                     <h2><a href="/shop/product/<%=item._id%>" tabindex="0"><%= item.name %></a></h2>
                                                     <div class="rating-result" title="90%">
                                                         <span>
                                                         </span>
                                                     </div>
                                                     <div class="product-price">
-                                                        <span>₹<%= item.price.toFixed(2) %> </span>
-                                                        <span class="old-price">₹<%= (item.price*1.2).toFixed(2) %></span>
+                                                         <% if(item.price==item.salePrice){ %>
+                                                <span>₹<%= item.price %>.00</span>
+                                                <span class="old-price">₹<%= (item.price*1.2).toFixed(2) %></span>
+                                                <% }else{ %>
+                                                    <span>₹<%= item.salePrice %>.00</span>
+                                                    <span class="old-price">₹<%= (item.price).toFixed(2) %></span>
+                                                    <% } %>
                                                     </div>
                                                 </div>
                                             

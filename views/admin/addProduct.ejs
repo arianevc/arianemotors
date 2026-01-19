@@ -53,6 +53,11 @@
                                     <input type="number" name="quantity" placeholder="Enter the quantity" class="form-control" id="quantity"/>
                                     <div id="error-quantity" class="error-message text-danger"></div>
                                 </div>
+                                 <div class="mb-4">
+                                    <label for="productOffer" class="form-label">Product Offer(%)</label>
+                                    <input type="number" name="productOffer" placeholder="Enter the Product Offer in %" class="form-control" id="productOffer"/>
+                                    <div id="error-productOffer" class="error-message text-danger"></div>
+                                </div>
                                 <div class="mb-4">
                                   <label class="form-label">Upload Image(s)</label>
                                   <div class="input-upload">                    
@@ -192,6 +197,7 @@ function addProductValidate() {
   const price=parseFloat(document.getElementById('product_price').value.trim())
   const quantity=document.getElementById('quantity').value.trim()
   const category=document.getElementById('category').value
+  const productOffer=parseFloat(document.getElementById('productOffer').value.trim())
 
   if(!name||name.length<2){
     document.getElementById('error-name').innerText="Enter a valid product name"
@@ -228,7 +234,10 @@ function addProductValidate() {
     document.getElementById('error-category').innerText = 'Please select a category';
     isValid = false;
   }
-
+//Product offer
+if(typeof(productOffer)!="number" ||productOffer>80){
+  document.getElementById('error-productOffer').innerText='Please enter a valid number for offer'
+}
   // Images
   if (croppedBlobs.length === 0) {
     document.getElementById('error-image').innerText = 'Please upload at least one image';
@@ -254,7 +263,7 @@ console.log("Validation result:", isValid);
     });
     return
   }
-    console.log("Validation failed");
+    // console.log("Validation failed");
 
     const formData = new FormData();
 
@@ -264,7 +273,7 @@ console.log("Validation result:", isValid);
     formData.append("price", document.getElementById("product_price").value);
     formData.append('quantity',document.getElementById("quantity").value)
     formData.append("category", document.getElementById("category").value);
-
+    formData.append("productOffer",document.getElementById('productOffer').value)
     
 
     // Add cropped images to formData

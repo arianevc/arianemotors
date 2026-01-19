@@ -48,7 +48,9 @@
                                     <% if (transactions.length > 0) { %>
                                         <% transactions.forEach(t => { %>
                                             <tr>
-                                                <td><%= new Date(t.date).toLocaleDateString() %></td>
+                                                <td><%= new Date(t.date).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'}) %>
+                                                    <%=new Date(t.date).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})  %>
+                                                </td>
                                                 <td><%= t.description %></td>
                                                 <td>
                                                     <%=t.transactionId %>

@@ -177,7 +177,7 @@ try {
         return res.json({success:false,message:'Invalid Return Request'})
     }
     //refund to wallet
-    const refundAmount=item.price*item.quantity
+    const refundAmount=item.salePrice*item.quantity
     user.wallet.balance+=refundAmount
     user.wallet.transactions.push({
         type:'Credit',

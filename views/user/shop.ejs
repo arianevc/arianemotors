@@ -25,7 +25,9 @@
                     <div class="col-lg-9">
                         <div class="shop-product-fillter">
                             <div class="totall-product">
-                                <p> We found <strong class="text-brand"><%= products.length %></strong> items for you!</p>
+                                <% if(products.length>0||count>0){ %>
+                                    <p> We found <strong class="text-brand" id="productCount"><%= count%></strong> items for you!</p>
+                                <% }%>
                             </div>
                             <div class="sort-by-product-area">
                                 <!-- <div class="sort-by-cover mr-10">
@@ -80,8 +82,8 @@
                             <h5 class="section-title style-1 mb-30 wow fadeIn animated">Category</h5>
                             <ul class="categories">
                               <% categoryList.forEach(category => {%>
-                                <li><a href="/shop/products?category=<%= category._id %>&search=<%= search || "" %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort || "" %>"
-                                    class="<%= categoryId == category._id.toString() ? 'active-category' : '' %>"><%= category.name %></a>
+                                <li><a href="#"
+                                    class="category-link <%= categoryId == category._id.toString() ? 'active-category' : '' %>" data-category="<%=category._id%>"><%= category.name %></a>
                                 </li>
                                 <% }) %>
                             </ul>
@@ -172,6 +174,8 @@
 
 <script>
     document.addEventListener('DOMContentLoaded',function(){
+      
+
         const clearfilterbtn=document.getElementById('clearfilterbtn')
         const sortTitle=document.querySelector(".sort-title")
         const productContainer=document.getElementById('product-container')
@@ -186,10 +190,12 @@
                 if(!response.ok)throw new Error('Network response was not ok')
                 const html=await response.text()
             productContainer.innerHTML=html
+            const count=response.headers.get('X-Total-Count')
+            document.getElementById('productCount').innerText=count
             //update browser URL without reloading
             window.history.pushState({},'',url)
             //scroll to top smoothly
-            productContainer.scrollIntoView({behavior:"smooth"})
+            // productContainer.scrollIntoView({behavior:"smooth"})
             } catch (error) {
                 console.error('Fetch error: ',error);
                                 
@@ -210,6 +216,7 @@
             urlParams.set('page',1)
 
             await fetchProducts(urlParams)
+            clearfilterbtn.removeAttribute('hidden')
         })        
         });
         //pagination logic
@@ -236,9 +243,27 @@
             urlParams.delete('category')
             urlParams.delete('sort')
            await fetchProducts(urlParams)
+           clearfilterbtn.setAttribute('hidden',true)
         })
     }
-
+    //category based filter
+    const categoryLinks=document.querySelectorAll(".category-link")
+    categoryLinks.forEach(link=>{
+        link.addEventListener('click',async function(e){
+            e.preventDefault()
+            try {
+            const urlParams=new URLSearchParams(window.location.search)
+            const categoryId=this.dataset.category
+            // console.log(urlParams.getAll());
+            urlParams.delete('page')
+            urlParams.set('category',categoryId)
+            await fetchProducts(urlParams)
+           clearfilterbtn.removeAttribute('hidden')            
+            } catch (error) {
+                console.error("Unable to fetch products based on categories: ",error);
+            }
+        })
+    })
     
     
     
