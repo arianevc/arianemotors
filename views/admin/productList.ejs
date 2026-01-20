@@ -268,6 +268,14 @@
   function initializeImageCropper(inputElement){
     inputElement.addEventListener('change',function(e){
       selectedFiles=Array.from(e.target.files)//to store the selected files
+      //check if they are images or not
+      for(let file of selectedFiles){
+        if(!file.type.startsWith('image/')){
+          Swal.fire("Invalid Image",`File ${file.name} is not an image`)
+          e.target.value=''
+          break
+        }
+      }
       imageIndex=0
       croppedBlobs=[]//resets cropped blobs
       previewContainer.innerHTML=''//to clear old cropped previews

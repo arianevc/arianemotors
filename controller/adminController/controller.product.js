@@ -96,6 +96,10 @@ try {
     //to add new images 
     let newImages=[]
     if(req.files&&req.files.length>0){
+      const invalidFiles=req.files.filter(file=>!file.mimetype.startsWith("image/"))
+      if(invalidFiles.length>0){
+        return res.status(400).json({success:false,message:"Invalid file type"})
+      }
       newImages=await processImages(req.files)
       // console.log(newImages)
       product.images.push(...newImages)

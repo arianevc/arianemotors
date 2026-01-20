@@ -123,8 +123,8 @@ try {
     res.json({
         success:true,
         order:RazorpayOrder,
-        dbOrderId:newOrder._id,
-        customOrderId:newOrder.orderId
+        dbOrderId:order._id,
+        customOrderId:order.orderId
     })
 } catch (error) {
     console.error("error in creazting Razorpay order: ",error);

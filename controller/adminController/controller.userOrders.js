@@ -98,6 +98,28 @@ const updateOrderStatus = async (req, res) => {
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found.' });
         }
+        //avoid changing status of orders in final stages
+        if (order.orderStatus === 'Cancelled') {
+            return res.status(400).json({ success: false, message: 'Cannot update a Cancelled order.' })
+        }
+        if (order.orderStatus === 'Returned') {
+            return res.status(400).json({ success: false, message: 'Cannot update a Returned order.' })
+        }
+        //delivered Item status can only be changed to returned
+        if (order.orderStatus === 'Delivered') {
+            if (newStatus !== 'Returned') {
+                return res.status(400).json({ success: false, message: 'Delivered orders can only be marked as Returned.' })
+            }
+        }
+        // If it's shipped, it cannot go back to Pending or Processing
+        if (order.orderStatus === 'Shipped') {
+            if (newStatus === 'Processing' || newStatus === 'Pending') {
+                return res.status(400).json({ success: false, message: 'Cannot revert a Shipped order to Pending or Processing.' });
+            }
+        }
+        if (order.paymentStatus === 'Paid' && newStatus === 'Pending') {
+            return res.status(400).json({ success: false, message: 'Payment is already completed. Cannot set status to Pending.' });
+        }
         //if new status is delivered update the stock of product
         if (newStatus === 'Delivered' && order.orderStatus !== 'Delivered') {
             if(order.paymentMethod=='COD'){

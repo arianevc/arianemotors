@@ -1,3 +1,29 @@
+<style>
+  .product-img img {
+  width: 100%;
+  height: 250px;   /* fixed height */
+  object-fit: cover; /* crop/scale nicely */
+}
+.product-card .product-title {
+  display: -webkit-box;
+  line-clamp: 2;   /* max 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 3em; /* reserve space so all cards align */
+}
+.product-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%; /* force equal height */
+}
+.product-listing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch; /* makes all children equal height */
+}
+</style>
 <div class="row product-grid-3">
     <% if(Array.isArray(products)&&products.length>=1){ %>
                             <% products.forEach(product=>{ %>
@@ -27,9 +53,11 @@
                                             <a href="/shop/products/?category=<%=product.category._id%>"><%=product.category.name %></a>
                                         </div>
                                         <% if(product.price!=product.salePrice){ %>
-                                            <span class="badge bg-info offer-badge">Offer price!!</span>
-                                            <% } %>
-                                        <h2><a href="/shop/product/<%= product._id %>"><%=product.brand%> <%= product.name %></a></h2>
+                                            <span class="badge bg-success offer-badge">Offer Price!</span>
+                                            <% }else{ %>
+                                                <span class="badge bg-info offer-badge">Best Deals!!</span>
+                                                <% } %>
+                                        <h2><a href="/shop/product/<%= product._id %>"><%=product.brand%> <%= product.name.length>15?product.name.slice(0,10)+"...":product.name %></a></h2>
                                         
                                         <!-- <div class="rating-result" title="90%">
                                             <span>
