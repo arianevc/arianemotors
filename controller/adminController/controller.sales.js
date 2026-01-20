@@ -7,10 +7,7 @@ import { log } from "node:console";
 // --- Helper: Get Date Range based on Filter ---
 const getDateRange = (filterType, startDate, endDate) => {
     let start = new Date();
-    let end = new Date();
-   console.log(startDate);
-   console.log(endDate);
-   
+    let end = new Date();   
     if (filterType === 'daily') {
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
@@ -21,12 +18,21 @@ const getDateRange = (filterType, startDate, endDate) => {
         start.setHours(0, 0, 0, 0);
     } else if (filterType === 'custom') {
         start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
         end = new Date(endDate);
+          start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            throw new Error("Please select valid Start and End dates");
+        }
         if(end<start){
             throw new Error("End Date should be lesser than Start Date")
         }
+        if (end > todayEnd) {
+            throw new Error("Future dates are not allowed. Please select today or a past date.");
+        }
+      
     }
     
     return { start, end };
@@ -60,12 +66,21 @@ const loadSalesReport = async (req, res) => {
             totalDiscount,
             filterType: filterType || 'daily',
             startDate: startDate || moment(start).format('YYYY-MM-DD'),
-            endDate: endDate || moment(end).format('YYYY-MM-DD')
+            endDate: endDate || moment(end).format('YYYY-MM-DD'),
         });
 
     } catch (error) {
         console.error("Sales Report Error:", error);
-        res.status(500).send(error.message||"Server Error");
+      res.render('admin/salesReport', {
+            orders: [],
+            totalSalesCount: 0,
+            totalOrderAmount: 0,
+            totalDiscount: 0,
+            filterType: req.query.filterType || 'daily',
+            startDate: req.query.startDate || '',
+            endDate: req.query.endDate || '',
+            errorMessage: error.message 
+        });
     }
 };
 

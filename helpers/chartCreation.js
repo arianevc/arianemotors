@@ -4,7 +4,6 @@ const processChartData=function (data,filter,startDate,endDate){
     const dataMap=new Map(data.map(item=>[item._id,item.totalSales]))
 
     let currentDate=new Date(startDate)
-
     while(currentDate<=endDate){
     if(filter==='yearly'){
         //Format key='2025-01'
@@ -15,6 +14,7 @@ const processChartData=function (data,filter,startDate,endDate){
             const label=currentDate.toLocaleString('default',{month:'short',year:'2-digit'})
             labels.push(label)
             revenueData.push(dataMap.get(key)||0)
+            currentDate.setMonth(currentDate.getMonth()+1)
 
     }else{
         //weekly/monthly

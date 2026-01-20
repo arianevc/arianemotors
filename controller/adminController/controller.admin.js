@@ -2,9 +2,42 @@
 import User from '../../model/userSchema.js'
 import Order from '../../model/orderSchema.js'
 import { processChartData } from '../../helpers/ChartCreation.js'
+import Product from '../../model/productSchema.js'
+import Category from '../../model/categorySchema.js'
 //load admin Dashboard
 const loadDashboard=async (req,res)=>{
     try{
+
+        //calculate total revenue
+        const revenueResult=await Order.aggregate([
+            {$match:{
+                orderStatus:{$nin:['Cancelled','Returned','Failed']}
+            }},
+            {$group:{
+                _id:null,
+                total:{$sum:'$totalPrice'}
+            }}
+        ])
+        const totalRevenue=revenueResult.length>0?revenueResult[0].total:0
+        //other datas
+        const totalOrders=await Order.countDocuments({orderStatus:{$ne:'Cancelled'}})
+        const totalProducts=await Product.countDocuments({isDeleted:false})
+        const totalCategories=await Category.countDocuments({isDeleted:false})
+        //calculate monthly revenue
+        const currentMonthStart=new Date(new Date().getFullYear(),new Date().getMonth(),1)
+        const monthlyEarningsResult=await Order.aggregate([
+            {
+                $match:{
+                    createdAt:{$gte:currentMonthStart},
+                    orderStatus:{$nin:['Cancelled','Returned']}
+                }
+            },
+            {$group:{
+                _id:null,
+                total:{$sum:'$totalPrice'}
+            }}
+        ])
+        const monthlyEarnings=monthlyEarningsResult.length>0?monthlyEarningsResult[0].total:0
         //show top 10 products
         const topProducts=await Order.aggregate([
             {$unwind:"$items"},
@@ -44,7 +77,7 @@ const loadDashboard=async (req,res)=>{
             {$sort:{totalSold:-1}},
             {$limit:10}
         ])
-       return res.render('admin/adminDashboard',{topProducts,topBrands,topCategories})
+       return res.render('admin/adminDashboard',{topProducts,topBrands,topCategories,totalRevenue,totalOrders,totalProducts,totalCategories,monthlyEarnings})
     }
     catch(error){
         console.log("Error occured: ",error)
