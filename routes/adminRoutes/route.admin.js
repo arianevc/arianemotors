@@ -8,9 +8,13 @@ import * as salesController from "../../controller/adminController/controller.sa
 import upload from '../../config/multer.js'
 import * as authenticate from '../../helpers/authenticate.js'
 const router = express.Router();
-
+//Show Admin dashboard
 router.get("/",authenticate.checkUserSession,adminController.loadDashboard);
+//Admin Dashboard Sales Chart
+router.get("/dashboard/chart-data",authenticate.checkUserSession,adminController.getChart)
+//redirect to login if no admin
 router.get("/login", authenticate.checkLoggedIn);
+//admin Logout
 router.post("/logout", adminController.adminLogout);
 //user management
 router.get("/users",adminController.loadUserList);

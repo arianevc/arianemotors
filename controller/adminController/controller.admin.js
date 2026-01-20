@@ -1,19 +1,98 @@
+
 import User from '../../model/userSchema.js'
-
-
+import Order from '../../model/orderSchema.js'
+import { processChartData } from '../../helpers/ChartCreation.js'
 //load admin Dashboard
 const loadDashboard=async (req,res)=>{
     try{
-        if(!req.session.isAdmin){
-            return res.redirect('/login')
-        }
-       return res.render('admin/adminDashboard')
+        //show top 10 products
+        const topProducts=await Order.aggregate([
+            {$unwind:"$items"},
+            {$group:{
+                _id:"$items.productId",
+                totalSold:{$sum:"$items.quantity"}
+            }},
+            {$sort:{totalSold:-1}},
+            {$limit:10},
+            {$lookup:{from:'products',localField:'_id',foreignField:'_id',as:'productInfo'}},
+            {$unwind:'$productInfo'},
+            {$project:{productName:'$productInfo.name',totalSold:1}}
+        ])
+        //show top 10 Brands
+        const topBrands=await Order.aggregate([
+            {$unwind:"$items"},
+            {$lookup:{from:'products',localField:'items.productId',foreignField:'_id',as:'product'}},
+            {$unwind:'$product'},
+            {$group:{
+                _id:'$product.brand',
+                totalSold:{$sum:"$items.quantity"}
+            }},
+            {$sort:{totalSold:-1}},
+            {$limit:10}
+        ])
+        //show top 10 categories
+        const topCategories=await Order.aggregate([
+            {$unwind:'$items'},
+            {$lookup:{from:'products',localField:'items.productId',foreignField:'_id',as:'product'}},
+            {$unwind:"$product"},
+            {$lookup:{from:'categories',localField:'product.category',foreignField:'_id',as:'category'}},
+            {$group:{
+                _id:"$category._id",
+                categoryName:{$first:"$category.name"},
+                totalSold:{$sum:"$items.quantity"}
+            }},
+            {$sort:{totalSold:-1}},
+            {$limit:10}
+        ])
+       return res.render('admin/adminDashboard',{topProducts,topBrands,topCategories})
     }
     catch(error){
         console.log("Error occured: ",error)
         res.status(500).send("Server Error")
     }
 
+}
+//get the data for the dashboard chart
+const getChart=async(req,res)=>{
+    try {
+        const {filter}=req.query
+        let startDate=new Date()
+        let endDate=new Date()
+        let groupFormat=""
+
+        if(filter==='yearly'){
+            startDate=new Date(new Date().getFullYear()-1,0,1)//from Jan 1st of 2025
+            groupFormat='%Y-%m'//group by YYYY-MM
+        }else if(filter==='monthly'){
+            startDate=new Date(new Date().getFullYear(),new Date().getMonth(),1)//from the first of the month
+            groupFormat='%Y-%m-%d'
+        }else if(filter==='weekly'){
+            startDate.setDate(startDate.getDate()-7)
+            groupFormat='%Y-%m-%d'
+        }
+
+        //aggregate the data
+        const salesData=await Order.aggregate([
+            {
+                $match:{
+                    createdAt:{$gte:startDate,$lte:endDate},
+                    orderStatus:{$ne:'Cancelled'}
+                }
+            },
+            {
+                $group:{
+                    _id:{$dateToString:{format:groupFormat,date:"$createdAt"}},
+                    totalSales:{$sum:'$totalPrice'}
+                }
+            },
+            {$sort:{_id:-1}}
+        ])
+        const result=processChartData(salesData,filter,startDate,endDate)
+        res.json(result)
+    } catch (error) {
+        console.error("Error in getting the data for the chart: ",error);
+        res.status(500).json({error:"Internal Server Error"})
+    }
 }
 //load registered users with pagination logic
 const loadUserList=async(req,res)=>{
@@ -92,4 +171,4 @@ const adminLogout=async (req,res)=>{
     })
 }
 
-export {loadDashboard,loadUserList,userStatusFilter,blockUser,adminLogout}
+export {loadDashboard,getChart,loadUserList,userStatusFilter,blockUser,adminLogout}
