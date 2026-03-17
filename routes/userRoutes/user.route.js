@@ -1,9 +1,9 @@
 import express from 'express'
 const router=express.Router()
 import passport from 'passport';
-import * as userController from "../../controller/userController/controller.user.js";
-import * as profileController from "../../controller/userController/controller.profile.js"
-import * as walletController from "../../controller/userController/controller.wallet.js"
+import * as userController from "../../controller/userController/user.controller.js";
+import * as profileController from "../../controller/userController/profile.controller.js"
+import * as walletController from "../../controller/userController/wallet.controller.js"
 import * as authenticate from '../../helpers/authenticate.js'
 import upload from "../../config/multer.js"
 import * as Validators from '../../helpers/expressValidator.js'
@@ -86,6 +86,8 @@ router.get('/order-failure',authenticate.checkUserSession,userController.loadOrd
 router.get('/orders/:orderId',authenticate.checkUserSession,userController.loadOrderDetails)
 router.get('/orders/invoice/:orderId',authenticate.checkUserSession,userController.downloadInvoice)
 router.get('/orders/cancel/:orderId',authenticate.checkUserSession,userController.cancelOrder)
+router.post('/orders/cancel-item',authenticate.checkUserSession,userController.cancelItem)
+
 router.post('/orders/return/:orderId',authenticate.checkUserSession,userController.returnOrder)
 router.post('/orders/return-item',authenticate.checkUserSession,userController.returnItems)
 //wallet management

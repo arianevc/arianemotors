@@ -74,8 +74,8 @@
                                                     <% } %>
                                         </div>
                                         <% if(product.quantity<1||product.quantity===undefined) {%>
-                                            <div>
-                                                <p class="text-danger">The product is out of stock. Please check after sometime</p>
+                                            <div class="w-100">
+                                                <p class="text-danger">The product is out of stock</p>
                                             </div>
                                             <% }else{ %>
                                                 <div class="product-action-1 show">
@@ -104,8 +104,10 @@
                                           </a>
                                         </li>
                                      <% } %>
+                                      <%let startPage=Math.max(1,Number(currentPage)-1)%>
+                                     <%let endPage=Math.min(totalPages,Number(currentPage)+1)%>
 
-                               <% for (let i = 1; i <= totalPages; i++) { %>
+                               <% for (let i = startPage; i <=endPage; i++) { %>
                                     <li class="page-item <%= i === currentPage ? 'active' : '' %>">
                                          <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
                                     </li>

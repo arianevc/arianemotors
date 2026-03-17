@@ -88,6 +88,7 @@
                                 <th width="20%">Unit Price</th>
                                 <th width="20%">Quantity</th>
                                 <th width="20%" class="text-end">Subtotal</th>
+                                <th width="20%">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -113,7 +114,19 @@
                                         Approve
                                         </button>
                                     </td>
-                                <% } %>
+                                    <% } else if(item.itemStatus == 'Cancelled') { %>
+                                    <td>
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    </td>
+                                    <% } else if(item.itemStatus == 'Returned') { %>
+                                    <td>
+                                        <span class="badge bg-info">Returned</span>
+                                    </td>
+                                    <% } else { %>
+                                    <td>
+                                        <span class="badge bg-success"><%= item.itemStatus %></span>
+                                    </td>
+                                    <% } %>
                                 </tr>
                             <% }) %>
                         </tbody>

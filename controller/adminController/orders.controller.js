@@ -126,12 +126,14 @@ const updateOrderStatus = async (req, res) => {
                 order.paymentStatus='Paid'
             }
             for (const item of order.items) {
-                // Find the product and decrease its stock
-                await Product.updateOne(
-                    { _id: item.productId },
-                    { $inc: { quantity: -item.quantity } } 
-                );
-                item.itemStatus='Delivered'
+                if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
+                    // Find the product and decrease its stock
+                    await Product.updateOne(
+                        { _id: item.productId },
+                        { $inc: { quantity: -item.quantity } } 
+                    );
+                    item.itemStatus='Delivered'
+                }
             }
         }
         //refund and re-stock on the product side
@@ -151,8 +153,10 @@ const updateOrderStatus = async (req, res) => {
             }
             //increment product stock
             for(const item of order.items){
-                await Product.updateOne({_id:item.productId},{$inc:{quantity:item.quantity}})
-                item.itemStatus='Returned'
+                if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
+                    await Product.updateOne({_id:item.productId},{$inc:{quantity:item.quantity}})
+                    item.itemStatus='Returned'
+                }
             }
         }
 
@@ -199,7 +203,12 @@ try {
         return res.json({success:false,message:'Invalid Return Request'})
     }
     //refund to wallet
-    const refundAmount=item.salePrice*item.quantity
+    const subtotal = order.totalPrice + order.discount;
+    const itemTotal = item.price * item.quantity;
+    const itemDiscount = (itemTotal / subtotal) * order.discount;
+    const refundAmount = parseFloat((itemTotal - itemDiscount).toFixed(2));
+
+    console.log("refund amount: ",refundAmount)
     user.wallet.balance+=refundAmount
     user.wallet.transactions.push({
         type:'Credit',

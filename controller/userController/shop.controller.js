@@ -15,6 +15,9 @@ const loadShop = async (req, res) => {
     const sort=req.query.sort||''
     const page=req.query.page||1
    
+    if(maxPrice<minPrice){
+        throw new Error("Maximum Price must be greater than Minimum Price")
+    }
     //build filter
     const filter={isDeleted:false,price:{$gte:minPrice,$lte:maxPrice}}
     //always apply search filter
@@ -166,7 +169,7 @@ const loadCart=async(req,res)=>{
             return (item.stockStatus=='ok'||item.stockStatus=='warning')?acc+(item.productId.salePrice*item.quantity):acc
         },0)
        
-        res.render('user/cart',{categoryList:categories,categoryId,search,cart:cartItemsWithStatus,cartTotal:cartTotal})
+        res.render('user/cart',{categoryList:categories,categoryId,search,cart:cartItemsWithStatus,cartTotal:cartTotal,cartHasError:cartHasError})
     } catch (error) {
         console.error("error in displaying the cart: ",error);
         res.status(500).send("Server Error")

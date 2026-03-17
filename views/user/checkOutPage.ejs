@@ -534,7 +534,7 @@
                 })
                 const orderData=await response.json()
                 if(!orderData.success){
-                    Swal.fire('Error!','Failed to create an order','error')
+                    Swal.fire('Error!',orderData.message||'Failed to create an order','error')
                 }
                 //options for the razorpay window
                 const options={

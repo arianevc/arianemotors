@@ -12,9 +12,12 @@
                 <div>
                     <h2 class="content-title card-title">Product Management </h2>
                     <p>Edit or Delete a product</p>
-                </div>
-                <!--Search bar-->
-                <div>
+                  </div>
+                  <!--Search bar-->
+                  <div class="d-flex gap-2">
+                  <div>
+                         <a href="/admin/addproduct"><button class="btn btn-md rounded font-sm hover-up">Add Product</button></a>
+                     </div>
                   <form action="/admin/products" method="get" class="mb-3 d-flex ">
                     
                     <input type="text" name="search" placeholder="Search Products" class="form-control bg-white" value="<%= search||""  %>">
@@ -67,8 +70,10 @@
             <img src="<%= product.images[0] %>" width="200" alt="image">
             
       </td>
-      <td style="height: 100%;" class="d-flex justify-content-between">
-        <button 
+      
+      <td>
+          <div class="d-flex justify-content-between">
+          <button 
           class="btn btn-warning edit-btn"
           data-bs-toggle="modal" 
           data-bs-target="#updateproduct"
@@ -81,12 +86,13 @@
           data-category="<%= product.category._id ||product.category%>"
           data-offer="<%= product.productOffer%>"
           data-images="<%= product.images %>"
-        ><i class="fa fa-pencil"></i>
+          ><i class="fa fa-pencil"></i>
         </button>
-          <button class="btn btn-<%= product.isDeleted?'success':'danger' %> delete-product-btn" data-id="<%= product._id %>" data-deleted="<%= product.isDeleted ?1:0%>" type="submit"><%= product.isDeleted?"Restore":"Delete" %></button>
-          
-          <button class="btn btn-danger removeBtn"  data-product-id="<%= product._id %>"><i class="fa fa-trash-o"></i></button>
+        <button class="btn btn-<%= product.isDeleted?'success':'danger' %> delete-product-btn" data-id="<%= product._id %>" data-deleted="<%= product.isDeleted ?1:0%>" type="submit"><%= product.isDeleted?"Restore":"Delete" %></button>
         
+        <button class="btn btn-danger removeBtn"  data-product-id="<%= product._id %>"><i class="fa fa-trash-o"></i></button>
+        
+      </div>
       </td>
     </tr>
   <% }) }%>

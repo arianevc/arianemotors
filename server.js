@@ -9,10 +9,10 @@ import dotenv from 'dotenv'
 const port=process.env.PORT||5000
 import passport from "./config/passport.js";
 import { cloudinaryConfig } from "./config/cloudinary.js";
-import userRoutes from './routes/userRoutes/route.user.js'
-import authRoutes from './routes/authRoute.js'
-import shopRoutes from './routes/userRoutes/route.shop.js'
-import adminRoutes from './routes/adminRoutes/route.admin.js'
+import userRoutes from './routes/userRoutes/user.route.js'
+import authRoutes from './routes/auth.route.js'
+import shopRoutes from './routes/userRoutes/shop.route.js'
+import adminRoutes from './routes/adminRoutes/admin.route.js'
 import setLocals from "./helpers/setLocals.js";
 
 app.use(nocache())
@@ -44,7 +44,6 @@ app.use('/', session({
         maxAge: 2 * 60 * 60 * 1000
     }
 }));
-
 
 app.use(passport.initialize())
 app.use(passport.session())

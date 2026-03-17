@@ -32,10 +32,20 @@ const loadCheckout=async(req,res)=>{
         const coupons=await Coupon.find({isActive:true,expiryDate:{$gt:new Date()}})
         const walletBalance=user.wallet.balance
         const phoneAndEmail={phone:user.phone,email:user.email}
-        //filter out unavailable or out of stock products
-       const availableCartItems=user.cart.filter(
-        item=>!item.productId.isDeleted&&item.productId.quantity>=1
-       )
+        // Check for stock availability
+        const hasStockError = user.cart.some(item => 
+           !item.productId || 
+           item.productId.isDeleted || 
+           item.productId.quantity < 1 || 
+           item.quantity > item.productId.quantity
+        );
+
+        if (hasStockError) {
+           return res.redirect('/shop/cart?error=stock');
+        }
+
+        // Keep all items since we've validated them
+        const availableCartItems = user.cart;
        let totalPrice=0
        availableCartItems.forEach(item=>{
         totalPrice+=item.productId.salePrice*item.quantity
@@ -128,7 +138,7 @@ try {
     })
 } catch (error) {
     console.error("error in creazting Razorpay order: ",error);
-    res.status(500).json({success:false,message:"Server error"})
+    res.status(500).json({success:false,message:"Server error"||error})
 }
 }
 //verification of Razorpay payment and Order is placed

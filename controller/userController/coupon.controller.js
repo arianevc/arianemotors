@@ -25,6 +25,9 @@ const applyCoupon=async(req,res)=>{
         if(totalAmount<coupon.minPurchaseAmount){
             return res.json({success:false,message:`Coupon valid only for purchase on or above ${coupon.minPurchaseAmount}`})
         }
+        if(totalAmount>coupon.maxPurchaseAmount){
+            return res.json({success:false,message:`Coupon valid only for purchase on or below ${coupon.maxPurchaseAmount}`})
+        }
         //calculate the discount
         let discountAmount=0
         if(coupon.discountType=='fixed'){

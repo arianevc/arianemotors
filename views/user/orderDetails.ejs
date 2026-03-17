@@ -93,7 +93,16 @@
                                     Return Item
                                     </button>
                                 </td>
-                                <% } %>
+                            <% } else if ((order.orderStatus === 'Pending' || order.orderStatus === 'Processing') && item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') { %>
+                            <td>
+                                    <button type="button" class="btn btn-sm btn-warning cancel-item-btn"
+                                    data-orderid="<%=order.orderId%>" data-itemid="<%= item._id %>">
+                                    Cancel Item
+                                    </button>
+                                </td>
+                            <% } else { %>
+                                <td></td>
+                            <% } %>
                         </tr>
                     <% }) %>
                 </tbody>
@@ -190,6 +199,42 @@
                 }
             })
         })
+        
+        //cancel item
+        document.querySelectorAll('.cancel-item-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const orderId = btn.dataset.orderid;
+                const itemId = btn.dataset.itemid;
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cancel this item?',
+                    text: 'Are you sure you want to cancel this item from your order?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, cancel it'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch('/orders/cancel-item', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ orderId, itemId })
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                Swal.fire('Success', data.message, 'success').then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error!', data.message, 'error');
+                            }
+                        } catch (error) {
+                            Swal.fire('Error!', 'Something went wrong', 'error');
+                        }
+                    }
+                });
+            });
+        });
         //entire order return
         const returnOrderBtn=document.getElementById('orderReturnBtn')
         if(returnOrderBtn){

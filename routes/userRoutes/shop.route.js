@@ -1,8 +1,8 @@
 import  express  from "express";
 const router=express.Router()
-import * as shopController from "../../controller/userController/controller.shop.js";
-import * as orderController from "../../controller/userController/controller.order.js"
-import * as couponController from "../../controller/userController/controller.coupons.js"
+import * as shopController from "../../controller/userController/shop.controller.js";
+import * as orderController from "../../controller/userController/order.controller.js"
+import * as couponController from "../../controller/userController/coupon.controller.js"
 import * as authenticate from "../../helpers/authenticate.js"
 
 //shop functions

@@ -296,8 +296,10 @@ console.log("submitting form")
     title: 'Success!',
     text: 'Product added successfully.',
     confirmButtonText: 'OK',
-  }).then(() => {
-    location.reload();
+  }).then((done) => {
+    if(done.isConfirmed){
+      window.location.href='/admin/products';
+    }
   });
 } else {
   if (result.priceError) {

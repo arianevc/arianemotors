@@ -112,7 +112,7 @@
                                                 <%-include('../partials/user/orderList')  %>
                                             </div>
                                         </div>
-
+                                        </div>
                                     <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <h5>My Addresses</h5>
@@ -563,6 +563,9 @@
         
         //orders page & search
         const orderContainer=document.getElementById('orders')
+        // console.log("orders container found? ",!!orderContainer);
+        
+        const orderTab=document.getElementById('orderTab')
         const orderFilterForm=document.getElementById('filterForm')
         const searchInput=document.getElementById('searchInput')
         const dateInput=document.getElementById('orderDateInput')
@@ -570,24 +573,24 @@
         const submitBtn=document.getElementById('submitFormBtn')
         const clearFilterBtn=document.getElementById('clearOrderFilterBtn')
         async function fetchOrders(page=1) {
-            const search=searchInput.value.trim()
-            const date=dateInput.value
-            const status=statusField.value
+            const search=searchInput?searchInput.value.trim():''
+            const date=dateInput?dateInput.value:''
+            const status=statusField?statusField.value:'All'
 
             const urlParams=new URLSearchParams({search,date,status,page})
             const url=`/order/search?${urlParams}`
+            
             try{
             const response=await fetch(url,{
-                headers:{'X-Requested-With':'XMLHttpRequest'},
+                headers:{'X-Requested-With':'XMLHttpRequest'}
             })
             if(!response.ok)throw new Error('Network issue in fetching orders')
             const html=await response.text()
-        
-        orderContainer.innerHTML=html
-        // window.history.pushState({},'',url)
+        if(orderContainer){
+            orderContainer.innerHTML=html
+        }
             }catch(error){
                 console.error("error in fetching orders: ",error);
-<<<<<<< HEAD
                 Swal.fire("Error!",error||"Server Error","error")
             } 
         }
@@ -608,68 +611,31 @@
             fetchOrders(1)
             clearFilterBtn.setAttribute('hidden',true)            
         })
+        //orderTab selection from the side pane behaviour
+        // orderTab.addEventListener('click',async function (e){
+        //     searchInput.value=''
+        //     dateInput.value=''
+        //     statusField.value='All'
+        //     e.preventDefault()
+        //     fetchOrders(1)
+        // })
         //pagination logic
         if(orderContainer){
-           
+            console.log("Attaching eventlistener to the orderContainer... ",);
             
             orderContainer.addEventListener('click',function(e){
                const link=e.target.closest('.page-link')
                
                if(!link)return
                e.preventDefault()
+               e.stopPropagation()
                const page=link.getAttribute('data-page')
-               console.log("page link: ",page);
+               console.log("page link clicked : ",page);
                if(page){
                 fetchOrders(page)
                }
-            })
+            },{capture:true})
         }
-=======
-                
-            }
-        })
-        //change password
-        async function submitPasswordChange(event) {
-        event.preventDefault(); // Stop page reload
-
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const errorText = document.getElementById('passwordError');
-
-        // Basic Validation
-        if (newPassword !== confirmPassword) {
-            errorText.textContent = "New passwords do not match!";
-            return;
-        }
-        if (newPassword.length < 6) {
-            errorText.textContent = "Password must be at least 6 characters long.";
-            return;
-        }
-
-        errorText.textContent = ""; // Clear errors
-
-        try {
-            const response = await fetch('/account/change-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPassword, newPassword })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                Swal.fire('Success', 'Password updated successfully', 'success')
-                .then(() => location.reload());
-            } else {
-                Swal.fire('Error', data.message, 'error');
-            }
-        } catch (error) {
-            console.error(error);
-            Swal.fire('Error', 'Something went wrong', 'error');
-        }
-    }
->>>>>>> feature/offers
     })
     </script>
 </body>

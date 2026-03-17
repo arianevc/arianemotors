@@ -26,14 +26,12 @@ const user=await User.findById(userId).populate('cart.productId')
 if(!user)throw new Error("User not found")  
 
 //check the cart length
+const cartItems = user.cart;
+if (!cartItems || cartItems.length === 0) throw new Error("Cart is empty");
 
-const cartItems=user.cart.filter(item=>{
-    return !item.productId.isDeleted&&item.productId.quantity>=1&&item.quantity<=item.productId.quantity    
-})
-if(!cartItems.length)throw new Error("Cart is empty")
-const stockCheck=validateCartStock(cartItems)
-if(!stockCheck.isValid){
-    throw new Error(stockCheck.message)
+const stockCheck = validateCartStock(cartItems);
+if (!stockCheck.isValid) {
+    throw new Error(stockCheck.message);
 }
 //calculate total
 let subtotal=0

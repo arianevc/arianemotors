@@ -117,7 +117,11 @@
                                         </table>
                                          
                                     </div>
-                                    <a href="/shop/checkout" class="btn "> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
+                                    <% if (cartHasError) { %>
+                                        <button onclick="Swal.fire('Stock Issue', 'Please remove unavailable items or adjust quantities before checking out', 'error')" class="btn btn-danger w-100"> <i class="fi-rs-box-alt mr-10"></i> Resolve Stock Issues to Proceed</button>
+                                    <% } else { %>
+                                        <a href="/shop/checkout" class="btn w-100"> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
+                                    <% } %>
                                 </div>
                             </div>
                         </div>
@@ -168,7 +172,17 @@
     <script src="/frontend/assets/js/shop.js?v=3.4"></script>
 <script>
     document.addEventListener('DOMContentLoaded',function(){
-
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'stock') {
+            Swal.fire(
+                'Stock Updated',
+                'Some items in your cart had stock changes since you added them. Please review the highlighted items before proceeding to checkout.',
+                'warning'
+            ).then(() => {
+                // Remove the error param from the URL cleanly
+                window.history.replaceState({}, document.title, window.location.pathname);
+            });
+        }
 
         //change qty of the product
         document.querySelector('tbody').addEventListener('click',function(e){
@@ -230,26 +244,71 @@
         const removebtns=document.querySelectorAll('.removebtn')
         removebtns.forEach(btn=>{
            btn.addEventListener('click',async function (e) {
+             e.preventDefault()
              const productId=btn.dataset.productId
-             await fetch(`/shop/cart/delete/${productId}`,{
-                method:'DELETE',
-                headers:{'Content-Type':'application/json'}
-             }).then(response=>response.json()).then(result=>{
-                if(result.success){
-                    Swal.fire({
-                        icon:"success",
-                        text:result.message,
-                        title:"Success"
-                    }).then(()=>{
-                        window.location.reload()
-                    })
-                }else{
-                    Swal.fire("Error",result.message,"error")
-                }
-             })
-             .catch(err=>{
-                    Swal.fire("Error","Some issues","error")
-                })
+             
+             Swal.fire({
+                 title: 'Are you sure?',
+                 text: "Remove this item from your cart?",
+                 icon: 'warning',
+                 showCancelButton: true,
+                 confirmButtonColor: '#3085d6',
+                 cancelButtonColor: '#d33',
+                 confirmButtonText: 'Yes, remove it!'
+             }).then(async (resultBox) => {
+                 if (resultBox.isConfirmed) {
+                     try {
+                         const response = await fetch(`/shop/cart/delete/${productId}`,{
+                            method:'DELETE',
+                            headers:{'Content-Type':'application/json'}
+                         });
+                         const result = await response.json();
+                         if(result.success){
+                             Swal.fire({
+                                 icon:"success",
+                                 text:result.message,
+                                 title:"Success",
+                                 timer: 1500,
+                                 showConfirmButton: false
+                             });
+                             // Remove the item's row from the table
+                             const row = btn.closest('tr');
+                             if (row) {
+                                 row.remove();
+                             }
+                             // Recalculate totals
+                             let newTotal = 0;
+                             document.querySelectorAll('span[id^="subtotal-"]').forEach(span => {
+                                 newTotal += parseFloat(span.textContent.replace('₹', '').trim()) || 0;
+                             });
+                             const finalTotal = document.getElementById('final-total');
+                             const grandTotal = document.getElementById('grand-total');
+                             if(finalTotal) finalTotal.textContent = `₹${newTotal.toFixed(2)}`;
+                             if(grandTotal) grandTotal.textContent = `₹${newTotal.toFixed(2)}`;
+                             
+                             // Update cart count badge
+                             const cartBadge = document.querySelector('.mini-cart-icon .pro-count');
+                             if(cartBadge) {
+                                 const currentCount = parseInt(cartBadge.textContent);
+                                 if(currentCount > 1) {
+                                     cartBadge.textContent = currentCount - 1;
+                                 } else {
+                                     cartBadge.remove(); // Remove badge if 0
+                                 }
+                             }
+
+                             // If no more items are left in the table, reload the page to show the empty cart message
+                             if(document.querySelectorAll('.removebtn').length === 0){
+                                 window.location.reload();
+                             }
+                         }else{
+                             Swal.fire("Error",result.message,"error")
+                         }
+                     } catch(err) {
+                         Swal.fire("Error","Some issues","error")
+                     }
+                 }
+             });
            })
         })
         //clear cart
