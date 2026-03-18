@@ -242,8 +242,10 @@
             urlParams.delete('page')
             urlParams.delete('category')
             urlParams.delete('sort')
+            urlParams.delete('search')
            await fetchProducts(urlParams)
            clearfilterbtn.setAttribute('hidden',true)
+           document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active-category'))
         })
     }
     //category based filter
@@ -252,8 +254,14 @@
         link.addEventListener('click',async function(e){
             e.preventDefault()
             try {
+           
             const urlParams=new URLSearchParams(window.location.search)
             const categoryId=this.dataset.category
+            
+            // Toggle active visual state immediately
+            categoryLinks.forEach(l => l.classList.remove('active-category'))
+            this.classList.add('active-category')
+
             // console.log(urlParams.getAll());
             urlParams.delete('page')
             urlParams.set('category',categoryId)

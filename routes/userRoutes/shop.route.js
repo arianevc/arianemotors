@@ -17,11 +17,11 @@ router.post('/wishlist/toggle/:productId',shopController.toggleWishlist)
 router.delete('/wishlist/delete/:productId',shopController.deleteFromWishlist)
 
 //cart management
-router.post('/cart/add',shopController.addProductToCart)
-router.get('/cart',shopController.loadCart)
-router.delete('/cart/clearCart',shopController.clearCart)
-router.delete('/cart/delete/:productId',shopController.deleteFromCart)
-router.post('/cart/update-quantity',shopController.updateCartQuantity)
+router.get('/cart',authenticate.checkUserSession,shopController.loadCart)
+router.post('/cart/add',authenticate.checkUserSession,shopController.addProductToCart)
+router.delete('/cart/clearCart',authenticate.checkUserSession,shopController.clearCart)
+router.delete('/cart/delete/:productId',authenticate.checkUserSession,shopController.deleteFromCart)
+router.post('/cart/update-quantity',authenticate.checkUserSession,shopController.updateCartQuantity)
 
 //coupon management
 router.post('/checkout/applyCoupon',authenticate.checkUserSession,couponController.applyCoupon)

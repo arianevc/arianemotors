@@ -124,6 +124,7 @@ const loadProductDetails=async(req,res)=>{
 const loadCart=async(req,res)=>{
     try {
         if(!req.session.userId){
+            req.session.returnTo=req.originalUrl
             return res.redirect('/login')
         }
         const search=req.query.search||""
@@ -305,6 +306,7 @@ const loadWishlist=async (req,res)=>{
         const user=await User.findById(req.session.userId).populate('wishList')
         res.render('user/wishList',{wishList:user.wishList,categoryList:categories,categoryId,search})
         }else{
+            req.session.returnTo=req.originalUrl
             return res.redirect('/login')
         }
     } catch (error) {

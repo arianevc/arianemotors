@@ -7414,6 +7414,10 @@ span.fi-rs-apps {
   padding: 30px;
   border: 1px solid #e8e8e8;
 }
+.categories{
+  max-height: 250px;
+  overflow-y: auto;
+}
 
 .widget-category ul > li {
   padding: 6px 0;

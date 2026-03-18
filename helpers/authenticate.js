@@ -12,6 +12,7 @@ const checkUserSession=async(req,res,next)=>{
     if(req.session.userId){
         next()
     }else{
+        req.session.returnTo=req.originalUrl
         res.redirect('/login')
     }
 }

@@ -19,9 +19,7 @@ const instance=new Razorpay({
 //display checkout page
 const loadCheckout=async(req,res)=>{
     try {
-         if(!req.session.userId){
-            return res.redirect('/login')
-         }
+         
         const userId=req.session.userId
        const commonData=await getCommonData()
         const user=await User.findById(userId).populate({

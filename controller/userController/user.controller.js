@@ -325,7 +325,13 @@ const userloginPost=async (req,res)=>{
             req.session.isAdmin=true
             return res.json({success:true,redirectUrl:'/admin'})
         }
-         return res.json({success:true,redirectUrl:'/'})
+        if(req.session.returnTo){
+            const redirect=req.session.returnTo
+            delete req.session.returnTo
+            return res.json({success:true,redirectUrl:redirect})
+        }else{
+            return res.json({success:true,redirectUrl:'/'})
+        }
         
     } catch (error) {
         console.log("Issue while user logging",error)
