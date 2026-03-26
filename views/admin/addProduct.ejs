@@ -1,7 +1,7 @@
 <%- include('../partials/admin/header') %>
         <section class="content-main">
             <div class="row">
-                <div class="col-9">
+                <div class="col-lg-8 mx-auto">
                     <div class="content-header">
                         <h2 class="content-title">Add New Product</h2>
                         <!-- <div>
@@ -9,7 +9,7 @@
                         </div> -->
                     </div>
                 </div>
-                <div class="col-lg-8">
+                <div class="col-lg-8 mx-auto">
                     <div class="card mb-4">
                         <div class="card-header">
                             <h4>Enter the Product Details</h4>
@@ -73,7 +73,7 @@
                                 </div>
 
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">Add Product</button>
+                                    <button type="submit" class="btn btn-primary" id="submitButton">Add Product</button>
                                 </div>
                             </form>
                         </div>
@@ -217,7 +217,7 @@ function addProductValidate() {
   }
   // Quantity
   
-  if (isNaN(quantity)||quantity<0) {
+  if (!quantity||isNaN(quantity)||quantity<0) {
     document.getElementById('error-quantity').innerText = 'Enter a proper quantity';
     isValid = false;
   }
@@ -247,6 +247,20 @@ console.log("Validation result:", isValid);
 
   return isValid;
 }
+//remove validation while inputting
+
+  const addproductform=document.getElementById('addproductform')
+  Array.from(addproductform.elements).forEach((element)=>{
+    if(element.tagName==="INPUT"||element.tagName==="TEXTAREA"){
+      element.addEventListener("input",function(){
+        const errorMessage=element.parentElement.querySelector('.error-message')
+        if(errorMessage){
+          errorMessage.textContent=""
+        }
+      })
+    }
+  })
+
  //======================
  // Add product Submit handler
  //==========================
@@ -263,6 +277,7 @@ console.log("Validation result:", isValid);
     });
     return
   }
+  
     // console.log("Validation failed");
 
     const formData = new FormData();
@@ -281,6 +296,10 @@ console.log("Validation result:", isValid);
       formData.append('images', blob, `cropped-${index}.jpeg`);
     });
 console.log("submitting form")
+const submitButton=document.getElementById('submitButton')
+  submitButton.disabled=true
+  submitButton.innerText="Verifying..."
+
 //add product fetch 
     try {
       console.log("response received")

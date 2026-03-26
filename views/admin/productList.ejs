@@ -204,7 +204,10 @@
          <button type="button" class="btn btn-primary" id="crop-next">Crop & Next</button>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-warning">Update</button>
+          <button type="submit" class="btn btn-warning" id="editSubmitBtn">Update</button>
+          <div style="display: none;" class="spinner-border text-primary" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>
         </div>
       </form>
     </div>
@@ -401,6 +404,10 @@ initializeImageCropper(imageInput)
     croppedBlobs.forEach((blob,index)=>{
       formData.append('images',blob,`cropped-${Date.now()}-${index}.jpg`)
     })
+    const editSubmitBtn=document.getElementById("editSubmitBtn")
+    editSubmitBtn.disabled=true
+    editSubmitBtn.innerText="Updating..."
+    document.querySelector(".spinner-border").removeAttribute('style')
     try {
       const response=await fetch(form.action,{
         method:'POST',

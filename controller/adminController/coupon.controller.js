@@ -1,9 +1,15 @@
 import Coupon from "../../model/couponModel.js";
-
+import { paginateHelper } from "../../helpers/pagination.js";
 const loadCoupons=async(req,res)=>{
 try {
-    const coupons=await Coupon.find().sort({createdAt:-1})
-    res.render('admin/coupons',{coupons})
+    const page=req.query.page
+    const filter={sort:{createdAt:-1}}
+    const paginatedData=await paginateHelper(Coupon,{page:page,limit:2})
+    const coupons = paginatedData.results
+
+    const totalPages=paginatedData.pagination.totalPages    
+    const currentPage=paginatedData.pagination.currentPage
+    res.render('admin/coupons',{coupons,totalPages,currentPage})
 } catch (error) {
     console.error("Error in displaying coupons: ",error);
     res.status(500).json({message:'Server Error'})

@@ -15,9 +15,42 @@
 .product-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   height: 100%; /* force equal height */
 }
+.product-cart-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.product-content-wrap {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.offer-badge {
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+.product-price {
+  margin-bottom: auto !important; /* pushes the action div down to the bottom */
+}
+.product-content-wrap .product-action-1 {
+  position: static !important;
+  transform: none !important;
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  opacity: 1 !important;
+  visibility: visible !important;
+  align-items: center; 
+}
+.out-of-stock-wrapper {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  min-height: 46px; /* Matches the approximate height of product action buttons */
+}
+
 .product-listing {
   display: flex;
   flex-wrap: wrap;
@@ -57,7 +90,7 @@
                                             <% }else{ %>
                                                 <span class="badge bg-info offer-badge">Best Deals!!</span>
                                                 <% } %>
-                                        <h2><a href="/shop/product/<%= product._id %>"><%=product.brand%> <%= product.name.length>15?product.name.slice(0,10)+"...":product.name %></a></h2>
+                                        <h2><a href="/shop/product/<%= product._id %>"><%=product.brand%> <%= product.name.length>15?product.name.slice(0,15)+"...":product.name %></a></h2>
                                         
                                         <!-- <div class="rating-result" title="90%">
                                             <span>
@@ -74,8 +107,8 @@
                                                     <% } %>
                                         </div>
                                         <% if(product.quantity<1||product.quantity===undefined) {%>
-                                            <div class="w-100">
-                                                <p class="text-danger">The product is out of stock</p>
+                                            <div class="out-of-stock-wrapper w-100">
+                                                <p class="text-danger mb-0" style="font-weight: bold;">The product is out of stock</p>
                                             </div>
                                             <% }else{ %>
                                                 <div class="product-action-1 show">
@@ -146,9 +179,11 @@
                                                 headers:{'Content-Type':'application/json'}
                                             }).then((response)=>response.json()).then((result)=>{
                                                 if(result.success){
+                                                    
+                                                    
                                                     Swal.fire({
                                                         icon:'success',
-                                                        timer:2000,
+                                                        timer:1000,
                                                         title:'Removed item from Cart',
                                                         showConfirmButton:false
                                                     })
@@ -161,7 +196,7 @@
                                                 }else{
                                                     Swal.fire({
                                                         icon:'error',
-                                                        timer:2000,
+                                                        timer:1000,
                                                         title:'Unable to remove from Cart',
                                                         text:result.message,
                                                         showConfirmButton:false
@@ -180,7 +215,7 @@
                                                 if(result.success){
                                                     Swal.fire({
                                                         icon:'success',
-                                                        timer:2000,
+                                                        timer:1000,
                                                         title:result.message,
                                                         showConfirmButton:false
                                                     })
@@ -195,7 +230,7 @@
                                                     console.error(result.message);
                                                     Swal.fire({
                                                          icon:'error',
-                                                        timer:2000,
+                                                        timer:1000,
                                                         title:'Error',
                                                         text:result.message||'Something wrong.Try again later',
                                                         showConfirmButton:false
@@ -205,9 +240,9 @@
                                                 console.error(err);
                                                 Swal.fire({
                                                          icon:'error',
-                                                        timer:2000,
-                                                        title:'Item added to cart',
-                                                        text:'Something wrong.Try again later',
+                                                        timer:1500,
+                                                        title:'Unable to add to cart',
+                                                        text:'Something Wrong.Please login or try again later.',
                                                         showConfirmButton:false
                                                     })
                                             })

@@ -111,7 +111,7 @@ const placeOrder=async(req,res)=>{
 const createRazorpayOrder=async(req,res)=>{
 try {
     const {addressId,couponCode}=req.body
-    // console.log(req.body)
+    console.log(req.body)
     const userId=req.session.userId
     if(!userId){
         return res.status(401).json({success:false,message:"User Not Found!"})

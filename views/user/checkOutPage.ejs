@@ -19,71 +19,91 @@
                     
                    
                 </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="divider mt-50 mb-50"></div>
-                    </div>
-                </div>
+                
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="mb-25">
+                        <div class="mb-25 d-flex justify-content-around">
                             <h4>Billing & Shipping Address</h4>
+                            <button class="btn btn-primary" type="button"  id="addAddressBtn" data-bs-toggle="modal" data-bs-target="#addressModal">Add New Address</button>
                         </div>
                         <% if(addresses && addresses.length>0) {%>
-                            <div class="radio-btns d-flex justify-content-evenly">
-                                <% addresses.forEach((addr,i)=>{ %>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="addressRadio" value="<%=i%>" id="addressRadio<%= i %>" <%= i==0?'checked':"" %>>
-                                        <label class="form-check-label" for="addressRadio<%= i %>">Use Address <%=i+1 %></label>
-                                    </div>
-                                    <% }) %>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="addressRadio" value="new" id="addr-new">
-                                        <label class="form-check-label" for="addr-new">Enter new Address</label>
-                                    </div>
+                            <div class="row" id="addressListContainer">
+                                            <% if(user.addresses && user.addresses.length>0){ %>
+                                                <% user.addresses.forEach((address,i) => { %>
+                                                    <div class="col-lg-6 p-3">
+                                                        <div class="card mb-3 mb-lg-0">
+                                                            <div class="d-flex justify-content-around card-header">
+                                                                <h5 class="mb-0">Address <%=i+1%></h5>
+                                                            </div>
+                                                        
+                                                            <div class="card-body">
+                                                                <strong><%=address.name%></strong><br>
+                                                                <address><%=address.street%>,<br><%=address.city%><br><%=address.state%>,<%=address.pinCode%></address>
+                                                                <button class="btn btn-secondary btn-sm use-address-btn" data-address-id="<%=i%>" >Use Address</button>
+                                                                
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <% }) %>
+                                                <% }else{ %>
+                                                    <p>You have no saved addresses</p>
+                                                    <%}%>
+                                        </div>
+                                
                                 </div>
                                 <% }else{%>
                                     <input type="radio" hidden name="addressRadio" value="new" checked>
                                     <h3>Enter an address</h3>
                                     <% } %>
+                                    <!--add address modal-->
+                                    <div class="modal fade" id="addressModal" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="addressModalTitle">Add Address</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form id="addressForm">
+                                                        <input type="hidden" name="addressId" id="addressId">
+                                                        <div class="mb-3">
+                                                            <label for="name" class="form-label">Full Name</label>
+                                                            <input type="text" name="name" id="name">
+                                                            <p class="error-message text-danger" id="nameError"></p>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="street" class="form-label">Street</label>
+                                                            <input type="text" name="street" id="street" >
+                                                            <p class="error-message text-danger" id="streetError"></p>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="city" class="form-label">City</label>
+                                                            <input type="text" name="city" id="city">
+                                                            <p class="error-message text-danger" id="cityError"></p>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="state" class="form-label">State</label>
+                                                            <input type="text" name="state" id="state">
+                                                            <p class="error-message text-danger" id="stateError"></p>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="pincode" class="form-label">Pincode</label>
+                                                            <input type="number" name="pinCode" id="pinCode">
+                                                            <p class="error-message text-danger" id="pinError"></p>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary" form="addressForm">Save Changes</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
-                                    <form method="post" id="addressForm">
-                            <div class="form-group">
-                                <input type="text" class="text-white" style="background-color: #088178;" required="" name="name" id="name" placeholder="Name *" readonly>
-                                <p style="color: red;" id="nameError"></p>
-                            </div>
-                            <div class="form-group">
-                                <input type="text" class="text-white" style="background-color: #088178;" name="street" required="" id="street" placeholder="Street/Line *" readonly>
-                                <p style="color: red;" id="streetError"></p>
-                            </div>
-                            <div class="form-group">
-                                <input required="" class="text-white" style="background-color: #088178;" type="text" name="city" id="city" placeholder="City / Town *" readonly>
-                                <p style="color: red;" id="cityError"></p>
-                            </div>
-                            <div class="form-group">
-                                <input required="" class="text-white" style="background-color: #088178;" type="text" name="state" id="state" placeholder="State*" readonly>
-                                <p style="color: red;" id="stateError"></p>
-                            </div>
-                            <div class="form-group">
-                                <input required="" class="text-white" style="background-color: #088178;" type="text" name="pinCode" id="pinCode" placeholder="Postcode / PIN *" readonly>
-                                <p style="color: red;" id="pinError"></p>
-                            </div>
-                            <div class="error-messages">
-                            </div>
-                            <button id="addAddressBtn" class="btn btn-primary" type="submit" hidden form="addressForm">Add Address</button>
-                        </form>
-                        <br>
-                        <h5 class="p-2">You can edit your addresses in <a href="/account" style="text-decoration: underline;">Your Profile</a></h5>
-                        <div class="form-group">
-                            <input class="text-white" style="background-color: #088178;" type="text" name="country" id="country" placeholder="Country" value="India">
-                        </div>
-                        <div class="form-group">
-                            <input class="text-white" style="background-color: #088178;" type="text" name="phone" id="phone" placeholder="Phone" value="<%=user.phone %>">
-                        </div>
-                        <div class="form-group">
-                            <input class="text-white" style="background-color: #088178;" type="text" name="email" id="email" placeholder="Email" value="<%= user.email %>">
-                        </div>
-                    </div>
+                       
+                        
+                    
                     <div class="col-md-6">
                         <div class="order_review">
                                 <div class="mb-30 mt-50">
@@ -220,6 +240,7 @@
         <div id="payment-message" class="mt-4 text-center"></div>
                     </div>
                 </div>
+                </div>
                 <% }else{ %>
 
                     <h3 style="color: #088178;text-align: center;" class="justify-content-center">No available items in cart purchase. Please check the availability of products before checkout</h3>
@@ -233,19 +254,93 @@
     </main>
 <%-include('../partials/user/footer') %>
 <script>
-    //selecting the address
     document.addEventListener('DOMContentLoaded',()=>{
-       const addresses=<%-JSON.stringify(addresses||[]) %>
-       
-       
-       
-       const nameField=document.getElementById('name')
-       const streetField=document.getElementById('street')
-       const cityField=document.getElementById('city')
-       const stateField=document.getElementById('state')
-       const pinCode=document.getElementById('pinCode')
+    //selecting the address
+    let addressId=''
+       useAddressBtns=document.querySelectorAll('.use-address-btn')
+       useAddressBtns.forEach((btn)=>{
+        btn.addEventListener('click',()=>{
+        addressId=btn.dataset.addressId
+        btn.disabled=true 
+        btn.innerText='Selected'
+        const card=btn.closest(".card")
+        const header=card.querySelector('.card-header')
+        const icon=document.createElement('i')
+        icon.classList.add('fa' ,'fa-check')
+        icon.setAttribute('style','font-size:20px;color:green')
+        header.appendChild(icon)
+        useAddressBtns.forEach((otherBtn)=>{
+            if(otherBtn.dataset.addressId!=addressId){
+                otherBtn.disabled=false
+                otherBtn.innerText='Use Address'
+                const otherCard=otherBtn.closest('.card')
+                const otherHeader=otherCard.querySelector('.card-header')
+                const otherIcon=otherHeader.querySelector('i')
+                if(otherIcon)otherIcon.remove()
+                
+            }
 
-       const addAddressBtn=document.getElementById('addAddressBtn')
+        })   
+            
+        })
+       })
+       
+       
+       
+       
+       
+      function checkErrors(inputFields){
+        let flag=true
+        console.log(inputFields)
+        if(inputFields.name==''||inputFields.name==undefined||typeof(inputFields.name)!="string"){
+            console.log("input name: ",inputFields.name);
+            
+            document.getElementById('nameError').textContent='*Enter a valid Name'
+            flag=false
+        }
+        if(inputFields.street==''||inputFields.street==undefined||typeof(inputFields.street)!="string"){
+            document.getElementById('streetError').textContent='*Enter a valid Street Name'
+            flag=false
+        }
+        if(inputFields.city==''||inputFields.city==undefined||typeof(inputFields.city)!="string"){
+            document.getElementById('cityError').textContent='*Enter a valid city Name'
+            flag=false
+        }
+        if(inputFields.state==''||inputFields.state==undefined||typeof(inputFields.state)!="string"){
+            document.getElementById('stateError').textContent='*Enter a valid State Name'
+            flag=false
+        }
+        if(inputFields.pinCode==undefined||inputFields.pinCode.toString().length!=6||typeof(inputFields.pinCode)!="number"){
+            document.getElementById('pinError').textContent='*Enter a valid 6-digit Pin Code'
+            flag=false
+        }
+        return flag
+      }
+       //remove validation while inputting
+
+  
+       const addressForm=document.getElementById('addressForm')
+  Array.from(addressForm.elements).forEach((element)=>{
+    if(element.tagName==="INPUT"){
+      element.addEventListener("input",function(){
+        const errorMessage=element.parentElement.querySelector('.error-message')
+        if(errorMessage){
+          errorMessage.textContent=""
+        }
+      })
+    }
+  })
+        
+
+       //submit add addressForm
+       addressForm.addEventListener('submit',async(e)=>{
+        e.preventDefault()
+        const nameField=document.getElementById('name').value.trim()
+       const streetField=document.getElementById('street').value.trim()
+       const cityField=document.getElementById('city').value.trim()
+       const stateField=document.getElementById('state').value.trim()
+       const pinCode=Number(document.getElementById('pinCode').value.trim())
+
        
        const fields={
         name:nameField,
@@ -254,95 +349,33 @@
         state:stateField,
         pinCode:pinCode
        }
-       //for populating the fields
-       function populateForm(address) {
-        if(!address)return
-        Object.entries(fields).forEach(([key,field])=>{
-            field.value=address[key]
-            field.classList.add('text-white')
-            field.setAttribute('readonly','')
-            field.style.backgroundColor='#088178'
-        })
-       }
-
-       //to clear the previous values from fields
-       function clearForm() {
-         Object.values(fields).forEach(field=>{
-                field.removeAttribute('style')
-                field.removeAttribute('readonly')
-                field.value=''
-                field.className=''
+       
+        const validate=checkErrors(fields)
+        console.log("validation result: ",validate);
         
-    })
-       }
-
-       //event listeners on radios
-       const radioBtns=document.querySelectorAll('input[name="addressRadio"]')
-       radioBtns.forEach(btn=>{
-        btn.addEventListener('change',(e)=>{
-            const selectedValue=e.target.value
-            
-            if(selectedValue=='new'){
-                clearForm()
-                addAddressBtn.removeAttribute('hidden')
-            }else{
-                const index=parseInt(selectedValue)
-                const selectedAddress=addresses[index]
-                populateForm(selectedAddress)
-                addAddressBtn.setAttribute('hidden',true)
-                  document.getElementById('nameError').textContent=''
-        document.getElementById('streetError').textContent=''
-        document.getElementById('cityError').textContent=''
-        document.getElementById('stateError').textContent=''
-        document.getElementById('pinError').textContent=''
-            }
-            
-        })
-    })
-    //on initial page load
-    const initiallyChecked=document.querySelector('input[name=addressRadio]:checked')
-    if(initiallyChecked){
-        const initialValue=initiallyChecked.value
-        if(initialValue=='new'){
-            clearForm()
-            addAddressBtn.removeAttribute('hidden')
-        }else{
-            const initialIndex=parseInt(initialValue)
-            const initialAddress=addresses[initialIndex]
-            populateForm(initialAddress)
-            addAddressBtn.setAttribute('hidden',true)
+        if(!validate){
+            Swal.fire('Validation error!','Please validate your entries','error')
+            return  
         }
-       }else if(addresses.length===0){
-        clearForm()
-       }
-
-       //submit add addressForm
-       const addressForm=document.getElementById('addressForm')
-       addAddressBtn.addEventListener('click',async(e)=>{
-        e.preventDefault()
-        //Adding new address
-        const errorContainer=document.querySelector('.error-messages')
-        const formData=new FormData(addressForm)
         
-        const data=Object.fromEntries(formData.entries())
-        console.log(data);
+        //Adding new address
+        
+        
+        
+        
+        
         const url=`/account/addresses`
         try {
             const response =await fetch(url,{
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
-                body:JSON.stringify(data)
+                body:JSON.stringify(fields)
             })
             const result=await response.json()
             if(!response.ok){
                 if(response.status==400 &&result.errors){
-                    const errorMessages=result.errors.map(err=>err.msg).join('\n*')
-                    const p=document.createElement('p')
-                    p.classList.add('text-danger')
-                    p.innerText=errorMessages
-                    errorContainer.appendChild(p)
             
-                    Swal.fire('Validation error!','Please validate your entries','error')
+                    Swal.fire('Validation error at the backend!','Please validate your entries','error')
                 }else{
                     Swal.fire('Error!',result.message,'error')
                 }
@@ -472,18 +505,18 @@
        
         placeOrderBtn.addEventListener('click',async function(e){
             e.preventDefault()
-            const selectRadio=document.querySelector('input[name="addressRadio"]:checked')
+            
             const paymentOption=document.querySelector('input[name="payment_option"]:checked')
         console.log("payment option selected: ",paymentOption.value);
         
-        let selectedAddressId=null
+        let selectedAddressId=addressId
         //make sure new address was added to the user addresses
-        if(selectRadio.value==='new'||!selectRadio){
+        if(selectedAddressId==''||!selectedAddressId){
             Swal.fire("Error!","Please select an address or Add new address",'error')
             return
         }
         //storing selected addresses's index
-        selectedAddressId=selectRadio.value
+       
         console.log("selected Address index for placing order: ",selectedAddressId);
         placeOrderBtn.disabled=true
         
