@@ -16,12 +16,13 @@
     <div class="card mb-4">
         <header class="card-header">
             <form action="/admin/sales-report" method="GET" id="filterForm">
-                <div class="row gx-3">
-                    <div class="col-lg-3 col-md-3 me-auto">
+                <div class="row gx-3 align-items-end">
+                    <div class="col-lg-3 col-md-3">
                         <label>Filter By</label>
                         <select class="form-select" name="filterType" id="filterType" onchange="toggleCustomDate()">
                             <option value="daily" <%= filterType === 'daily' ? 'selected' : '' %>>Daily</option>
                             <option value="weekly" <%= filterType === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                            <option value="monthly" <%= filterType === 'monthly' ? 'selected' : '' %>>Monthly</option>
                             <option value="yearly" <%= filterType === 'yearly' ? 'selected' : '' %>>Yearly</option>
                             <option value="custom" <%= filterType === 'custom' ? 'selected' : '' %>>Custom Date</option>
                         </select>
@@ -79,6 +80,30 @@
                     </div>
                 </div>
             </div>
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-danger-light"><i class="text-danger material-icons md-assignment_return"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Returns Amount</h6>
+                                <span>₹<%= totalReturnsAmount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-danger-light"><i class="text-danger material-icons md-cancel"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Cancellations Amount</h6>
+                                <span>₹<%= totalCancellationsAmount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
 
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -87,6 +112,7 @@
                             <th>Order ID</th>
                             <th>Date</th>
                             <th>Customer</th>
+                            <th>Status</th>
                             <th>Total</th>
                             <th>Discount</th>
                             <th>Coupon</th>
@@ -100,6 +126,17 @@
                                     <td><%= order.orderId %></td>
                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                     <td><%= order.userId ? order.userId.name : 'Unknown' %></td>
+                                    <td>
+                                        <% if(order.orderStatus === 'Delivered') { %>
+                                            <span class="badge rounded-pill bg-success"><%= order.orderStatus %></span>
+                                        <% } else if(order.orderStatus === 'Returned') { %>
+                                            <span class="badge rounded-pill bg-warning"><%= order.orderStatus %></span>
+                                        <% } else if(order.orderStatus === 'Cancelled') { %>
+                                            <span class="badge rounded-pill bg-danger"><%= order.orderStatus %></span>
+                                        <% } else { %>
+                                            <span class="badge rounded-pill bg-info"><%= order.orderStatus %></span>
+                                        <% } %>
+                                    </td>
                                     <td>₹<%= order.totalPrice.toFixed(2) %></td>
                                     <td>₹<%= order.discount.toFixed(2) %></td>
                                     <td><%= order.couponApplied || 'None' %></td>
@@ -112,6 +149,28 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <div class="pagination-area mt-30 mb-50" id="pagination-container">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-start">
+                            <% if (currentPage > 1) { %>
+                                <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage - 1 %>"><i class="material-icons md-chevron_left"></i></a></li>
+                            <% } %>
+                            <% for(let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= currentPage == i ? 'active' : '' %>">
+                                    <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                            <% if (currentPage < totalPages) { %>
+                                <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage + 1 %>"><i class="material-icons md-chevron_right"></i></a></li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                </div>
+            <% } %>
+
         </div>
     </div>
 </section>
@@ -137,5 +196,85 @@
             input.style.display = (type === 'custom') ? 'block' : 'none';
         });
     }
+
+    document.addEventListener('submit', async function(e) {
+        const form = e.target.closest('#filterForm');
+        if (!form) return;
+        
+        e.preventDefault();
+        const formData = new FormData(form);
+        const urlParams = new URLSearchParams(formData);
+        
+        const url = `/admin/sales-report?${urlParams.toString()}`;
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newContent = doc.querySelector('.content-main');
+            const oldContent = document.querySelector('.content-main');
+            
+            if (newContent && oldContent) {
+                oldContent.innerHTML = newContent.innerHTML;
+            }
+            
+            window.history.pushState({}, '', url);
+            
+        } catch (error) {
+            console.error('Fetch error:', error);
+            Swal.fire('Error', 'Failed to apply filter', 'error');
+        }
+    });
+
+    document.addEventListener('click', async function(e) {
+        const link = e.target.closest('.page-link');
+        if (!link) return;
+        
+        e.preventDefault();
+        const page = link.getAttribute('data-page');
+        if (!page) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', page);
+        
+        // Ensure filter params are also passed if needed (actually they are in window.location.search)
+        
+        const url = `/admin/sales-report?${urlParams.toString()}`;
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newTable = doc.querySelector('.table-responsive');
+            const oldTable = document.querySelector('.table-responsive');
+            if(newTable && oldTable) {
+                oldTable.innerHTML = newTable.innerHTML;
+            }
+            
+            const newPagination = doc.querySelector('#pagination-container');
+            const oldPagination = document.querySelector('#pagination-container');
+            
+            if(newPagination && oldPagination) {
+                oldPagination.innerHTML = newPagination.innerHTML;
+            } else if (newPagination && !oldPagination) {
+                const cardBody = document.querySelector('.card-body');
+                if (cardBody) cardBody.appendChild(newPagination);
+            }
+            
+            window.history.pushState({}, '', url);
+            
+        } catch (error) {
+            console.error('Fetch error:', error);
+            Swal.fire('Error', 'Failed to fetch page data', 'error');
+        }
+    });
 </script>
 

@@ -19,11 +19,11 @@ const loadCategories=async(req,res)=>{
         const categories=await Category.find(query)
         .sort({createdAt:-1}).skip((page-1)*limit).limit(limit)
 
-        const total=Category.countDocuments(query)
-        const totalPages=Math.ceil(total/limit)
+        const total = await Category.countDocuments(query);
+        let totalPages = Math.ceil(total/limit);
+        if (totalPages === 0) totalPages = 1;
 
-
-        res.render('admin/categoryList',{categories,currentPage:page,totalPages,search})
+        res.render('admin/categoryList',{categories,currentPage:page,totalPages,search: search || ''})
     } catch (error) {
         console.log("Error in categories",error)
         res.status(500).send("Error in categories from server")

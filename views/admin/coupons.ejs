@@ -129,6 +129,28 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- Pagination -->
+                        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                            <div class="pagination-area mt-30 mb-50" id="pagination-container">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination justify-content-start">
+                                        <% if (currentPage > 1) { %>
+                                            <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage - 1 %>"><i class="material-icons md-chevron_left"></i></a></li>
+                                        <% } %>
+                                        <% for(let i = 1; i <= totalPages; i++) { %>
+                                            <li class="page-item <%= currentPage == i ? 'active' : '' %>">
+                                                <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                            </li>
+                                        <% } %>
+                                        <% if (currentPage < totalPages) { %>
+                                            <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage + 1 %>"><i class="material-icons md-chevron_right"></i></a></li>
+                                        <% } %>
+                                    </ul>
+                                </nav>
+                            </div>
+                        <% } %>
+
                     </div>
 
                 </div>
@@ -240,23 +262,63 @@
                 }
             })
             // Populate edit modal
-            const editButtons = document.querySelectorAll('.edit-coupon');
-            editButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.getElementById('edit_coupon_id').value = btn.dataset.id;
-                    document.getElementById('edit_coupon_code').value = btn.dataset.code;
-                    document.getElementById('edit_discount_type').value = btn.dataset.type;
-                    document.getElementById('edit_discount_value').value = btn.dataset.value;
-                    document.getElementById('edit_min_purchase').value = btn.dataset.min;
-                    document.getElementById('edit_max_purchase').value = btn.dataset.max;
-                    
-                    const expiryDate = new Date(btn.dataset.expiry);
-                    if (!isNaN(expiryDate.getTime())) {
-                        const formattedDate = expiryDate.toISOString().split('T')[0];
-                        document.getElementById('edit_expiry_date').value = formattedDate;
-                    }
+            function bindTableEvents() {
+                const editButtons = document.querySelectorAll('.edit-coupon');
+                editButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.getElementById('edit_coupon_id').value = btn.dataset.id;
+                        document.getElementById('edit_coupon_code').value = btn.dataset.code;
+                        document.getElementById('edit_discount_type').value = btn.dataset.type;
+                        document.getElementById('edit_discount_value').value = btn.dataset.value;
+                        document.getElementById('edit_min_purchase').value = btn.dataset.min;
+                        document.getElementById('edit_max_purchase').value = btn.dataset.max;
+                        
+                        const expiryDate = new Date(btn.dataset.expiry);
+                        if (!isNaN(expiryDate.getTime())) {
+                            const formattedDate = expiryDate.toISOString().split('T')[0];
+                            document.getElementById('edit_expiry_date').value = formattedDate;
+                        }
+                    });
                 });
-            });
+
+                //delete coupon
+                const deleteButttons = document.querySelectorAll('.delete-coupon')
+                deleteButttons.forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.preventDefault()
+                        const couponId = btn.dataset.id
+                        console.log(("coupon Id: ", couponId));
+                        const result = await Swal.fire({
+                            title: 'Are you Sure?',
+                            text: 'The coupon will be removed permenantly!',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, Delete It!'
+                        })
+                        if (result.isConfirmed) {
+                            try {
+                                const response = await fetch(`/admin/coupons/deleteCoupon?id=${couponId}`, {
+                                    method: 'DELETE',
+                                })
+                                const data = await response.json()
+                                if (data.success) {
+                                    Swal.fire("Success!", result.message || "Successfully deleted coupon", 'success').then(() => {
+                                        window.location.reload()
+                                    })
+                                } else {
+                                    Swal.fire("Error!", result.message, 'error')
+                                }
+                            } catch (error) {
+                                Swal.fire('Error!', 'Server Error', 'error')
+                                console.error(error);
+
+                            }
+                        }
+
+                    })
+                })
+            }
+
+            bindTableEvents();
 
             // Save edit coupon
             document.getElementById('saveEditCouponBtn').addEventListener('click', async (e) => {
@@ -305,43 +367,53 @@
                 }
             });
 
-            //delete coupon
-            const deleteButttons = document.querySelectorAll('.delete-coupon')
-            deleteButttons.forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.preventDefault()
-                    const couponId = btn.dataset.id
-                    console.log(("coupon Id: ", couponId));
-                    const result = await Swal.fire({
-                        title: 'Are you Sure?',
-                        text: 'The coupon will be removed permenantly!',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, Delete It!'
-                    })
-                    if (result.isConfirmed) {
-                        try {
-                            const response = await fetch(`/admin/coupons/deleteCoupon?id=${couponId}`, {
-                                method: 'DELETE',
-                            })
-                            const data = await response.json()
-                            if (data.success) {
-                                Swal.fire("Success!", result.message || "Successfully deleted coupon", 'success').then(() => {
-                                    window.location.reload()
-                                })
-                            } else {
-                                Swal.fire("Error!", result.message, 'error')
-                            }
-                        } catch (error) {
-                            Swal.fire('Error!', 'Server Error', 'error')
-                            console.error(error);
+            // DOMParser pagination logic
+            document.addEventListener('click', async function(e) {
+                const link = e.target.closest('.page-link');
+                if (!link) return;
+                
+                e.preventDefault();
+                const page = link.getAttribute('data-page');
+                if (!page) return;
 
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('page', page);
+                
+                const url = `/admin/coupons?${urlParams.toString()}`;
+                
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const html = await response.text();
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newTable = doc.querySelector('.table-responsive');
+                    const oldTable = document.querySelector('.table-responsive');
+                    if(newTable && oldTable) {
+                        oldTable.innerHTML = newTable.innerHTML;
+                    }
+                    
+                    const newPagination = doc.querySelector('#pagination-container');
+                    const oldPagination = document.querySelector('#pagination-container');
+                    if(newPagination && oldPagination) {
+                        oldPagination.innerHTML = newPagination.innerHTML;
+                    } else if (newPagination && !oldPagination) {
+                        const tableContainer = document.querySelector('.table-responsive');
+                        if (tableContainer) {
+                            tableContainer.parentNode.insertBefore(newPagination, tableContainer.nextSibling);
                         }
                     }
-
-
-
-                })
-            })
+                    
+                    bindTableEvents(); // re-bind listeners to newly injected buttons!
+                    window.history.pushState({}, '', url);
+                    
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    Swal.fire('Error', 'Failed to fetch page data', 'error');
+                }
+            });
 
         })
     </script>

@@ -91,5 +91,6 @@ const orderSchema=new Schema({
 },{
     timestamps:true
 })
+orderSchema.index({createdAt:1,orderStatus:1})
 const Order=mongoose.model('Order',orderSchema)
 export default Order

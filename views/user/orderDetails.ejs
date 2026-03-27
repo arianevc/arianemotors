@@ -1,5 +1,6 @@
 <%- include('../partials/user/header.ejs') %>
-
+<!-- Load Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <main class="main">
     <div class="container" style="padding: 40px 15px;">
         <div class="mb-4">
@@ -7,16 +8,23 @@
             <p><strong>Order ID:</strong> <%= order.orderId %></p>
             <p><strong>Date Placed:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p>
             <p><strong>Status:</strong> <span class="badge bg-success" id="orderStatus"><%= order.orderStatus %></span></p>
-            <div class="mt-4">
-                <a href="/orders/invoice/<%= order.orderId %>" class="btn btn-primary">
-                    <i class="fi-rs-download mr-5"></i>Download Invoice
-                </a>    
-                <% if (order.orderStatus === 'Pending' || order.orderStatus === 'Processing') { %>
-                        <button style="background-color: rgb(153, 5, 5);" type="submit" id="orderCancelBtn" data-order-id="<%= order.orderId %>" class="btn btn-danger">Cancel Order</button>
-                
-                <% }else if (order.orderStatus === "Delivered") { %>
-                        <button style="background-color: rgb(132, 66, 0);" type="button" id="orderReturnBtn" data-order-id="<%= order.orderId %>" class="btn btn-warning">Return Order</button>
-                <% } %>
+            <div class="mt-4 p-3">
+                <%if(order.orderStatus!=='Pending'){%>
+                    <a href="/orders/invoice/<%= order.orderId %>" class="btn btn-primary">
+                        <i class="fi-rs-download mr-5"></i>Download Invoice
+                    </a>    
+               <%}%>
+                <% if ((order.orderStatus === 'Pending' || order.orderStatus === 'Processing')&&order.paymentStatus!=='Failed') { %>
+                        <button style="background-color: rgb(153, 5, 5);" type="button" id="orderCancelBtn" data-order-id="<%= order.orderId %>" class="btn btn-danger">Cancel Order</button>
+                        
+                        <% }else if (order.orderStatus === "Delivered") { %>
+                            <button style="background-color: rgb(132, 66, 0);" type="button" id="orderReturnBtn" data-order-id="<%= order.orderId %>" class="btn btn-warning">Return Order</button>
+                            <% } %>
+                            <%if(order.paymentStatus=='Failed'){%>
+                                <button style="background-color: rgb(153, 5, 5);" type="button" id="retryPaymentBtn" data-order-id="<%= order.orderId %>" class="btn btn-danger">Retry Payment</button>
+                                <% }else if(order.paymentStatus=='Pending'){ %>
+                                    <button style="background-color: rgb(153, 5, 5);" type="button" id="retryPaymentBtn" data-order-id="<%= order.orderId %>" class="btn btn-danger">Make Payment</button>
+                        <%}%>
         </div>
 
         <div class="row">
@@ -93,16 +101,16 @@
                                     Return Item
                                     </button>
                                 </td>
-                            <% } else if ((order.orderStatus === 'Pending' || order.orderStatus === 'Processing') && item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') { %>
+                            <% } else if ((order.orderStatus === 'Pending' || order.orderStatus === 'Processing')&&order.paymentStatus!=='Failed' && item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') { %>
                             <td>
                                     <button type="button" class="btn btn-sm btn-warning cancel-item-btn"
                                     data-orderid="<%=order.orderId%>" data-itemid="<%= item._id %>">
                                     Cancel Item
                                     </button>
                                 </td>
-                            <% } else { %>
-                                <td></td>
-                            <% } %>
+                            <% }%>
+                                
+                            
                         </tr>
                     <% }) %>
                 </tbody>
@@ -114,6 +122,82 @@
 <%- include('../partials/user/footer.ejs') %>
 <script>
     document.addEventListener('DOMContentLoaded',function(){
+        //retry payment for failed orders
+        const retryPayment=document.getElementById('retryPaymentBtn')
+        if (retryPayment) {
+            retryPayment.addEventListener('click',async()=>{
+                const orderId=retryPayment.dataset.orderId
+                retryPayment.innerText='Processing...'
+                retryPayment.disabled=true
+                try {
+                    const response=await fetch('/shop/order/retryPayment',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({
+                            orderId:orderId
+                        })
+                    })
+                    const data=await response.json()
+                    if(!data.success){
+                        Swal.fire("Error!",data.message||'Error in retrying payment','error')
+                        retryPayment.innerText='Retry Payment'
+                        retryPayment.disabled=false
+                        return
+                    }
+                    //options for razorpay
+                    const options={
+                        "key":'<%=process.env.RAZORPAY_API_TEST_KEY_ID%>',
+                        "currency":'INR',
+                        "amount":data.order.amount,
+                        "name":"Ariane Motors",
+                        "image":'https://placehold.co/300x300/6001ff/white?text=AM',
+                        "description":"Retry Payment",
+                        "order_id":data.order.id,
+                        "handler": async function (response) {
+                            const verifyRes = await fetch('/shop/verify-razorpay-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            })
+                        });
+
+                        const verifyData = await verifyRes.json();
+
+                        if (verifyData.success) {
+                            window.location.href = `/order-success?orderId=${verifyData.orderId}`;
+                        } else {
+                            Swal.fire('Error', 'Payment verification failed', 'error');
+                        }
+                        },
+                        "prefill":{
+                            "name":data.user.name,
+                            "email":data.user.email,
+                            "contact":data.user.phone
+                        },
+                        "theme":{
+                            "color":"#088178"
+                        }
+                    }
+                    //open the razorpay window
+                    const rzp=new Razorpay(options)
+                    rzp.on('payment.failed',function(response){
+                        Swal.fire('Error','Payment failed again. Please try again','error')
+                        retryPayment.innerText='Retry Payment'
+                        retryPayment.disabled=false
+                    })
+                    rzp.open()
+                } catch (error) {
+                     console.error(error);
+                    Swal.fire('Error','Something went wrong','error')
+                    retryPayment.innerText="Retry Payment"
+                    retryPayment.disabled=false
+                }
+
+            })
+        }
         //order cancellation
         const cancelOrderBtn=document.getElementById('orderCancelBtn')
         const orderStatusField=document.getElementById('orderStatus')
@@ -121,6 +205,8 @@
         const paymentStatusField=document.getElementById('paymentStatus')
         if(cancelOrderBtn){
         cancelOrderBtn.addEventListener('click',async(e)=>{
+            console.log("cancel button clicked");
+            
             e.preventDefault()
             const orderId=cancelOrderBtn.dataset.orderId
             Swal.fire({
