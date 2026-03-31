@@ -58,7 +58,7 @@
                                                 </td>
                                                 <% if(item.stockStatus=='danger'){ %>
                                                     <td class="text-center" colspan="2" data-title="Stock">
-                                                        <span  class="text-muted">Unavailable</span>
+                                                        <span  class="text-danger">Product is Temporarly Unavailable.Please remove the item and continue shopping</span>
                                                         </td>
                                                         <% }else{ %>
                                                             <td class="text-center" data-title="Stock">
@@ -229,7 +229,7 @@
                         grandTotal.textContent=`₹${result.finalTotal.toFixed(2)}`
                     }else{
                         Swal.fire("Error!",result.message,'error').then(()=>{
-                            window.location.reload()
+                            qtySpan.textContent-=1
                         }) 
                         console.error('Failed to update quantity');
                     } 

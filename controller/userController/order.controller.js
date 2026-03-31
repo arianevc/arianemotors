@@ -136,7 +136,7 @@ try {
     })
 } catch (error) {
     console.error("error in creazting Razorpay order: ",error);
-    res.status(500).json({success:false,message:"Server error"||error})
+    res.status(500).json({success:false,message:error.message||'Server Error'})
 }
 }
 //verification of Razorpay payment and Order is placed

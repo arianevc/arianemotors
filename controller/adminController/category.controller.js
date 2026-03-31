@@ -4,9 +4,7 @@ import Product from "../../model/productSchema.js"
 
 
 const loadCategories=async(req,res)=>{
-    if(!req.session.isAdmin){
-       return res.redirect('/login')
-    }
+    
     try {
         const search=req.query.search || ''
         const page=parseInt(req.query.page)|| 1

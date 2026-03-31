@@ -68,7 +68,7 @@ app.use('/shop',shopRoutes)
 app.use('/admin',adminRoutes)
 
 app.use((req,res,next)=>{
-    const isAdmin=req.session.isAdmin?true:false
+    const isAdmin=req.session.adminId?true:false
     res.status(404).render('user/error',{statusCode:404,isAdmin,statusMessage:"Page Not Found"})
 })
 app.listen(port,(err)=>{

@@ -35,12 +35,12 @@
 
                         <div class="mb-4">
                             <label for="min_purchase" class="form-label">Min Purchase Amount</label>
-                            <input type="number" placeholder="Enter amount" class="form-control" id="min_purchase"
+                            <input type="number" placeholder="Enter the Minimum Purchase Amount" class="form-control" id="min_purchase"
                                 min="0" />
                         </div>
                         <div class="mb-4">
-                            <label for="max_purchase" class="form-label">Max Purchase Amount</label>
-                            <input type="number" placeholder="Enter amount" class="form-control" id="max_purchase"
+                            <label for="max_purchase" class="form-label">Max Purchase Amount(Only for %)</label>
+                            <input type="number" placeholder="Not Applicable for Fixed Discounts" class="form-control" id="max_purchase" disabled
                                 min="1000" />
                         </div>
 
@@ -215,8 +215,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            //add coupon form submission
+            //disable max purchase for fixed
+            const discountSelect=document.getElementById('discount_type')
+            const maxField=document.getElementById('max_purchase')
+            discountSelect.addEventListener('change',()=>{
+                if(discountSelect.value=='percentage'){
+                    maxField.disabled=false
+                    maxField.placeholder='Enter the Maximum Purchase Amount'
+                }else{
+                    maxField.disabled=true
+                    maxField.placeholder='Not Applicable for Fixed Discounts'
 
+                }
+            })
+            //add coupon form submission
+            
             createCouponBtn.addEventListener('click', async (e) => {
                 const code = document.getElementById('coupon_code').value.trim()
                 const discountType = document.getElementById('discount_type').value
@@ -226,14 +239,16 @@
                 const expiryDate = document.getElementById('expiry_date').value
                 const createCouponBtn = document.getElementById('createCouponBtn')
                 e.preventDefault()
-
-                if (!code || !discountType || !discountValue || !minPurchase || !maxPurchase || !expiryDate) {
+                if(discountValue=='percentage'&&!maxPurchase){
+                    return Swal.fire("Error!", "Please fill the Maximum Purchase Amount", 'error')
+                }
+                if (!code || !discountType || !discountValue || !minPurchase  || !expiryDate) {
                     return Swal.fire("Error!", "Please fill all the fields", 'error')
                 }
                 if (discountValue <= 0 || minPurchase <= 0) {
                     return Swal.fire("Error!", "Values cannot be negative", "error")
                 }
-                if (minPurchase > maxPurchase || maxPurchase <= 0) {
+                if (discountValue=='percentage'&&(minPurchase > maxPurchase || maxPurchase <= 0)) {
                     return Swal.fire("Error!", "Invalid Max Purchase amount", "error")
                 }
                 //sending request

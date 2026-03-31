@@ -1,7 +1,7 @@
 import User from "../model/userSchema.js"
 
 const checkLoggedIn=async (req,res,next)=>{
-    if(req.session.isAdmin){
+    if(req.session.adminId){
         return res.redirect('/admin')
     }else if(req.session.userId){
         return res.redirect('/')
@@ -17,13 +17,13 @@ const checkUserSession=async(req,res,next)=>{
     }
 }
 const isAdmin=async(req,res,next)=>{
-    if(req.session.userId&&req.session.isAdmin){
-        res.redirect('/admin')
+    if(req.session.adminId){
+        return res.redirect('/admin')
     }
     next()
 }
 const checkAdmin=async(req,res,next)=>{
-    if(req.session.userId&&req.session.isAdmin){
+    if(req.session.adminId){
         next()
     }else{
         res.redirect('/login')

@@ -194,14 +194,22 @@ try {
 }
 //logout for admin
 const adminLogout=async (req,res)=>{
-    req.session.destroy((err)=>{
-        if(err){
-            console.log("Error while destroying session",err)
-            return res.redirect('/')
-        }
-        res.clearCookie('connect.sid')
-        res.redirect('/login')
-    })
+    if(req.session.userId) {
+        delete req.session.adminId;
+        req.session.save((err) => {
+            if(err) console.log("Error saving session", err);
+            res.redirect('/login');
+        });
+    } else {
+        req.session.destroy((err)=>{
+            if(err){
+                console.log("Error while destroying session",err)
+                return res.redirect('/')
+            }
+            res.clearCookie('user.sid')
+            res.redirect('/login')
+        })
+    }
 }
 
 

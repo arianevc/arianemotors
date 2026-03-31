@@ -9,9 +9,9 @@ import upload from '../../config/multer.js'
 import * as authenticate from '../../helpers/authenticate.js'
 const router = express.Router();
 //Show Admin dashboard
-router.get("/",authenticate.checkUserSession,adminController.loadDashboard);
+router.get("/",authenticate.checkAdmin,adminController.loadDashboard);
 //Admin Dashboard Sales Chart
-router.get("/dashboard/chart-data",authenticate.checkUserSession,adminController.getChart)
+router.get("/dashboard/chart-data",authenticate.checkAdmin,adminController.getChart)
 //redirect to login if no admin
 router.get("/login", authenticate.checkLoggedIn);
 //admin Logout
@@ -22,15 +22,15 @@ router.get("/users/filter", adminController.userStatusFilter);
 router.post("/users/:id/block", adminController.blockUser);
 
 //category management
-router.get("/categories",authenticate.checkUserSession,categoryController.loadCategories);
-router.post("/categories", authenticate.checkUserSession,categoryController.addCategory);
-router.post("/categories/:id/edit", authenticate.checkUserSession,categoryController.editCategory);
-router.patch("/categories/:id/delete",authenticate.checkUserSession, categoryController.softDeleteCategory);
+router.get("/categories",authenticate.checkAdmin,categoryController.loadCategories);
+router.post("/categories", authenticate.checkAdmin,categoryController.addCategory);
+router.post("/categories/:id/edit", authenticate.checkAdmin,categoryController.editCategory);
+router.patch("/categories/:id/delete",authenticate.checkAdmin, categoryController.softDeleteCategory);
 
 //product management
 
-router.get("/products",authenticate.checkUserSession, productController.loadProducts);
-router.get("/addproduct",authenticate.checkUserSession, productController.loadAddProduct);
+router.get("/products",authenticate.checkAdmin, productController.loadProducts);
+router.get("/addproduct",authenticate.checkAdmin, productController.loadAddProduct);
 router.post(
   "/products/add",
   upload.array("images", 5),
@@ -45,9 +45,9 @@ router.post("/products/:id/delete", productController.softDeleteProduct);
 
 //order management
 
-router.get('/orders', authenticate.checkUserSession,userOrderController.loadOrders);
-router.post('/orders/update-status/:orderId',authenticate.checkUserSession, userOrderController.updateOrderStatus);
-router.get('/orders/details/:orderId',authenticate.checkUserSession,userOrderController.loadOrderDetails)
+router.get('/orders', authenticate.checkAdmin,userOrderController.loadOrders);
+router.post('/orders/update-status/:orderId',authenticate.checkAdmin, userOrderController.updateOrderStatus);
+router.get('/orders/details/:orderId',authenticate.checkAdmin,userOrderController.loadOrderDetails)
 router.post('/orders/approve-return',authenticate.checkAdmin,userOrderController.returnApprove)
 
 

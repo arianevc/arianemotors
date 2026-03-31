@@ -154,6 +154,8 @@ const loadCart=async(req,res)=>{
             }
             //CASE 3:Low Stock(cart qty >Available stock)
             else if(item.quantity>product.quantity){
+                item.quantity=product.quantity
+                cartItem.quantity=product.quantity // Update the copied object sent to EJS
                 cartItem.stockStatus='warning'
                 cartItem.stockError=`Only ${product.quantity} left!`
                 cartHasError=true
@@ -165,10 +167,13 @@ const loadCart=async(req,res)=>{
             }
             return cartItem
         })
-        //calculate totalPrice of available items only
         const cartTotal=cartItemsWithStatus.reduce((acc,item)=>{
             return (item.stockStatus=='ok'||item.stockStatus=='warning')?acc+(item.productId.salePrice*item.quantity):acc
         },0)
+        
+        if (cartHasError) {
+            await user.save();
+        }
        
         res.render('user/cart',{categoryList:categories,categoryId,search,cart:cartItemsWithStatus,cartTotal:cartTotal,cartHasError:cartHasError})
     } catch (error) {

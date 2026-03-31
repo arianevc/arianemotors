@@ -4,7 +4,7 @@ const loadCoupons=async(req,res)=>{
 try {
     const page=req.query.page
     const filter={sort:{createdAt:-1}}
-    const paginatedData=await paginateHelper(Coupon,{page:page,limit:2})
+    const paginatedData=await paginateHelper(Coupon,{page:page,limit:5})
     const coupons = paginatedData.results
 
     const totalPages=paginatedData.pagination.totalPages    

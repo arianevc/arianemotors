@@ -24,7 +24,6 @@ minPurchaseAmount:{
 },
 maxPurchaseAmount:{
     type:Number,
-    required:true
 },
 expiryDate:{
     type:Date,

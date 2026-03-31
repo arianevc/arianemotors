@@ -317,14 +317,15 @@ const userloginPost=async (req,res)=>{
         if(!passwordMatch){
             return res.json({success:false,message:"Invalid Password"})
         }
+        if(user.isAdmin){
+            req.session.adminId=user._id
+            return res.json({success:true,redirectUrl:'/admin'})
+        }
+        
         req.session.userId=user._id
         req.session.loggedUser=user.name
         req.session.loggedUserImage=user.profileImage
         req.session.loggedUserReferral=user.referralCode
-        if(user.isAdmin){
-            req.session.isAdmin=true
-            return res.json({success:true,redirectUrl:'/admin'})
-        }
         if(req.session.returnTo){
             const redirect=req.session.returnTo
             delete req.session.returnTo
@@ -341,14 +342,25 @@ const userloginPost=async (req,res)=>{
 }
 
 const userLogout=async (req,res)=>{
-    req.session.destroy((err)=>{
-        if(err){
-            console.log("Error while destroying session",err)
-            return res.redirect('/')
-        }
-        res.clearCookie('connect.sid')
-        res.redirect('/login')
-    })
+    if(req.session.adminId) {
+        delete req.session.userId;
+        delete req.session.loggedUser;
+        delete req.session.loggedUserImage;
+        delete req.session.loggedUserReferral;
+        req.session.save((err)=>{
+            if(err) console.log("Error saving session", err);
+            res.redirect('/login');
+        });
+    } else {
+        req.session.destroy((err)=>{
+            if(err){
+                console.log("Error while destroying session",err)
+                return res.redirect('/')
+            }
+            res.clearCookie('user.sid')
+            res.redirect('/login')
+        })
+    }
 }
 
 //order management

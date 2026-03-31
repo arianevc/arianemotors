@@ -5,9 +5,7 @@ import { processImages } from '../../helpers/imageProcessing.js'
 import { updateProductPrice } from '../../helpers/priceCalculator.js'
 
 const loadProducts=async(req,res)=>{
-  if(!req.session.isAdmin){
- return res.redirect('/login')
-  }
+  
     try {
     const search=req.query.search||""
     const page = parseInt(req.query.page) || 1;
