@@ -254,16 +254,42 @@
                 const itemId=btn.dataset.itemid
 
                 //asking for reason in swal
-                const{value:reason}=await Swal.fire({
+                let {value:reason}=await Swal.fire({
                     title:'Return Reason',
                     input:'select',
                     inputOptions:{
                         'Damaged':'Received damaged product',
                         'Wrong item':'Wrong item received',
-                        'Not Satisfied':'Not satisfied with the product'
+                        'Not Satisfied':'Not satisfied with the product',
+                        'Other':'Other (Please specify)'
                     },
-                    showCancelButton:true
+                    showCancelButton:true,
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'You need to select a reason'
+                        }
+                    }
                 })
+
+                if (reason === 'Other') {
+                    const {value: customReason} = await Swal.fire({
+                        title: 'Please Specify',
+                        input: 'textarea',
+                        inputPlaceholder: 'Type your custom reason here...',
+                        showCancelButton: true,
+                        inputValidator: (value) => {
+                            if (!value || value.trim() === '') {
+                                return 'You must provide a reason for returning the item!'
+                            }
+                        }
+                    });
+                    
+                    if (customReason) {
+                        reason = customReason;
+                    } else {
+                        reason = null; // User cancelled
+                    }
+                }
                 if(reason){
                  try {
                        const response=await fetch('/orders/return-item',{

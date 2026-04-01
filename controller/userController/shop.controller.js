@@ -158,7 +158,7 @@ const loadCart=async(req,res)=>{
                 cartItem.quantity=product.quantity // Update the copied object sent to EJS
                 cartItem.stockStatus='warning'
                 cartItem.stockError=`Only ${product.quantity} left!`
-                cartHasError=true
+                // cartHasError=true
             }
             //CASE 4:
             else{
@@ -171,9 +171,7 @@ const loadCart=async(req,res)=>{
             return (item.stockStatus=='ok'||item.stockStatus=='warning')?acc+(item.productId.salePrice*item.quantity):acc
         },0)
         
-        if (cartHasError) {
-            await user.save();
-        }
+        await user.save()
        
         res.render('user/cart',{categoryList:categories,categoryId,search,cart:cartItemsWithStatus,cartTotal:cartTotal,cartHasError:cartHasError})
     } catch (error) {
