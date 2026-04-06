@@ -1,5 +1,4 @@
 import User from '../../model/userSchema.js'
-import Category from '../../model/categorySchema.js'
 import Order from '../../model/orderSchema.js'
 import Product from '../../model/productSchema.js'
 import { getCommonData } from '../../helpers/commonData.js'
@@ -8,6 +7,7 @@ import crypto from 'crypto'
 import Coupon from '../../model/couponModel.js'
 import { createOrderHelper } from '../../helpers/orderHelper.js'
 import { log } from 'console'
+
 
 
 //create Razorpay instance
@@ -111,7 +111,6 @@ const placeOrder=async(req,res)=>{
 const createRazorpayOrder=async(req,res)=>{
 try {
     const {addressId,couponCode}=req.body
-    console.log(req.body)
     const userId=req.session.userId
     if(!userId){
         return res.status(401).json({success:false,message:"User Not Found!"})
@@ -235,7 +234,8 @@ const retryPayment=async(req,res)=>{
             }
         })
     } catch (error) {
-        
+         console.error("error in retry razorpay payment: ",error);
+        res.status(500).json({success:false,message:"Server Error in failed payment"})
     }
 }
 //handle request for return of items
@@ -264,3 +264,6 @@ try {
 
 export{loadCheckout,placeOrder,createRazorpayOrder,
     verifyRazorpayOrder,handlePaymentFailure,retryPayment,requestReturn}
+
+
+  
