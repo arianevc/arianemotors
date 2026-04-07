@@ -26,35 +26,35 @@
                             <h4>Billing & Shipping Address</h4>
                             <button class="btn btn-primary" type="button"  id="addAddressBtn" data-bs-toggle="modal" data-bs-target="#addressModal">Add New Address</button>
                         </div>
-                        <% if(addresses && addresses.length>0) {%>
+                        <% if(user.addresses && user.addresses.length>0){ %>
                             <div class="row" id="addressListContainer">
-                                            <% if(user.addresses && user.addresses.length>0){ %>
-                                                <% user.addresses.forEach((address,i) => { %>
-                                                    <div class="col-lg-6 p-3">
-                                                        <div class="card mb-3 mb-lg-0">
-                                                            <div class="d-flex justify-content-around card-header">
-                                                                <h5 class="mb-0">Address <%=i+1%></h5>
-                                                            </div>
-                                                        
-                                                            <div class="card-body">
-                                                                <strong><%=address.name%></strong><br>
-                                                                <address><%=address.street%>,<br><%=address.city%><br><%=address.state%>,<%=address.pinCode%></address>
-                                                                <button class="btn btn-secondary btn-sm use-address-btn" data-address-id="<%=i%>" >Use Address</button>
-                                                                
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                <% }) %>
-                                                <% }else{ %>
-                                                    <p>You have no saved addresses</p>
-                                                    <%}%>
+                                <% user.addresses.forEach((address,i) => { %>
+                                    <div class="col-lg-6 p-3">
+                                        <div class="card mb-3 mb-lg-0">
+                                            <div class="d-flex justify-content-around card-header">
+                                                <h5 class="mb-0">Address <%=i+1%></h5>
+                                            </div>
+                                        
+                                            <div class="card-body">
+                                                <strong><%=address.name%></strong><br>
+                                                <address><%=address.street%>,<br><%=address.city%><br><%=address.state%>,<%=address.pinCode%></address>
+                                                <button class="btn btn-secondary btn-sm use-address-btn" data-address-id="<%=i%>" >Use Address</button>
+                                                
+                                            </div>
                                         </div>
-                                
+                                    </div>
+                                <% }) %>
+                            </div>
+                        <% }else{%>
+                            <div class="row mt-4 mb-4 text-center">
+                                <input type="radio" hidden name="addressRadio" value="new" checked>
+                                <div class="col-12 p-4 border rounded" style="background-color: #f8f9fa;">
+                                    <h5 class="text-muted"><i class="fa fa-map-marker me-2"></i>You have no saved addresses</h5>
+                                    <p class="mb-0 mt-2 text-muted">Please add a new address to continue checkout.</p>
                                 </div>
-                                <% }else{%>
-                                    <input type="radio" hidden name="addressRadio" value="new" checked>
-                                    <h3>Enter an address</h3>
-                                    <% } %>
+                            </div>
+                        <% } %>
+                    </div>
                                     <!--add address modal-->
                                     <div class="modal fade" id="addressModal" tabindex="-1">
                                         <div class="modal-dialog">
