@@ -1,9 +1,9 @@
 import  express  from "express";
 const router=express.Router()
-import * as shopController from "../../controller/controller.shop.js";
-import * as orderController from "../../controller/controller.order.js"
+import * as shopController from "../../controller/userController/shop.controller.js";
+import * as orderController from "../../controller/userController/order.controller.js"
+import * as couponController from "../../controller/userController/coupon.controller.js"
 import * as authenticate from "../../helpers/authenticate.js"
-
 
 //shop functions
 router.get('/products',authenticate.checkBlocked,shopController.loadShop);
@@ -17,18 +17,22 @@ router.post('/wishlist/toggle/:productId',shopController.toggleWishlist)
 router.delete('/wishlist/delete/:productId',shopController.deleteFromWishlist)
 
 //cart management
-router.post('/cart/add',shopController.addProductToCart)
-router.get('/cart',shopController.loadCart)
-router.delete('/cart/clearCart',shopController.clearCart)
-router.delete('/cart/delete/:productId',shopController.deleteFromCart)
-router.post('/cart/update-quantity',shopController.updateCartQuantity)
+router.get('/cart',authenticate.checkUserSession,shopController.loadCart)
+router.post('/cart/add',authenticate.checkUserSession,shopController.addProductToCart)
+router.delete('/cart/clearCart',authenticate.checkUserSession,shopController.clearCart)
+router.delete('/cart/delete/:productId',authenticate.checkUserSession,shopController.deleteFromCart)
+router.post('/cart/update-quantity',authenticate.checkUserSession,shopController.updateCartQuantity)
 
+//coupon management
+router.post('/checkout/applyCoupon',authenticate.checkUserSession,couponController.applyCoupon)
 //checkout
-router.get('/checkout',orderController.loadCheckout)
+router.get('/checkout',authenticate.checkUserSession,orderController.loadCheckout)
 //order management
 router.post('/place-order',authenticate.checkUserSession,orderController.placeOrder)
+
 //middleware for the failed razorpay payment
 router.post('/order-failed',authenticate.checkUserSession,orderController.handlePaymentFailure)
 router.post('/create-razorpay-order',authenticate.checkUserSession,orderController.createRazorpayOrder)
 router.post('/verify-razorpay-payment',authenticate.checkUserSession,orderController.verifyRazorpayOrder)
+router.post('/order/retryPayment',authenticate.checkUserSession,orderController.retryPayment)
 export default router

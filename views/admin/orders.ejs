@@ -1,6 +1,6 @@
 <%- include('../partials/admin/header.ejs') %>
 
-<main class="main-wrap">
+<main class="main">
     <section class="content-main">
         <div class="content-header">
             <h2 class="content-title">Order Management</h2>
@@ -19,6 +19,7 @@
                             <option value="Shipped" <%= currentStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                             <option value="Delivered" <%= currentStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                             <option value="Cancelled" <%= currentStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                            <option value="Returned" <%= currentStatus === 'Returned' ? 'selected' : '' %>>Returned</option>
                         </select>
                     </div>
                     <div class="col-lg-2 col-6 col-md-3">
@@ -84,7 +85,7 @@
 
     // --- Main function to fetch and update orders ---
     async function fetchOrders(page = 1) {
-        const search = searchInput.value;
+        const search = searchInput.value; 
         const status = statusFilter.value;
         const sort = sortFilter.value;
 

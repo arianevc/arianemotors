@@ -1,19 +1,22 @@
 import bcrypt from 'bcrypt' 
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
-import User from '../model/userSchema.js'
-import Category from '../model/categorySchema.js'
-import Order from '../model/orderSchema.js'
+import User from '../../model/userSchema.js'
+import Category from '../../model/categorySchema.js'
+import Order from '../../model/orderSchema.js'
 import  PDFDocument  from "pdfkit";
-import verifyEmail from "../helpers/verifyEmail.js"
+import verifyEmail from "../../helpers/verifyEmail.js"
+import { getCommonData } from '../../helpers/commonData.js'
 import { validationResult } from 'express-validator'
-
+import Product from '../../model/productSchema.js'
+import { generateReferralCode } from '../../helpers/codeGenerator.js'
 
 //load Home page
 const LoadHomepage=async (req,res)=>{
     try{
-        const category=await Category.find()
-       return res.render('user/homepage',{categoryList:category,search:"",categoryId:""})
+        const commonData=await getCommonData()
+                
+       return res.render('user/homepage',commonData)
     }
     catch(error){
         console.log("Error occured: ",error)
@@ -58,7 +61,7 @@ const forgotPasswordPost=async (req,res)=>{
     await user.save()
 
 
-    const resetlink=`http://localhost:3001/resetpwd/${token}`
+    const resetlink=`http://localhost:${process.env.PORT}/resetpwd/${token}`
     //sending the email
     console.log(resetlink)
     const transporter=nodemailer.createTransport({
@@ -150,7 +153,7 @@ function generateOtp() {
 }
 const userSignupPost=async (req,res)=>{
     try {
-        const {name,phone,email,password,cpassword}=req.body
+        const {name,phone,email,password,cpassword,referralCode}=req.body
         const errors=validationResult(req)
         if(!errors.isEmpty()){
             return res.status(400).json({success:false,errors:errors.array()})
@@ -167,11 +170,12 @@ const userSignupPost=async (req,res)=>{
         req.session.otpData={
             otp:otp,
             expiresAt:Date.now()+1*60*1000,
-            email:email
+            email:email,
         }
         // console.log(req.session.otpData)
-        req.session.userData={name,phone,email,password}
+        req.session.userData={name,phone,email,password,referralCode}
         console.log("OTP Sent: ",otp)
+       
         return res.json({success:true,email:email,message:"An OTP mail is sent to your E-mail ID "})
     } catch (error) {
         console.log("Signup error: ",error)
@@ -206,13 +210,44 @@ try {
             let abbr=user.name[0]+user.name[user.name.indexOf(' ')+1]
             let image=`https://placehold.co/300x300/088178/white?text=${abbr}`
         const hashedPassword=await bcrypt.hash(user.password,10)
+        //add referral code 
+        let newReferralCode=generateReferralCode()
+        //to avoid same referalcode(looping)
+        let codeExists=await User.findOne({referralCode:newReferralCode})
+        while(codeExists){
+            newReferralCode=generateReferralCode()
+            codeExists=await User.findOne({referralCode:newReferralCode})        
+        }
         const saveUserData=new User({
             name:user.name,
             phone:user.phone,
             email:user.email,
             profileImage:image,
-            password:hashedPassword
+            password:hashedPassword,
+            referralCode:newReferralCode
         })
+        //give reward coupon to the referrer
+        if(user.referralCode){
+            const referrer=await User.findOne({referralCode:user.referralCode})
+            if(referrer){
+                saveUserData.referredBy=referrer._id
+                referrer.wallet.balance+=100
+                referrer.wallet.transactions.push({
+                    amount:100,
+                    type:'Credit',
+                    description:`Referral bonus for inviting ${saveUserData.name}`,
+                    date:Date.now()
+                })
+                await referrer.save()
+            }
+            saveUserData.wallet.balance+=50
+            saveUserData.wallet.transactions.push({
+                    amount:50,
+                    type:'Credit',
+                    description:`Referral bonus for using referral code`,
+                    date:Date.now()
+                })
+        }
         await saveUserData.save()
         req.session.userData = null;
     }else if(req.session.userId){
@@ -267,7 +302,7 @@ const resendOtp=async (req,res)=>{
         res.status(500).json({success:false,message:"Internal server error"})
     }
 }
-
+//Login of user or admin
 const userloginPost=async (req,res)=>{
     try {
         const {email,password}=req.body
@@ -282,31 +317,54 @@ const userloginPost=async (req,res)=>{
         if(!passwordMatch){
             return res.json({success:false,message:"Invalid Password"})
         }
-        req.session.userId=user._id
         if(user.isAdmin){
-            req.session.isAdmin=true
+            req.session.adminId=user._id
             return res.json({success:true,redirectUrl:'/admin'})
         }
-         return res.json({success:true,redirectUrl:'/'})
+        
+        req.session.userId=user._id
+        req.session.loggedUser=user.name
+        req.session.loggedUserImage=user.profileImage
+        req.session.loggedUserReferral=user.referralCode
+        if(req.session.returnTo){
+            const redirect=req.session.returnTo
+            delete req.session.returnTo
+            return res.json({success:true,redirectUrl:redirect})
+        }else{
+            return res.json({success:true,redirectUrl:'/'})
+        }
         
     } catch (error) {
         console.log("Issue while user logging",error)
+        res.locals.loggedUser=null
         res.json({success:false,message:"Login Failed . Please try again later"})
     }
 }
 
 const userLogout=async (req,res)=>{
-    req.session.destroy((err)=>{
-        if(err){
-            console.log("Error while destroying session",err)
-            return res.redirect('/')
-        }
-        res.clearCookie('connect.sid')
-        res.redirect('/login')
-    })
+    if(req.session.adminId) {
+        delete req.session.userId;
+        delete req.session.loggedUser;
+        delete req.session.loggedUserImage;
+        delete req.session.loggedUserReferral;
+        req.session.save((err)=>{
+            if(err) console.log("Error saving session", err);
+            res.redirect('/login');
+        });
+    } else {
+        req.session.destroy((err)=>{
+            if(err){
+                console.log("Error while destroying session",err)
+                return res.redirect('/')
+            }
+            res.clearCookie('user.sid')
+            res.redirect('/login')
+        })
+    }
 }
 
 //order management
+//order success page after payment or placing order
 const loadOrderSuccess=async(req,res)=>{
 try {
     const orderId=req.query.orderId
@@ -327,15 +385,18 @@ try {
 //order failure
 const loadOrderFailure=async(req,res)=>{
     try {
+        const orderId=req.query.orderId
+        const order=await Order.findOne({orderId:orderId})
         const search=req.query.search||""
     const categoryId=req.query.category||""
     const categories=await Category.find()
-        res.render('user/orderFailurePage',{categoryList:categories,categoryId,search})
+        res.render('user/orderFailurePage',{categoryList:categories,categoryId,search,order:order})
     } catch (error) {
         console.error("error in displaying payment failure page: ",error);
         res.status(500).render('user/error',{statusCode:500,statusMessage:"Page Unavailable due to server error"})
     }
 }
+//display the details about a particular order
 const loadOrderDetails=async(req,res)=>{
     try {
         const orderId=req.params.orderId
@@ -354,6 +415,7 @@ const loadOrderDetails=async(req,res)=>{
         res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
     }
 }
+//feature to download an invoice of the purchase
 const downloadInvoice=async(req,res)=>{
     try{
     const orderId=req.params.orderId
@@ -431,27 +493,117 @@ const downloadInvoice=async(req,res)=>{
         res.status(500).render('user/error',{statusCode:500,statusMessage:'Failed to generate invoice'})
     }
 }
+//cancel the order before shippment or delivery
 const cancelOrder=async(req,res)=>{
     try {
         const orderId=req.params.orderId   
-    const userId=req.session.userId
-    const order=await Order.findOne({orderId:orderId,userId:userId})
-    if(!order){
-        return res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
-    }
-    if(order.orderStatus==="Pending"||order.orderStatus==="Processing"){
-        order.orderStatus="Cancelled"
-        await order.save()
-       return res.status(200).json({success:true,message:"Order is Cancelled"})
-    }else{
-        return res.status(406).json({success:false,message:"Order cancellation failed"})
-    }
-     } catch (error) {
-        console.error("error in cancelling the order")
+        const userId=req.session.userId
+        const order=await Order.findOne({orderId:orderId,userId:userId})
+        const user=await User.findById(userId)
+        
+        if(!order){
+            return res.status(404).render('user/error',{statusCode:404,statusMessage:"Order Not Found"})
+        }
+        
+        if(order.orderStatus==="Pending"||order.orderStatus==="Processing"){
+            order.orderStatus="Cancelled"
+            let totalRefund = 0;
+            const subtotal = order.totalPrice + order.discount;
+
+            for(const item of order.items){
+                if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
+                    item.itemStatus='Cancelled'
+                    await Product.updateOne({_id:item.productId},
+                        {$inc:{quantity:item.quantity}})
+                    
+                    //  refund calculation
+                    const itemTotal = item.price * item.quantity;
+                    const itemDiscount = (itemTotal / subtotal) * order.discount;
+                    totalRefund += (itemTotal - itemDiscount);
+                }
+            }
+            
+            //refund to wallet if order is paid
+            if(order.paymentStatus=='Paid' && totalRefund > 0){
+                order.paymentStatus='Refunded'
+                user.wallet.balance += parseFloat(totalRefund.toFixed(2));
+                user.wallet.transactions.push({
+                    amount: parseFloat(totalRefund.toFixed(2)),
+                    type: 'Credit',
+                    description: `Refund for cancelled order: ${orderId}`,
+                    transactionId: 'Nil'
+                })
+                await user.save()
+            }
+            await order.save()
+            return res.status(200).json({success:true,message:"Order is Cancelled. If paid, refund will be credited to your wallet."})
+        }else{
+            return res.status(406).json({success:false,message:"Order cancellation failed"})
+        }
+    } catch (error) {
+        console.error("error in cancelling the order", error)
         return res.status(500).json({success:false,message:"Server Error"})
     }
-
 }
+
+//cancel a specific item in the order
+const cancelItem=async(req,res)=>{
+    try {
+        const { orderId, itemId } = req.body;
+        const userId = req.session.userId;
+        const order = await Order.findOne({ orderId: orderId, userId: userId });
+        const user = await User.findById(userId);
+        
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order Not Found" });
+        }
+        
+        const item = order.items.id(itemId);
+        if (!item) {
+            return res.status(404).json({ success: false, message: "Item Not Found" });
+        }
+        
+        if (order.orderStatus === "Pending" || order.orderStatus === "Processing") {
+            if (item.itemStatus === 'Cancelled') {
+                return res.status(400).json({ success: false, message: "Item is already cancelled" });
+            }
+            
+            item.itemStatus = 'Cancelled';
+            await Product.updateOne({_id: item.productId}, {$inc: {quantity: item.quantity}});
+            
+            const subtotal = order.totalPrice + order.discount;
+            const itemTotal = item.price * item.quantity;
+            const itemDiscount = (itemTotal / subtotal) * order.discount;
+            const refundAmount = parseFloat((itemTotal - itemDiscount).toFixed(2));
+            
+            if (order.paymentStatus === 'Paid' && refundAmount > 0) {
+                user.wallet.balance += refundAmount;
+                user.wallet.transactions.push({
+                    amount: refundAmount,
+                    type: 'Credit',
+                    description: `Refund for cancelled item in order: ${orderId}`,
+                    transactionId: 'Nil'
+                });
+                await user.save();
+            }
+            
+            const allCancelled = order.items.every(i => i.itemStatus === 'Cancelled');
+            if (allCancelled) {
+                order.orderStatus = 'Cancelled';
+                if (order.paymentStatus === 'Paid') order.paymentStatus = 'Refunded';
+            }
+            
+            await order.save();
+            return res.status(200).json({ success: true, message: "Item cancelled successfully. Refund processed if applicable." });
+        } else {
+            return res.status(406).json({ success: false, message: "Cannot cancel item at this stage" });
+        }
+    } catch (error) {
+        console.error("Error in cancelling item: ", error);
+        return res.status(500).json({ success: false, message: "Server Error" });
+    }
+}
+//return the order entirely
 const returnOrder=async(req,res)=>{
     try {
         const orderId=req.params.orderId
@@ -476,7 +628,27 @@ const returnOrder=async(req,res)=>{
         res.status(500).json({success:false,message:"Server Error"})
     }
 }
+//return only specific items in the order
+const returnItems=async(req,res)=>{
+    try {
+        const{orderId,itemId,reason}=req.body
+        const order=await Order.findOne({orderId:orderId})
+        //find the item
+        const item=order.items.id(itemId)
+        if(item.itemStatus=='Delivered'){
+            item.itemStatus='Return Requested'
+            item.reason=reason
+            await order.save()
+            res.json({success:true,message:"Request requested successfully"})
+        }else{
+            res.json({success:false,message:"Cannot return this item"})
+        }
+    } catch (error) {
+        console.error("Error in requesting the return of item: ",error);
+        res.json({success:false,message:'Server Error'})
+    }
+}
 export{LoadHomepage,loadUserLogin,loadforgotPassword,forgotPasswordPost,
     loadResetPassword,resetPasswordPost,userSignupPost,loadUserSignup,loadVerfiyOtp,verifyOtp,resendOtp,
     userloginPost,userLogout,loadOrderSuccess,loadOrderFailure,loadOrderDetails,downloadInvoice,
-    cancelOrder,returnOrder}
+    cancelOrder,cancelItem,returnOrder,returnItems}

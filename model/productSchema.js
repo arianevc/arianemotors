@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { type } from 'node:os'
 const {Schema}=mongoose
 
 const productSchema=new Schema({
@@ -36,10 +37,15 @@ const productSchema=new Schema({
         type:Number,
         required:true,
     },
-    // sellPrice:{
-    //     type:Number,
-    //     required:true,
-    // }
+    productOffer:{
+        type:Number,
+        default:0
+    },
+    salePrice:{
+        type:Number,
+        required:true,
+        default:0
+    }
 })
 const Product=mongoose.model('Product',productSchema)
 export default Product

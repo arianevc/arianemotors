@@ -41,14 +41,24 @@
     </div>
 </div>
 
-<div class="pagination-area mt-30 mb-50">
-    <nav aria-label="Page navigation example">
-        <ul class="pagination justify-content-start" id="pagination-controls">
-            <% for(let i = 1; i <= totalPages; i++) { %>
-                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                    <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
-                </li>
-            <% } %>
-        </ul>
-    </nav>
-</div>
+<!-- Pagination -->
+                        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                            <div class="pagination-area mt-30 mb-50" id="pagination-container">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination justify-content-start">
+                                        <% if (currentPage > 1) { %>
+                                            <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage - 1 %>"><i class="material-icons md-chevron_left"></i></a></li>
+                                        <% } %>
+                                        
+                                        <!-- Current Page -->
+                                        <li class="page-item active">
+                                            <a class="page-link" href="#" data-page="<%= currentPage %>"><%= currentPage %></a>
+                                        </li>
+                                        
+                                        <% if (currentPage < totalPages) { %>
+                                            <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage + 1 %>"><i class="material-icons md-chevron_right"></i></a></li>
+                                        <% } %>
+                                    </ul>
+                                </nav>
+                            </div>
+                        <% } %>

@@ -1,0 +1,280 @@
+<%- include('../partials/admin/header') %>
+
+<section class="content-main">
+    <div class="content-header">
+        <h2 class="content-title">Sales Report</h2>
+        <div>
+            <a href="/admin/sales-report/pdf?filterType=<%= filterType %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="btn btn-primary">
+                <i class="text-muted material-icons md-post_add"></i>Download PDF
+            </a>
+            <a href="/admin/sales-report/excel?filterType=<%= filterType %>&startDate=<%= startDate %>&endDate=<%= endDate %>" class="btn btn-primary">
+                <i class="text-muted material-icons md-post_add"></i>Download Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <header class="card-header">
+            <form action="/admin/sales-report" method="GET" id="filterForm">
+                <div class="row gx-3 align-items-end">
+                    <div class="col-lg-3 col-md-3">
+                        <label>Filter By</label>
+                        <select class="form-select" name="filterType" id="filterType" onchange="toggleCustomDate()">
+                            <option value="daily" <%= filterType === 'daily' ? 'selected' : '' %>>Daily</option>
+                            <option value="weekly" <%= filterType === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                            <option value="monthly" <%= filterType === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                            <option value="yearly" <%= filterType === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                            <option value="custom" <%= filterType === 'custom' ? 'selected' : '' %>>Custom Date</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 custom-date" style="display: <%= filterType === 'custom' ? 'block' : 'none' %>;">
+                        <label>Start Date</label>
+                        <input type="date" name="startDate" value="<%= startDate %>" class="form-control">
+                    </div>
+                    <div class="col-lg-3 col-md-3 custom-date" style="display: <%= filterType === 'custom' ? 'block' : 'none' %>;">
+                        <label>End Date</label>
+                        <input type="date" name="endDate" value="<%= endDate %>" class="form-control">
+                    </div>
+                    
+                    <div class="col-lg-2 col-md-2 align-self-end">
+                        <button type="submit" class="btn btn-md btn-primary">Filter</button>
+                    </div>
+                </div>
+            </form>
+        </header>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-lg-4">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Sales</h6>
+                                <span>₹<%= totalOrderAmount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-success-light"><i class="text-success material-icons md-local_shipping"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Orders Count</h6>
+                                <span><%= totalSalesCount %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-warning-light"><i class="text-warning material-icons md-qr_code"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Discount</h6>
+                                <span>₹<%= totalDiscount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-danger-light"><i class="text-danger material-icons md-assignment_return"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Returns Amount</h6>
+                                <span>₹<%= totalReturnsAmount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card card-body mb-4">
+                        <article class="icontext">
+                            <span class="icon icon-sm rounded-circle bg-danger-light"><i class="text-danger material-icons md-cancel"></i></span>
+                            <div class="text">
+                                <h6 class="mb-1 card-title">Total Cancellations Amount</h6>
+                                <span>₹<%= totalCancellationsAmount.toFixed(2) %></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Discount</th>
+                            <th>Coupon</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if(orders.length > 0) { %>
+                            <% orders.forEach(order => { %>
+                                <tr>
+                                    <td><%= order.orderId %></td>
+                                    <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                    <td><%= order.userId ? order.userId.name : 'Unknown' %></td>
+                                    <td>
+                                        <% if(order.orderStatus === 'Delivered') { %>
+                                            <span class="badge rounded-pill bg-success"><%= order.orderStatus %></span>
+                                        <% } else if(order.orderStatus === 'Returned') { %>
+                                            <span class="badge rounded-pill bg-warning"><%= order.orderStatus %></span>
+                                        <% } else if(order.orderStatus === 'Cancelled') { %>
+                                            <span class="badge rounded-pill bg-danger"><%= order.orderStatus %></span>
+                                        <% } else { %>
+                                            <span class="badge rounded-pill bg-info"><%= order.orderStatus %></span>
+                                        <% } %>
+                                    </td>
+                                    <td>₹<%= order.totalPrice.toFixed(2) %></td>
+                                    <td>₹<%= order.discount.toFixed(2) %></td>
+                                    <td><%= order.couponApplied || 'None' %></td>
+                                    <td><%= order.paymentMethod %></td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr><td colspan="7" class="text-center">No sales found for this period.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <div class="pagination-area mt-30 mb-50" id="pagination-container">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-start">
+                            <% if (currentPage > 1) { %>
+                                <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage - 1 %>"><i class="material-icons md-chevron_left"></i></a></li>
+                            <% } %>
+                            <% for(let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= currentPage == i ? 'active' : '' %>">
+                                    <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                            <% if (currentPage < totalPages) { %>
+                                <li class="page-item"><a class="page-link" href="#" data-page="<%= currentPage + 1 %>"><i class="material-icons md-chevron_right"></i></a></li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                </div>
+            <% } %>
+
+        </div>
+    </div>
+</section>
+<% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Date Range',
+                text: '<%= errorMessage %>', // e.g. "End date cannot be before Start date"
+                confirmButtonColor: '#3085d6'
+            });
+        });
+    </script>
+<% } %>
+<script>
+  
+    function toggleCustomDate() {
+        const type = document.getElementById('filterType').value;
+        const customInputs = document.querySelectorAll('.custom-date');
+        
+        customInputs.forEach(input => {
+            input.style.display = (type === 'custom') ? 'block' : 'none';
+        });
+    }
+
+    document.addEventListener('submit', async function(e) {
+        const form = e.target.closest('#filterForm');
+        if (!form) return;
+        
+        e.preventDefault();
+        const formData = new FormData(form);
+        const urlParams = new URLSearchParams(formData);
+        
+        const url = `/admin/sales-report?${urlParams.toString()}`;
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newContent = doc.querySelector('.content-main');
+            const oldContent = document.querySelector('.content-main');
+            
+            if (newContent && oldContent) {
+                oldContent.innerHTML = newContent.innerHTML;
+            }
+            
+            window.history.pushState({}, '', url);
+            
+        } catch (error) {
+            console.error('Fetch error:', error);
+            Swal.fire('Error', 'Failed to apply filter', 'error');
+        }
+    });
+
+    document.addEventListener('click', async function(e) {
+        const link = e.target.closest('.page-link');
+        if (!link) return;
+        
+        e.preventDefault();
+        const page = link.getAttribute('data-page');
+        if (!page) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', page);
+        
+        // Ensure filter params are also passed if needed (actually they are in window.location.search)
+        
+        const url = `/admin/sales-report?${urlParams.toString()}`;
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newTable = doc.querySelector('.table-responsive');
+            const oldTable = document.querySelector('.table-responsive');
+            if(newTable && oldTable) {
+                oldTable.innerHTML = newTable.innerHTML;
+            }
+            
+            const newPagination = doc.querySelector('#pagination-container');
+            const oldPagination = document.querySelector('#pagination-container');
+            
+            if(newPagination && oldPagination) {
+                oldPagination.innerHTML = newPagination.innerHTML;
+            } else if (newPagination && !oldPagination) {
+                const cardBody = document.querySelector('.card-body');
+                if (cardBody) cardBody.appendChild(newPagination);
+            }
+            
+            window.history.pushState({}, '', url);
+            
+        } catch (error) {
+            console.error('Fetch error:', error);
+            Swal.fire('Error', 'Failed to fetch page data', 'error');
+        }
+    });
+</script>
+

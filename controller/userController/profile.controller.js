@@ -1,8 +1,14 @@
-import User from "../model/userSchema.js"
-import Category from "../model/categorySchema.js"
-import Order from "../model/orderSchema.js"
-import { processProfileImage } from "../helpers/imageProcessing.js"
+import User from "../../model/userSchema.js"
+import Category from "../../model/categorySchema.js"
+import Order from "../../model/orderSchema.js"
+import bcrypt from 'bcrypt' 
+import crypto from 'crypto'
+import { paginateHelper } from "../../helpers/pagination.js"
+import { processProfileImage } from "../../helpers/imageProcessing.js"
 import { validationResult } from "express-validator"
+import { getCommonData } from "../../helpers/commonData.js"
+import Razorpay from "razorpay"
+import { log, timeStamp } from "node:console"
 
 
 //load Account details
@@ -11,16 +17,80 @@ const loadAccountDetails=async(req,res)=>{
         if(!req.session.userId){
            return res.redirect('/login')
         }
+        // console.log("page no: ",page);
+        
+        const filters={userId:req.session.userId}
+        let sortOption={createdAt:-1}
+        const paginatedData=await paginateHelper(Order,{
+            limit:6,
+            sort:sortOption,
+            filters:filters,
+            page:1
+        })
+        const userOrders=paginatedData.results
+        const totalPages=paginatedData.pagination.totalPages
+        // console.log("total documents: ",paginatedData.pagination.totalDocuments)
+        const currentPage=paginatedData.pagination.currentPage
+
         const user=await User.findById(req.session.userId)
-        const userOrders=await Order.find({userId:req.session.userId})
+       if(req.xhr){
+        return res.render('partials/user/orderList',{orders:userOrders,totalPages:totalPages,currentPage:currentPage})
+       }
      
         const category=await Category.find()
         // console.log(user.addresses)
-        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user,orders:userOrders})
+        res.render('user/accountDetails',{categoryList:category,categoryId:"",search:"",user:user,orders:userOrders,currentPage,totalPages})
     } catch (error) {
-        console.log("error in loading ")
+        console.log("error in loading account details: ",error)
+        res.status(500).render('user/errorPage')
     }
 }
+//search for orders
+const orderSearch=async(req,res)=>{
+ try {
+    console.log(req.query) 
+    const query={userId:req.session.userId}
+    //search regex for finding OrderId
+    if(req.query.search){
+        const searchRegex=new RegExp(req.query.search,'i')
+        query.orderId={$regex:searchRegex}
+    }
+    //setting a range for the date
+    if(req.query.date){
+        const dateStr=req.query.date
+
+        const startOfDate=new Date(dateStr)
+        startOfDate.setHours(0,0,0,0)
+        const endOfDate=new Date(dateStr)
+        endOfDate.setHours(23,59,59,999)
+        query.createdAt={$gte:startOfDate,$lte:endOfDate}
+    }
+    if(req.query.status&&req.query.status!=='All'){
+        query.orderStatus=req.query.status
+    }
+    console.log('final mongoQuery: ',query)
+    const sortOption={createdAt:-1}
+    const paginatedData=await paginateHelper(Order,{
+        sort:sortOption,
+        limit:6,
+        page:req.query.page,
+        filters:query,
+    })
+    console.log("paginatedData: ",paginatedData)
+    const userOrders=paginatedData.results
+    console.log('fetched Orders: ',userOrders);
+    const totalPages=paginatedData.pagination.totalPages
+    const currentPage=paginatedData.pagination.currentPage
+    if(req.xhr){
+        return res.render('partials/user/orderList',{orders:userOrders,totalPages:totalPages,currentPage:currentPage})
+    }
+
+ } catch (error) {
+    console.error("Error in displaying the searched order: ",error);
+        
+ }
+}
+
 //load user details to edit or read
 const editProfile=async(req,res)=>{
     try {
@@ -30,6 +100,54 @@ const editProfile=async(req,res)=>{
         res.json({name:user.name,phone:user.phone})
     } catch (error) {
         console.log("error in editing profile",error)
+    }
+}
+//change account password
+const changePassword=async(req,res)=>{
+try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.session.userId;
+
+        // 1. Find User
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        // 2. Check if user is Google Auth only (Optional safety check)
+        // If they logged in via Google, they might not have a password set.
+        if (!user.password) {
+            return res.json({ success: false, message: "You are logged in via Google. You cannot change password here." });
+        }
+
+        // 3. Verify Current Password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.json({ success: false, message: "Incorrect current password" });
+        }
+
+        // 4. Validate New Password Strength (Basic)
+        if (newPassword.length < 6) {
+            return res.json({ success: false, message: "Password must be at least 6 characters" });
+        }
+        
+        // 5. Prevent using the same password
+        const isSame = await bcrypt.compare(newPassword, user.password);
+        if (isSame) {
+            return res.json({ success: false, message: "New password cannot be the same as the old password" });
+        }
+
+        // 6. Hash New Password & Save
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedPassword;
+        await user.save();
+
+        res.json({ success: true, message: "Password changed successfully" });
+
+    } catch (error) {
+        console.error("Change Password Error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 }
 //add or update user details
@@ -42,10 +160,10 @@ const editUserPost=async(req,res)=>{
         }
         const user=await User.findByIdAndUpdate(req.session.userId,{name:name,phone:phone})
         
-        res.json({success:true,message:"User Profile updated successfully"})
+       return res.json({success:true,message:"User Profile updated successfully"})
     } catch (error) {
         console.error(error)
-        res.status(500).json({success:false,message:"Server Error"})
+       return res.status(500).json({success:false,message:"Server Error"})
     }
     
 }
@@ -65,7 +183,7 @@ const addAddress=async (req,res)=>{
         res.json({success:true,message:'Address added sucessfully!',addresses:user.addresses})
     } catch (error) {
         console.error("Error in adding address",error)
-        res.status(500).json({success:false,message:'Server Error'})
+        return res.status(500).json({success:false,message:'Server Error'})
     }
 }
 //retrieve a single address to edit and view
@@ -191,7 +309,7 @@ const removeImage=async(req,res)=>{
         res.status(500).json({success:false,message:"Server error during removal of image"})
     }
 }
-export{loadAccountDetails,editProfile,editUserPost,addAddress,getSingleAddress
+export{loadAccountDetails,orderSearch,editProfile,changePassword,editUserPost,addAddress,getSingleAddress
     ,editAddress,deleteAddress,loadEditEmail,emailVerify,loadImageEditer,changeImagePost,
     removeImage
 }

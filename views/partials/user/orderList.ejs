@@ -1,0 +1,70 @@
+
+    
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Order ID</th>
+                                                                <th>Date</th>
+                                                                <th>Status</th>
+                                                                <th>Payment</th>
+                                                                <th>Total</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <%if(orders&&orders.length>0){ %>
+                                                            <% orders.forEach((order)=>{%>
+                                                            <tr>
+                                                                <td><%=order.orderId %></td>
+                                                                <td><%=new Date(order.createdAt).toLocaleDateString() %></td>
+                                                                <td><%= order.orderStatus %></td>
+                                                                <td><%= order.paymentStatus %></td>
+                                                                <td>₹<%=order.totalPrice.toFixed(2) %></td>
+                                                                <td><a href="/orders/<%= order.orderId %>" class="btn-small d-block">View</a></td>
+                                                            </tr>
+                                                            <% }) %>
+                                                            <% }else{ %>
+                                        <tr><td colspan="6" class="text-center" style="color: #088178;">No Orders Available to Display</td></tr>
+                                        <% } %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            
+                        
+                                        <!-- pagination -->
+                                        <div class="pagination-area mt-30 mb-50">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination justify-content-start" id="pagination-container">
+                                      <% if (currentPage > 1) { %>
+                                        <li class="page-item">
+                                           <a class="page-link" href="#" data-page="<%= currentPage - 1 %>">
+                                               <i class="fi-rs-angle-double-small-left"></i>
+                                          </a>
+                                        </li>
+                                     <% } %>
+                                     <%let startPage=Math.max(1,Number(currentPage)-1)%>
+                                     <%let endPage=Math.min(totalPages,Number(currentPage)+1)%>
+
+                               <% for (let i = startPage; i <= endPage; i++) { %>
+                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                         <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+
+                               <% if (currentPage < totalPages) { %>
+                                  <li class="page-item">
+                                        <a class="page-link" href="#" data-page="<%= currentPage + 1 %>">
+                                              <i class="fi-rs-angle-double-small-right"></i>
+                                        </a>
+                                  </li>
+                               <% } %>
+                                        </ul>
+                                    </nav>
+                             </div>
+                             
+                              
+                                    
+                                    

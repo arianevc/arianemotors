@@ -12,9 +12,12 @@
                 <div>
                     <h2 class="content-title card-title">Product Management </h2>
                     <p>Edit or Delete a product</p>
-                </div>
-                <!--Search bar-->
-                <div>
+                  </div>
+                  <!--Search bar-->
+                  <div class="d-flex gap-2">
+                  <div>
+                         <a href="/admin/addproduct"><button class="btn btn-md rounded font-sm hover-up">Add Product</button></a>
+                     </div>
                   <form action="/admin/products" method="get" class="mb-3 d-flex ">
                     
                     <input type="text" name="search" placeholder="Search Products" class="form-control bg-white" value="<%= search||""  %>">
@@ -43,6 +46,7 @@
                                             <th>Category</th>
                                             <th>Price</th>
                                             <th>Quantity</th>
+                                            <th>Product Offer(%)</th>
                                             <th>Images</th>
                                             <th>Actions</th>
                                             
@@ -60,13 +64,16 @@
       <td></td>
       <td><%= product.category.name%></td>
       <td>₹<%= product.price %></td>
-      <td><%= product.quantity %></td>
+      <td><%= product.quantity %> Nos.</td>
+      <td><%=product.productOffer %>%</td>
       <td>
             <img src="<%= product.images[0] %>" width="200" alt="image">
             
       </td>
-      <td style="height: 100%;" class="d-flex justify-content-between">
-        <button 
+      
+      <td>
+          <div class="d-flex justify-content-between">
+          <button 
           class="btn btn-warning edit-btn"
           data-bs-toggle="modal" 
           data-bs-target="#updateproduct"
@@ -77,13 +84,15 @@
           data-price="<%= product.price %>"
           data-quantity="<%= product.quantity %>"
           data-category="<%= product.category._id ||product.category%>"
+          data-offer="<%= product.productOffer%>"
           data-images="<%= product.images %>"
-        ><i class="fa fa-pencil"></i>
+          ><i class="fa fa-pencil"></i>
         </button>
-          <button class="btn btn-<%= product.isDeleted?'success':'danger' %> delete-product-btn" data-id="<%= product._id %>" data-deleted="<%= product.isDeleted ?1:0%>" type="submit"><%= product.isDeleted?"Restore":"Delete" %></button>
-          
-          <button class="btn btn-danger removeBtn"  data-product-id="<%= product._id %>"><i class="fa fa-trash-o"></i></button>
+        <button class="btn btn-<%= product.isDeleted?'success':'danger' %> delete-product-btn" data-id="<%= product._id %>" data-deleted="<%= product.isDeleted ?1:0%>" type="submit"><%= product.isDeleted?"Restore":"Delete" %></button>
         
+        <button class="btn btn-danger removeBtn"  data-product-id="<%= product._id %>"><i class="fa fa-trash-o"></i></button>
+        
+      </div>
       </td>
     </tr>
   <% }) }%>
@@ -172,6 +181,10 @@
             <label>Quantity</label>
             <input type="number" class="form-control" name="quantity" id="edit-product-quantity">
           </div>
+          <div class="mb-3">
+            <label>Product Offer(in %)</label>
+            <input type="number" class="form-control" name="productOffer" id="edit-product-offer">
+          </div>
          <div class="mb-3 d-flex">
           <label for="">Existing Images</label>
           <div id="existing-images" class="d-flex flex-wrap gap-2"></div>
@@ -191,7 +204,10 @@
          <button type="button" class="btn btn-primary" id="crop-next">Crop & Next</button>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-warning">Update</button>
+          <button type="submit" class="btn btn-warning" id="editSubmitBtn">Update</button>
+          <div style="display: none;" class="spinner-border text-primary" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>
         </div>
       </form>
     </div>
@@ -261,6 +277,14 @@
   function initializeImageCropper(inputElement){
     inputElement.addEventListener('change',function(e){
       selectedFiles=Array.from(e.target.files)//to store the selected files
+      //check if they are images or not
+      for(let file of selectedFiles){
+        if(!file.type.startsWith('image/')){
+          Swal.fire("Invalid Image",`File ${file.name} is not an image`)
+          e.target.value=''
+          break
+        }
+      }
       imageIndex=0
       croppedBlobs=[]//resets cropped blobs
       previewContainer.innerHTML=''//to clear old cropped previews
@@ -309,6 +333,7 @@ initializeImageCropper(imageInput)
         const quantity=button.dataset.quantity
         const brand=button.dataset.brand
         const category=button.dataset.category
+        const offer=button.dataset.offer
         const images=button.dataset.images?button.dataset.images.split(','):[]
         
 
@@ -320,6 +345,7 @@ initializeImageCropper(imageInput)
         document.getElementById('edit-product-quantity').value=quantity
         document.getElementById('edit-product-brand').value=brand
         document.getElementById('edit-product-category').value=category
+        document.getElementById('edit-product-offer').value=offer
         
         
         imagesContainer.innerHTML=""//to clear previous images
@@ -378,6 +404,10 @@ initializeImageCropper(imageInput)
     croppedBlobs.forEach((blob,index)=>{
       formData.append('images',blob,`cropped-${Date.now()}-${index}.jpg`)
     })
+    const editSubmitBtn=document.getElementById("editSubmitBtn")
+    editSubmitBtn.disabled=true
+    editSubmitBtn.innerText="Updating..."
+    document.querySelector(".spinner-border").removeAttribute('style')
     try {
       const response=await fetch(form.action,{
         method:'POST',

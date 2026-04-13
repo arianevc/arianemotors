@@ -27,6 +27,14 @@ const orderSchema=new Schema({
         price:{
             type:Number,
             required:true
+        },
+        itemStatus:{
+            type:String,
+            enum:['Ordered','Shipped','Delivered','Cancelled','Return Requested','Returned'],
+            default:'Ordered'
+        },
+        reason:{
+            type:String
         }
     }],
     shippingAddress: {
@@ -56,7 +64,7 @@ const orderSchema=new Schema({
     },
     paymentMethod:{
         type:String,
-        enum:['COD','Online'],
+        enum:['COD','Online','Wallet'],
         required:true
     },
     razorpayOrderId:{
@@ -68,12 +76,21 @@ const orderSchema=new Schema({
     // },
     paymentStatus:{
         type:String,
-        enum:['Pending','Paid','Failed'],
+        enum:['Pending','Paid','Failed','Refunded'],
         default:'Paid'
+    },
+    discount:{
+        type:Number,
+        default:0
+    },
+    couponApplied:{
+        type:String,
+        default:null
     }
 
 },{
     timestamps:true
 })
+orderSchema.index({createdAt:1,orderStatus:1})
 const Order=mongoose.model('Order',orderSchema)
 export default Order

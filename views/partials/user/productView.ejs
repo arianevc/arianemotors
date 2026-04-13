@@ -1,5 +1,64 @@
-<div class="row product-grid-3" id="product-container">
-    <% if(Array.isArray(products)){ %>
+<style>
+  .product-img img {
+  width: 100%;
+  height: 250px;   /* fixed height */
+  object-fit: cover; /* crop/scale nicely */
+}
+.product-card .product-title {
+  display: -webkit-box;
+  line-clamp: 2;   /* max 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 3em; /* reserve space so all cards align */
+}
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* force equal height */
+}
+.product-cart-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.product-content-wrap {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.offer-badge {
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+.product-price {
+  margin-bottom: auto !important; /* pushes the action div down to the bottom */
+}
+.product-content-wrap .product-action-1 {
+  position: static !important;
+  transform: none !important;
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  opacity: 1 !important;
+  visibility: visible !important;
+  align-items: center; 
+}
+.out-of-stock-wrapper {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  min-height: 46px; /* Matches the approximate height of product action buttons */
+}
+
+.product-listing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch; /* makes all children equal height */
+}
+</style>
+<div class="row product-grid-3">
+    <% if(Array.isArray(products)&&products.length>=1){ %>
                             <% products.forEach(product=>{ %>
                             <div class="col-lg-4 col-md-4 col-12 col-sm-6 product-card">
                                 <div class="product-cart-wrap mb-30">
@@ -26,7 +85,12 @@
                                         <div class="product-category">
                                             <a href="/shop/products/?category=<%=product.category._id%>"><%=product.category.name %></a>
                                         </div>
-                                        <h2><a href="/shop/product/<%= product._id %>"><%=product.brand%> <%= product.name %></a></h2>
+                                        <% if(product.price!=product.salePrice){ %>
+                                            <span class="badge bg-success offer-badge">Offer Price!</span>
+                                            <% }else{ %>
+                                                <span class="badge bg-info offer-badge">Best Deals!!</span>
+                                                <% } %>
+                                        <h2><a href="/shop/product/<%= product._id %>"><%=product.brand%> <%= product.name.length>15?product.name.slice(0,15)+"...":product.name %></a></h2>
                                         
                                         <!-- <div class="rating-result" title="90%">
                                             <span>
@@ -34,23 +98,28 @@
                                             </span>
                                         </div> -->
                                         <div class="product-price">
-                                            <span>₹<%= product.price %>.00</span>
-                                            <span class="old-price">₹<%= (product.price*1.2).toFixed(2) %></span>
+                                            <% if(product.price==product.salePrice){ %>
+                                                <span>₹<%= product.price %>.00</span>
+                                                <span class="old-price">₹<%= (product.price*1.2).toFixed(2) %></span>
+                                                <% }else{ %>
+                                                    <span>₹<%= product.salePrice %>.00</span>
+                                                    <span class="old-price">₹<%= (product.price).toFixed(2) %></span>
+                                                    <% } %>
                                         </div>
                                         <% if(product.quantity<1||product.quantity===undefined) {%>
-                                            <div>
-                                                <p class="text-danger">The product is out of stock. Please check after sometime</p>
+                                            <div class="out-of-stock-wrapper w-100">
+                                                <p class="text-danger mb-0" style="font-weight: bold;">The product is out of stock</p>
                                             </div>
                                             <% }else{ %>
                                                 <div class="product-action-1 show">
                                              <% if(product.isInCart){ %>       
-                                            <a aria-label="Item in Cart" data-product-id="<%= product._id %>" data-item-in-cart="true" class="action-btn hover-up" id="addToCartbtn" href="#" style="background-color: #088178;"><i style="color: azure;" class="fi-rs-shopping-bag"></i></a>
+                                            <a aria-label="Item in Cart" data-product-id="<%= product._id %>" data-item-in-cart="true" class="action-btn hover-up add-to-cart-btn" href="#" style="background-color: #088178;"><i style="color: azure;" class="fi-rs-shopping-bag"></i></a>
                                             <% }else{ %>
-                                                <a aria-label="Add To Cart" data-product-id="<%= product._id %>" data-item-in-cart="false" class="action-btn hover-up" id="addToCartbtn" href="#"><i class="fi-rs-shopping-bag-add"></i></a>
+                                                <a aria-label="Add To Cart" data-product-id="<%= product._id %>" data-item-in-cart="false" class="action-btn hover-up add-to-cart-btn" href="#"><i class="fi-rs-shopping-bag-add"></i></a>
                                                 <% }if(product.isWishlisted){ %>
-                                                    <a aria-label="Item in Wishlist" data-product-id="<%= product._id %>" data-is-wishlisted="true" class="action-btn hover-up" id="wishlistBtn" href="#"><i class="fa fa-heart"></i></a>
+                                                    <a aria-label="Item in Wishlist" data-product-id="<%= product._id %>" data-is-wishlisted="true" class="action-btn hover-up wishlist-btn" href="#"><i class="fa fa-heart"></i></a>
                                                     <% }else{ %>
-                                                        <a aria-label="Add to Wishlist" data-product-id="<%= product._id %>" data-is-wishlisted="false" class="action-btn hover-up" id="wishlistBtn" href="#"><i class="fa fa-heart-o"></i></a>
+                                                        <a aria-label="Add to Wishlist" data-product-id="<%= product._id %>" data-is-wishlisted="false" class="action-btn hover-up wishlist-btn" href="#"><i class="fa fa-heart-o"></i></a>
                                                     <% } %>
                                         </div>
                                     <% } %>
@@ -58,141 +127,166 @@
                                 </div>
                             </div>
                             <% }) %>
-                            
+                            <div class="pagination-area mt-30 mb-50">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination justify-content-start" id="pagination-container">
+                                      <% if (currentPage > 1) { %>
+                                        <li class="page-item">
+                                           <a class="page-link" href="#" data-page="<%= currentPage - 1 %>">
+                                               <i class="fi-rs-angle-double-small-left"></i>
+                                          </a>
+                                        </li>
+                                     <% } %>
+                                      <%let startPage=Math.max(1,Number(currentPage)-1)%>
+                                     <%let endPage=Math.min(totalPages,Number(currentPage)+1)%>
+
+                               <% for (let i = startPage; i <=endPage; i++) { %>
+                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                         <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+
+                               <% if (currentPage < totalPages) { %>
+                                  <li class="page-item">
+                                        <a class="page-link" href="#" data-page="<%= currentPage + 1 %>">
+                                              <i class="fi-rs-angle-double-small-right"></i>
+                                        </a>
+                                  </li>
+                               <% } %>
+                                        </ul>
+                                    </nav>
+                             </div>
                             <% }else{ %>
                                 <h1>No products found</h1>
                                 <% } %>
                         </div>
+                    
                        <script>
                         document.addEventListener('DOMContentLoaded',function(){
+                            if (window.productEventDelegated) return;
+                            window.productEventDelegated = true;
 
-                            //add to cart button
-                            const cartBtns=document.querySelectorAll('#addToCartbtn')
-                            
-                            cartBtns.forEach(btn=>{  
-                                btn.addEventListener('click',async()=>{
-                                           const cartPrdctId=btn.dataset.productId
-                                          const itemInCart=btn.dataset.itemInCart=="true"
-                                          const icon=btn.querySelector('i')
-                                        // console.log("product id: "+cartPrdctId+",item in cart: "+itemInCart);
-                                        if(itemInCart){
-                                            await fetch(`/shop/cart/delete/${cartPrdctId}`,{
-                                                method:'DELETE',
-                                                headers:{'Content-Type':'application/json'}
-                                            }).then((response)=>response.json()).then((result)=>{
-                                                if(result.success){
-                                                    Swal.fire({
-                                                        icon:'success',
-                                                        timer:2000,
-                                                        title:'Removed item from Cart',
-                                                        showConfirmButton:false
-                                                    })
-                                                    btn.removeAttribute('style')
-                                                    btn.setAttribute('aria-label','Add to Cart')
-                                                    btn.setAttribute('data-item-in-cart','false')
-                                                    icon.removeAttribute('style')
-                                                    icon.classList.remove('fi-rs-shopping-bag')
-                                                    icon.classList.add('fi-rs-shopping-bag-add')
-                                                }else{
-                                                    Swal.fire({
-                                                        icon:'error',
-                                                        timer:2000,
-                                                        title:'Unable to remove from Cart',
-                                                        text:result.message,
-                                                        showConfirmButton:false
-                                                    })
-                                                }
-                                            }).catch((err)=>{
-                                                console.error(err);
-                                                Swal.fire("Error","server error",'error')
-                                            })
-                                        }else{
-                                            await fetch(`/shop/cart/add`,{
-                                                method:"POST",
-                                                headers:{'Content-Type':'application/json'},
-                                                body:JSON.stringify({productId:cartPrdctId,quantity:1})
-                                            }).then(res=>res.json()).then((result)=>{
-                                                if(result.success){
-                                                    Swal.fire({
-                                                        icon:'success',
-                                                        timer:2000,
-                                                        title:result.message,
-                                                        showConfirmButton:false
-                                                    })
-                                                    btn.setAttribute('style','background-color:#088178')
-                                                    btn.setAttribute('aria-label','Item in Cart')
-                                                    btn.setAttribute('data-item-in-cart','true')
-                                                    icon.setAttribute('style','color:azure')
-                                                    icon.classList.remove('fi-rs-shopping-bag-add')
-                                                    icon.classList.add('fi-rs-shopping-bag')
-                                                    
-                                                }else{
-                                                    console.error(result.message);
-                                                    Swal.fire({
-                                                         icon:'error',
-                                                        timer:2000,
-                                                        title:'Error',
-                                                        text:result.message||'Something wrong.Try again later',
-                                                        showConfirmButton:false
-                                                    })
-                                                }
-                                            }).catch((err)=>{
-                                                console.error(err);
+                            document.addEventListener('click', async (e) => {
+                                const cartBtn = e.target.closest('.add-to-cart-btn');
+                                if(cartBtn){
+                                    e.preventDefault();
+                                    const cartPrdctId = cartBtn.dataset.productId;
+                                    const itemInCart = cartBtn.dataset.itemInCart == "true";
+                                    const icon = cartBtn.querySelector('i');
+                                    
+                                    if(itemInCart){
+                                        await fetch(`/shop/cart/delete/${cartPrdctId}`,{
+                                            method:'DELETE',
+                                            headers:{'Content-Type':'application/json'}
+                                        }).then((response)=>response.json()).then((result)=>{
+                                            if(result.success){
                                                 Swal.fire({
-                                                         icon:'error',
-                                                        timer:2000,
-                                                        title:'Item added to cart',
-                                                        text:'Something wrong.Try again later',
-                                                        showConfirmButton:false
-                                                    })
-                                            })
-                                        }
-                            
-                                })
-                            })
-                            //add to wishlist
-                            const wishlistBtns=document.querySelectorAll('#wishlistBtn')
-                            wishlistBtns.forEach(btn=>{
-                                btn.addEventListener('click',async()=>{
-                                    const wishlistPrdctId=btn.dataset.productId
-                                    const wishlistIcon=btn.querySelector('i')
-                                    const isWishlisted=btn.dataset.isWishlisted=="true"
-                                        await fetch(`/shop/wishlist/toggle/${wishlistPrdctId}`,{
-                                            method:'POST',
+                                                    icon:'success',
+                                                    timer:1000,
+                                                    title:'Removed item from Cart',
+                                                    showConfirmButton:false
+                                                });
+                                                cartBtn.removeAttribute('style');
+                                                cartBtn.setAttribute('aria-label','Add to Cart');
+                                                cartBtn.setAttribute('data-item-in-cart','false');
+                                                icon.removeAttribute('style');
+                                                icon.classList.remove('fi-rs-shopping-bag');
+                                                icon.classList.add('fi-rs-shopping-bag-add');
+                                            }else{
+                                                Swal.fire({
+                                                    icon:'error',
+                                                    timer:1000,
+                                                    title:'Unable to remove from Cart',
+                                                    text:result.message,
+                                                    showConfirmButton:false
+                                                });
+                                            }
+                                        }).catch((err)=>{
+                                            console.error(err);
+                                            Swal.fire("Error","server error",'error');
+                                        });
+                                    }else{
+                                        await fetch(`/shop/cart/add`,{
+                                            method:"POST",
                                             headers:{'Content-Type':'application/json'},
+                                            body:JSON.stringify({productId:cartPrdctId,quantity:1})
                                         }).then(res=>res.json()).then((result)=>{
                                             if(result.success){
                                                 Swal.fire({
-                                                        icon:'success',
-                                                        timer:2000,
-                                                        title:result.message,
-                                                        showConfirmButton:false
-                                                    })
-                                                if(result.removed){
-                                                    btn.setAttribute('aria-label','Add to Wishlist')
-                                                    btn.setAttribute('data-is-wishlisted','false')
-                                                    wishlistIcon.classList.remove('fa-heart')
-                                                    wishlistIcon.classList.add('fa-heart-o')
-                                                }else{
-                                                    btn.setAttribute('aria-label','Item in Wishlist')
-                                                    btn.setAttribute('data-is-wishlisted','true')
-                                                    wishlistIcon.classList.remove('fa-heart-o')
-                                                    wishlistIcon.classList.add('fa-heart')
-
-                                                }
+                                                    icon:'success',
+                                                    timer:1000,
+                                                    title:result.message,
+                                                    showConfirmButton:false
+                                                });
+                                                cartBtn.setAttribute('style','background-color:#088178');
+                                                cartBtn.setAttribute('aria-label','Item in Cart');
+                                                cartBtn.setAttribute('data-item-in-cart','true');
+                                                icon.setAttribute('style','color:azure');
+                                                icon.classList.remove('fi-rs-shopping-bag-add');
+                                                icon.classList.add('fi-rs-shopping-bag');
                                             }else{
+                                                console.error(result.message);
                                                 Swal.fire({
-                                                     icon:'error',
-                                                        timer:2000,
-                                                        title:'Unable to perform Wishlisting',
-                                                        text:result.message,
-                                                        showConfirmButton:false
-                                                })
+                                                    icon:'error',
+                                                    timer:1000,
+                                                    title:'Error',
+                                                    text:result.message||'Something wrong.Try again later',
+                                                    showConfirmButton:false
+                                                });
                                             }
-                                        })
-                            
-                                })
-                            })
-                            
-                        })
+                                        }).catch((err)=>{
+                                            console.error(err);
+                                            Swal.fire({
+                                                icon:'error',
+                                                timer:1500,
+                                                title:'Unable to add to cart',
+                                                text:'Something Wrong.Please login or try again later.',
+                                                showConfirmButton:false
+                                            });
+                                        });
+                                    }
+                                }
+
+                                const wishlistBtn = e.target.closest('.wishlist-btn');
+                                if(wishlistBtn){
+                                    e.preventDefault();
+                                    const wishlistPrdctId = wishlistBtn.dataset.productId;
+                                    const wishlistIcon = wishlistBtn.querySelector('i');
+                                    const isWishlisted = wishlistBtn.dataset.isWishlisted == "true";
+                                    
+                                    await fetch(`/shop/wishlist/toggle/${wishlistPrdctId}`,{
+                                        method:'POST',
+                                        headers:{'Content-Type':'application/json'},
+                                    }).then(res=>res.json()).then((result)=>{
+                                        if(result.success){
+                                            Swal.fire({
+                                                icon:'success',
+                                                timer:2000,
+                                                title:result.message,
+                                                showConfirmButton:false
+                                            });
+                                            if(result.removed){
+                                                wishlistBtn.setAttribute('aria-label','Add to Wishlist');
+                                                wishlistBtn.setAttribute('data-is-wishlisted','false');
+                                                wishlistIcon.classList.remove('fa-heart');
+                                                wishlistIcon.classList.add('fa-heart-o');
+                                            }else{
+                                                wishlistBtn.setAttribute('aria-label','Item in Wishlist');
+                                                wishlistBtn.setAttribute('data-is-wishlisted','true');
+                                                wishlistIcon.classList.remove('fa-heart-o');
+                                                wishlistIcon.classList.add('fa-heart');
+                                            }
+                                        }else{
+                                            Swal.fire({
+                                                icon:'error',
+                                                timer:2000,
+                                                title:'Unable to perform Wishlisting',
+                                                text:result.message,
+                                                showConfirmButton:false
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        });
                        </script>

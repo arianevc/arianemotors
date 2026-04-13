@@ -32,12 +32,21 @@
         color: red;
         font-size: small;
     }
-    .pwdtogglebutton{
-        border: none;
-        background-color: white;
+    .pwd-grp{
+        position: relative;
     }
-    
-</style>
+    .pwdtogglebutton{
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        color: #777; /* eye icon color */
+    }
+    </style>
 <header class="header-area header-style-1 header-height-2">
     
 </header>
@@ -80,29 +89,34 @@
                                         </p>
                                         <form id="formsignup">
                                             <div class="form-group">
-                                                <input type="text" required="" id="name" name="name" placeholder="Name">
+                                                <input type="text" id="name" name="name" placeholder="Name">
                                                 
                                             </div>
                                             <div class="form-group">
-                                                <input type="email" required="" id="email" name="email" placeholder="Email">
+                                                <input type="email" id="email" name="email" placeholder="Email">
                                                 
                                             </div>
                                             <div class="form-group">
-                                                <input type="text" required="" id="phone" name="phone" placeholder="Phone">
+                                                <input type="text" id="phone" name="phone" placeholder="Phone">
                                                 
                                             </div>
         
                                             <div class="form-group">
-                                                <div class="pwd-grp d-flex">
-                                                <input class="loginpassword" required="" id="password" type="password" name="password" placeholder="Password">
+                                                <div class="pwd-grp">
+                                                <input class="loginpassword"  id="password" type="password" name="password" placeholder="Password" style="padding-right: 40px;">
                                                 <button type="button" class="pwdtogglebutton"><i class="fa fa-eye"></i></button>
                                                 </div>
                                                 
                                             </div>
                     
                                             <div class="form-group">
-                                                <input id="cpassword" type="password" name="cpassword" placeholder="Confirm password">
-                                               
+                                                <div class="pwd-grp">
+                                                <input id="cpassword" type="password" name="cpassword" placeholder="Confirm password" style="padding-right: 40px;">
+                                                <button type="button" class="pwdtogglebutton"><i class="fa fa-eye"></i></button>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <input id="referralCode" type="text" name="referralCode" placeholder="Enter Referral Code(Optional)">
                                             </div>
                                            
                                                 <div class="error-messages">
@@ -164,7 +178,8 @@
                 email:signupForm.email.value,
                 phone:signupForm.phone.value,
                 password:signupForm.password.value,
-                cpassword:signupForm.cpassword.value
+                cpassword:signupForm.cpassword.value,
+                referralCode:signupForm.referralCode.value
             }
            try {
              const response=await fetch('/signup',{

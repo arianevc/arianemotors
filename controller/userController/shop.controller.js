@@ -1,6 +1,9 @@
-import User from '../model/userSchema.js'
-import Category from '../model/categorySchema.js'
-import Product from '../model/productSchema.js'
+import User from '../../model/userSchema.js'
+import Category from '../../model/categorySchema.js'
+import Product from '../../model/productSchema.js'
+import { paginateHelper } from '../../helpers/pagination.js';
+
+
 
 //render the shop page with all filters and search criteria
 const loadShop = async (req, res) => {
@@ -9,38 +12,49 @@ const loadShop = async (req, res) => {
     const categoryId=req.query.category||""
     const minPrice=parseInt(req.query.minPrice)||0
     const maxPrice=parseInt(req.query.maxPrice)||100000
-    const page=parseInt(req.query.page)||1
     const sort=req.query.sort||''
-    const limit=6
-    const skip=(page-1)*limit
-
+    const page=req.query.page||1
+   
+    if(maxPrice<minPrice){
+        throw new Error("Maximum Price must be greater than Minimum Price")
+    }
+    //build filter
     const filter={isDeleted:false,price:{$gte:minPrice,$lte:maxPrice}}
-    // console.log(search,categoryId)
     //always apply search filter
     if(search)
-    {
-       filter.name={$regex:search,$options:"i"}
+        {
+            filter.name={$regex:search,$options:"i"}
+            
+        }
+        if(categoryId){
+            filter.category=categoryId
+        }
+        let sortOption={}//sort products according filter
+        
+        if(sort=='asc'){
+            sortOption.salePrice=1
+        }else if(sort=="desc"){
+            sortOption.salePrice=-1
+        }else{
+            sortOption.createdAt=-1
+        }
+        //pass the model and options
+        const paginatedData=await paginateHelper(Product,{
+            page:page,
+            limit:6,
+            filters:filter,
+            sort:sortOption,
+            populate:'category',
+        })
 
-    }
-    if(categoryId){
-    filter.category=categoryId
-    }
-    let sortOption={}//sort products according filter
+
+    const products = paginatedData.results
     
-    if(sort=='asc'){
-        sortOption.price=1
-    }else if(sort=="desc"){
-        sortOption.price=-1
-    }else{
-        sortOption.createdAt=-1
-    }
+    
+    const count=paginatedData.pagination.totalDocuments
+    const totalPages=paginatedData.pagination.totalPages    
+    const currentPage=paginatedData.pagination.currentPage
 
-
-    const totalProducts=await Product.countDocuments(filter)
-    const totalPages=Math.ceil(totalProducts/limit)
-
-
-    const products = await Product.find(filter).populate('category').sort(sortOption).skip(skip).limit(limit);
     const categories=await Category.find()
     let wishlistedProductIds=[]
     let cartProductIds=[]
@@ -55,15 +69,26 @@ const loadShop = async (req, res) => {
     const annotatedProducts=products.map(product=>{
         const id=product._id.toString()
         return{
-            ...product.toObject(),isWishlisted:wishlistedProductIds.includes(id),
+            ...product.toObject(),
+            isWishlisted:wishlistedProductIds.includes(id),
             isInCart:cartProductIds.includes(id)
         }
     })
     if (req.xhr) { // Check if request is AJAX
-        return res.render('partials/user/productView', { products:annotatedProducts });
+        res.set('X-Total-Count',count)
+        return res.render('partials/user/productView', { products:annotatedProducts,currentPage:currentPage,totalPages:totalPages});
 }
 
-    res.render('user/shop', { products:annotatedProducts,categoryList:categories,search,minPrice,maxPrice,categoryId,currentPage:page,totalPages,sort }); // render 'shop.ejs' with products
+    res.render('user/shop', { products:annotatedProducts,
+        categoryList:categories,
+        search,
+        minPrice,
+        count,
+        maxPrice,
+        categoryId,
+        currentPage,
+        totalPages,
+        sort }); // render 'shop.ejs' with products
   } catch (error) {
     console.error("Error loading shop:", error);
     res.status(500).send("Something went wrong.");
@@ -75,6 +100,8 @@ const loadProductDetails=async(req,res)=>{
         const productId=req.params.id
         const categories=await Category.find()
         const product=await Product.findById(productId).populate('category')
+        if(!product)return res.redirect('/shop')
+        const relatedProducts=(await Product.find({category:product.category,_id:{$ne:product._id}}))
         let isWishlisted=false
         if(req.session.userId){
         const user=await User.findById(req.session.userId)
@@ -85,7 +112,9 @@ const loadProductDetails=async(req,res)=>{
         if(!product){
             return res.status(404).send("Product Not Found")
         }
-        res.render('user/productDetails',{product,isWishlisted:isWishlisted,categoryList:categories,categoryId:"",search:""})
+        res.render('user/productDetails',{product,isWishlisted:isWishlisted,relatedProducts:relatedProducts,
+            discountPercentage:Math.round(((product.price-product.salePrice)/product.price)*100)
+            ,finalPrice:product.salePrice,categoryList:categories,categoryId:"",search:""})
     } catch (error) {
         console.error("Error in showing product details",error)
         res.status(500).send("Server Error")
@@ -95,16 +124,56 @@ const loadProductDetails=async(req,res)=>{
 const loadCart=async(req,res)=>{
     try {
         if(!req.session.userId){
+            req.session.returnTo=req.originalUrl
             return res.redirect('/login')
         }
         const search=req.query.search||""
         const categoryId=req.query.category||""
         const categories=await Category.find()
+        //nested populate
         const user=await User.findById(req.session.userId).populate({
-            path:'cart.productId',
-            model:'Product'
+            path:'cart.productId'
         })
-        res.render('user/cart',{categoryList:categories,categoryId,search,cart:user.cart})
+        let cartHasError=false
+        //map the cartItems based on their availability status
+        const cartItemsWithStatus=user.cart.map(item=>{
+            const product=item.productId
+            const cartItem=item.toObject()//convert to plain object 
+
+            //CASE 1: Product is deleted
+            if(!product||product.isDeleted){
+                cartItem.stockStatus='danger'
+                cartItem.stockError='Product unavailable'
+                cartHasError=true
+            }
+            //CASE 2: Out of Stock
+            else if(product.quantity===0||product.quantity<1){
+                cartItem.stockStatus='danger'
+                cartItem.stockError='Out of Stock'
+                cartHasError=true
+            }
+            //CASE 3:Low Stock(cart qty >Available stock)
+            else if(item.quantity>product.quantity){
+                item.quantity=product.quantity
+                cartItem.quantity=product.quantity // Update the copied object sent to EJS
+                cartItem.stockStatus='warning'
+                cartItem.stockError=`Only ${product.quantity} left!`
+                // cartHasError=true
+            }
+            //CASE 4:
+            else{
+                cartItem.stockStatus='ok'
+                cartItem.stockError=null
+            }
+            return cartItem
+        })
+        const cartTotal=cartItemsWithStatus.reduce((acc,item)=>{
+            return (item.stockStatus=='ok'||item.stockStatus=='warning')?acc+(item.productId.salePrice*item.quantity):acc
+        },0)
+        
+        await user.save()
+       
+        res.render('user/cart',{categoryList:categories,categoryId,search,cart:cartItemsWithStatus,cartTotal:cartTotal,cartHasError:cartHasError})
     } catch (error) {
         console.error("error in displaying the cart: ",error);
         res.status(500).send("Server Error")
@@ -119,14 +188,26 @@ const addProductToCart=async(req,res)=>{
         
         const{productId,quantity}=req.body
         const qtynum=parseInt(quantity)
-        if(qtynum>3){
-            return res.status(400).json({success:false,message:"Cannot allow more than 3 in quantity"})
-        }
         const userId=req.session.userId
         const user=await User.findById(userId)
         const product=await Product.findById(productId)
+        const inWishlist=user.wishList.find(id=>id==productId)
+        const existingProduct=user.cart.find(item=>item.productId.toString()==productId)
+        
         if(qtynum>product.quantity){
             return res.status(406).json({success:false,message:"Cart quantity cannot be more than that of stock"})
+        }
+        if(existingProduct){
+            if(existingProduct.quantity+qtynum>product.quantity){
+                return res.status(406).json({success:false,message:"Cart quantity cannot be more than that of stock"})
+            }
+            let totalqty=qtynum+existingProduct.quantity
+            if(totalqty>5){
+                return res.status(400).json({success:false,message:"Cannot add more than 5 quantity"})
+            }
+        }
+        if(qtynum>5){
+            return res.status(400).json({success:false,message:"Cannot allow more than 5 in quantity"})
         }
         if(!product||product.isDeleted){
             return res.status(404).json({success:false,message:"Product is unavailable",redirectUrl:'/shop'})
@@ -134,14 +215,10 @@ const addProductToCart=async(req,res)=>{
         if(!user){
            return res.status(404).json({success:false,message:"User not found"})
         }
-        if(user.cart.length>=3){
-            return res.status(401).json({success:false,message:"Only 3 items allowed in cart"})
-        }
-        const inWishlist=user.wishList.find(id=>id==productId)
+        
         if(inWishlist){
             await user.updateOne({$pull:{wishList:productId}})
         }
-        const existingProduct=user.cart.find(item=>item.productId.toString()==productId)
         if(existingProduct){
             existingProduct.quantity+=qtynum
         }else{
@@ -168,6 +245,9 @@ const updateCartQuantity=async(req,res)=>{
             return res.status(404).json({success:false,message:"Item not found"})
         }
         const product=await Product.findById(productId)
+        if(parseInt(quantity)>5){
+            return res.status(406).json({success:false,message:"cannot add more than 5 items of the product"})
+        }
         if((parseInt(quantity)>product.quantity)){
             return res.status(406).json({success:false,message:"quantity cannot be greater than product stock"})
         }
@@ -175,8 +255,11 @@ const updateCartQuantity=async(req,res)=>{
         await user.save()
         const updatedUser=await User.findById(userId).populate('cart.productId')
         let newGrandTotal=0
-        updatedUser.cart.forEach(item=>{
-            newGrandTotal+=item.productId.price*item.quantity
+        const availableCartItems=updatedUser.cart.filter(item=>{
+    return !item.productId.isDeleted&&item.productId.quantity>=1&&item.quantity<=item.productId.quantity
+})
+        availableCartItems.forEach(item=>{
+            newGrandTotal+=item.productId.salePrice*item.quantity
         })
         res.json({success:true,finalTotal:newGrandTotal})
     } catch (error) {
@@ -226,6 +309,7 @@ const loadWishlist=async (req,res)=>{
         const user=await User.findById(req.session.userId).populate('wishList')
         res.render('user/wishList',{wishList:user.wishList,categoryList:categories,categoryId,search})
         }else{
+            req.session.returnTo=req.originalUrl
             return res.redirect('/login')
         }
     } catch (error) {
