@@ -1,7 +1,7 @@
 
 import User from '../../model/userSchema.js'
 import Order from '../../model/orderSchema.js'
-import { processChartData } from '../../helpers/ChartCreation.js'
+import { processChartData } from '../../helpers/chartCreation.js'
 import Product from '../../model/productSchema.js'
 import Category from '../../model/categorySchema.js'
 //load admin Dashboard
