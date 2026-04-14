@@ -1,30 +1,38 @@
 import { updateProductPrice } from "../../helpers/priceCalculator.js"
 import Category from "../../model/categorySchema.js"
 import Product from "../../model/productSchema.js"
+import { paginateHelper } from "../../helpers/pagination.js";
 
-
-const loadCategories=async(req,res)=>{
-    
+const loadCategories = async (req, res) => {
     try {
-        const search=req.query.search || ''
-        const page=parseInt(req.query.page)|| 1
-        const limit=20
+        const search = req.query.search || '';
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;
 
-        //search for a category if it is present in the DB
-        const query={
-            name:{$regex:new RegExp(search,'i')}
-        }
-        const categories=await Category.find(query)
-        .sort({createdAt:-1}).skip((page-1)*limit).limit(limit)
+        const options = {
+            page,
+            limit,
+            sort: { createdAt: -1 },
+            search,
+            searchFields: ['name']
+        };
 
-        const total = await Category.countDocuments(query);
-        let totalPages = Math.ceil(total/limit);
+        const result = await paginateHelper(Category, options);
+
+        const categories = result.results;
+        let totalPages = result.pagination.totalPages;
         if (totalPages === 0) totalPages = 1;
 
-        res.render('admin/categoryList',{categories,currentPage:page,totalPages,search: search || ''})
+        res.render('admin/categoryList', {
+            categories,
+            currentPage: result.pagination.currentPage,
+            totalPages,
+            search,
+            limit
+        });
     } catch (error) {
-        console.log("Error in categories",error)
-        res.status(500).send("Error in categories from server")
+        console.log("Error in categories", error);
+        res.status(500).send("Error in categories from server");
     }
 }
 

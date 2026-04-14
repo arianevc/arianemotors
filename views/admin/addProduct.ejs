@@ -69,7 +69,7 @@
                                     <img id="imagePreview" style="max-width: 100%;">
                                   </div>
                                   <!--hidden form to keep cropped images-->
-                                  <div class="croppedImgcontainer"></div>
+                                  <div class="croppedImgcontainer d-flex flex-wrap gap-2 mt-2"></div>
                                 </div>
 
                                 <div class="d-grid">
@@ -164,14 +164,40 @@
 
     cropper.getCroppedCanvas().toBlob(blob => {
       // Store the cropped blob
-      croppedBlobs.push(blob)
+      const currentBlob = blob;
+      croppedBlobs.push(currentBlob)
 
       // Show a small preview for each image
+      const div = document.createElement('div')
+      div.classList.add('position-relative', 'd-inline-block', 'm-1')
+
       const img = document.createElement('img')
-      img.src = URL.createObjectURL(blob)
+      img.src = URL.createObjectURL(currentBlob)
       img.style.width = '100px'
-      img.style.margin = '5px'
-      previewContainer.appendChild(img)
+      img.style.height = '100px'
+      img.classList.add('img-thumbnail')
+
+      const removeBtn = document.createElement('button')
+      removeBtn.textContent = 'x'
+      removeBtn.type = 'button'
+      removeBtn.classList.add('btn', 'btn-danger', 'btn-sm', 'position-absolute')
+      removeBtn.style.top = '0'
+      removeBtn.style.right = '0'
+      removeBtn.style.padding = '0 5px'
+      removeBtn.addEventListener('click', () => {
+        // Remove visually
+        div.remove()
+
+        // Remove from croppedBlobs
+        const indexToRemove = croppedBlobs.indexOf(currentBlob)
+        if (indexToRemove !== -1) {
+          croppedBlobs.splice(indexToRemove, 1)
+        }
+      })
+
+      div.appendChild(img)
+      div.appendChild(removeBtn)
+      previewContainer.appendChild(div)
 
       imageIndex++
       loadNextImage() // Move to next image

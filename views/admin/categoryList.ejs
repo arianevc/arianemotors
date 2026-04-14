@@ -59,7 +59,7 @@
                                     <tbody>
   <% categories.forEach((category, index) => { %>
     <tr>
-      <td><%= index + 1 %></td>
+      <td><%= (currentPage - 1) * limit + index + 1 %></td>
       <td><%= category.name %></td>
       <td><%= category.description %></td>
       <td><%= category.categoryOffer?category.categoryOffer+"%":'Nil' %></td>
