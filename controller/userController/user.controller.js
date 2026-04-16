@@ -61,7 +61,7 @@ const forgotPasswordPost=async (req,res)=>{
     await user.save()
 
 
-    const resetlink=`http://localhost:${process.env.PORT}/resetpwd/${token}`
+    const resetlink=`https://arianemotors.in/resetpwd/${token}`
     //sending the email
     console.log(resetlink)
     const transporter=nodemailer.createTransport({
